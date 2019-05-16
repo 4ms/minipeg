@@ -7,24 +7,30 @@
 
 #include <stm32f0xx.h>
 
-//INPUTS
-//ADC: GPIOA GPIO_Pin_0 GPIO_Pin_1 GPIO_Pin_2 GPIO_Pin_3
 
 //DEBUG_VERSION will disable the Tap Button LED for channel 2 (it's used by the SWD connection)
 //#define DEBUG_VERSION
 #define RELEASE_VERSION
 
-#define TAPBUT_RCC RCC_AHBPeriph_GPIOA
+#define ALL_GPIO_RCC (RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOF)
 
-#define TAPBUT_GPIO GPIOA
-#define TAPBUT1_pin GPIO_Pin_4
-#define TAPBUT1 (!(TAPBUT_GPIO->IDR & TAPBUT1_pin))
-#define TAPBUT2_pin GPIO_Pin_5
-#define TAPBUT2 (!(TAPBUT_GPIO->IDR & TAPBUT2_pin))
-#define TAPBUT3_pin GPIO_Pin_6
-#define TAPBUT3 (!(TAPBUT_GPIO->IDR & TAPBUT3_pin))
-#define TAPBUT4_pin GPIO_Pin_7
-#define TAPBUT4 (!(TAPBUT_GPIO->IDR & TAPBUT4_pin))
+#define TRIGJACK_pin GPIO_Pin_15
+#define TRIGJACK_GPIO GPIOA
+
+#define PINGJACK_pin GPIO_Pin_5
+#define PINGJACK_GPIO GPIOB
+
+#define PINGBUT_pin GPIO_Pin_3
+#define PINGBUT_GPIO GPIOB
+#define PINGBUT (!(PINGBUT_GPIO->IDR & PINGBUT_pin))
+
+#define CYCLEJACK_pin GPIO_Pin_6
+#define CYCLEJACK_GPIO GPIOB
+
+#define CYCLEBUT_pin GPIO_Pin_1
+#define CYCLEBUT_GPIO GPIOF
+
+
 
 #define PING_RCC RCC_AHBPeriph_GPIOB
 #define PING_GPIO GPIOB
