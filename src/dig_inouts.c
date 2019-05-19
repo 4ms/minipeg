@@ -4,60 +4,32 @@
 
 #include "dig_inouts.h"
 
-const uint32_t TAPBUT_pins[4]={TAPBUT1_pin, TAPBUT2_pin, TAPBUT3_pin, TAPBUT4_pin};
-const uint32_t PING_pins[4]={PING1_pin, PING2_pin, PING3_pin, PING4_pin};
-const uint32_t RESET123_pins[3]={RESET1_pin, RESET2_pin, RESET3_pin};
+struct PWMOutputPin{
+	GPIO_TypeDef 	*gpio;
+	uint8_t			pinnum;
+	uint8_t			af;
+};
 
- void TAPLED_ON(uint8_t x)
- {
-	 switch (x)
-	 {
-		 case 0:
-			 TAPLED1_GPIO->BSRR = TAPLED1_pin;
-			 break;
-		 case 1:
-			 TAPLED2_GPIO->BSRR = TAPLED2_pin;
-			 break;
-		 case 2:
-			 TAPLED3_GPIO->BSRR = TAPLED3_pin;
-			 break;
-		 case 3:
-			 TAPLED4_GPIO->BSRR = TAPLED4_pin;
-			 break;
-	 }
- }
+void init_pwm_out_pin(struct PWMOutputPin *p){
+	GPIO_InitTypeDef gpio;
+	GPIO_StructInit(&gpio);
 
- void TAPLED_OFF(uint8_t x)
- {
-	 switch (x)
-	 {
-		 case 0:
-			 TAPLED1_GPIO->BRR = TAPLED1_pin;
-			 break;
-		 case 1:
-			 TAPLED2_GPIO->BRR = TAPLED2_pin;
-			 break;
-		 case 2:
-			 TAPLED3_GPIO->BRR = TAPLED3_pin;
-			 break;
-		 case 3:
-			 TAPLED4_GPIO->BRR = TAPLED4_pin;
-			 break;
-	 }
- }
+	gpio.GPIO_Mode = GPIO_Mode_AF;
+	gpio.GPIO_Speed = GPIO_Speed_50MHz;
+	gpio.GPIO_OType = GPIO_OType_PP;
+	gpio.GPIO_PuPd = GPIO_PuPd_UP;
 
+	gpio.GPIO_Pin = 1<<(p->pinnum);
+	GPIO_Init(p->gpio, &gpio);
+	GPIO_PinAFConfig(p->gpio, p->pinnum, p->af);
 
- uint32_t TAPBUT(uint8_t x) {return(!(TAPBUT_GPIO->IDR & TAPBUT_pins[x]));}
-
- uint32_t PING(uint8_t x) {return((PING_GPIO->IDR & PING_pins[x]));}
-
- uint32_t RESETJACK(uint8_t x) {return((x==3) ? ((RESET4_GPIO->IDR & RESET4_pin)) : ((RESET123_GPIO->IDR & RESET123_pins[x])));}
-
-
+}
 
 void init_dig_inouts(void){
 	GPIO_InitTypeDef gpio;
 	GPIO_StructInit(&gpio);
+
+	RCC_AHBPeriphClockCmd(ALL_GPIO_RCC, ENABLE);
 
 	//Configure outputs
 	gpio.GPIO_Mode = GPIO_Mode_OUT;
@@ -65,35 +37,17 @@ void init_dig_inouts(void){
 	gpio.GPIO_OType = GPIO_OType_PP;
 	gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
-	//TAPLEDs
-	RCC_AHBPeriphClockCmd(TAPLED_RCC, ENABLE);
+	gpio.GPIO_Pin = EOF_pin;	GPIO_Init(EOF_GPIO, &gpio);
 
-	gpio.GPIO_Pin = TAPLED1_pin;	GPIO_Init(TAPLED1_GPIO, &gpio);
-	gpio.GPIO_Pin = TAPLED3_pin;	GPIO_Init(TAPLED3_GPIO, &gpio);
-	gpio.GPIO_Pin = TAPLED4_pin;	GPIO_Init(TAPLED4_GPIO, &gpio);
 
-#ifndef DEBUG_VERSION
-	gpio.GPIO_Pin = TAPLED2_pin;	GPIO_Init(TAPLED2_GPIO, &gpio);
-#else
-	gpio.GPIO_Mode = GPIO_Mode_AF;
-	gpio.GPIO_Pin = TAPLED2_pin;	GPIO_Init(TAPLED2_GPIO, &gpio);
-	GPIO_PinAFConfig(TAPLED2_GPIO, GPIO_PinSource13, GPIO_AF_0);
-#endif
-
-	//LFO output pins
+	//PWM output pins
 	gpio.GPIO_Mode = GPIO_Mode_AF;
 	gpio.GPIO_Speed = GPIO_Speed_50MHz;
 	gpio.GPIO_OType = GPIO_OType_PP;
 	gpio.GPIO_PuPd = GPIO_PuPd_UP;
 
-	RCC_AHBPeriphClockCmd(LFOPWM_GPIO_RCC, ENABLE);
-	gpio.GPIO_Pin = LFOPWM1_pin | LFOPWM2_pin | LFOPWM3_pin | LFOPWM4_pin;
-	GPIO_Init(LFOPWM_GPIO, &gpio);
-
-	GPIO_PinAFConfig(LFOPWM_GPIO, LFOPWM1_source, GPIO_AF_2);
-	GPIO_PinAFConfig(LFOPWM_GPIO, LFOPWM2_source, GPIO_AF_2);
-	GPIO_PinAFConfig(LFOPWM_GPIO, LFOPWM3_source, GPIO_AF_2);
-	GPIO_PinAFConfig(LFOPWM_GPIO, LFOPWM4_source, GPIO_AF_2);
+	gpio.GPIO_Pin = ENV_PWM_pin; GPIO_Init(ENV_PWM_GPIO, &gpio);
+	GPIO_PinAFConfig(ENV_PWM_GPIO, ENV_PWM_source, ENV_PWM_AF);
 
 	//Configure inputs
 	gpio.GPIO_Mode = GPIO_Mode_IN;
@@ -193,10 +147,6 @@ void EXTI2_IRQHandler(void)
 
 /*
 
-// This handy routine checks each button and digital input jack
-// to see if it's been low for a certain number of cycles,
-// and high for a certain number of cycles.
-// We shift 0's and 1's down a 16-bit variable (State[]) to indicate high/low status.
 
 void debounce_inputs(void)
 {

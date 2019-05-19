@@ -1,74 +1,44 @@
 #include "stm32f0xx_conf.h"
+#include "globals.h"
 #include "dig_inouts.h"
 #include "pwm.h"
 #include "adc.h"
+#include "log4096.h"
 
-
-//#define FREERUN
 
 
 /************************
  * Time keeping			*
  ************************/
-volatile uint32_t tmr_ping[4]={0,0,0,0};
-volatile uint32_t tmr_reset[4]={0,0,0,0};
-volatile uint32_t tmr_tapin[4]={0,0,0,0};
-volatile uint32_t tmr_tapout[4]={0,0,0,0};
-volatile uint32_t ping_irq_timestamp[4]={0,0,0,0};
-
-/************************
- * Mnuemonics			*
- ************************/
-#define WAIT 0
-#define RISE 1
-#define FALL 2
-
-
-/********************
- * Settings			*
- ********************/
-#define ADC_DRIFT 50
-
-#define PLUCKY_CURVE_ADC 130
-#define PLUCKY_CUBIC_ADC 90
-#define PLUCKY_QUADRATIC_ADC 55
-#define TRIGOUT_CURVE_ADC 30
-
-#define TRIGOUT_WIDTH 50
-
-#define SKEW_TRACKING_TIME 4000
-
-#define HOLDTIMECLEAR 15000
-
-/********************
- * Global variables	*
- ********************/
+volatile uint32_t tapouttmr;
+volatile uint32_t tapintmr;
+volatile uint32_t pingtmr;
+volatile uint32_t divpingtmr;
+volatile uint32_t eo1tmr;
+volatile uint32_t eo2tmr;
 volatile uint8_t timer_overflowed=0;
-uint8_t ping_state[4]={0,0,0,0};
-volatile uint8_t clk_time_changed[4]={0,0,0,0};
-volatile uint16_t adc_buffer[4];
-int16_t t_dacout[4]={0,0,0,0};
+volatile uint32_t ping_irq_timestamp=0, trigq_irq_timestamp=0;
+volatile uint8_t reset_nextping_flag=0;
+volatile uint8_t sync_to_ping_mode=1;
+volatile uint8_t trigq_jack_down=0;
+volatile uint8_t using_tap_clock=0;
+
+uint8_t eo1_high=0,eo2_high=0;
+
+
+volatile uint16_t adc_buffer[6];
+int16_t t_dacout[6]={0};
 
 
 void SysTick_Handler(void) {
 
- 	tmr_ping[0]++;
-	tmr_ping[1]++;
-	tmr_ping[2]++;
-	tmr_ping[3]++;
-	tmr_reset[0]++;
-	tmr_reset[1]++;
-	tmr_reset[2]++;
-	tmr_reset[3]++;
-	tmr_tapin[0]++;
-	tmr_tapin[1]++;
-	tmr_tapin[2]++;
-	tmr_tapin[3]++;
-	tmr_tapout[0]++;
-	tmr_tapout[1]++;
-	tmr_tapout[2]++;
-	tmr_tapout[3]++;
-
+	tapoutmr++;
+	tapintmr++;
+	pingtmr++;
+	divpingtmr++;
+	eo1tmr++;
+	eo2tmr++;
+	
 	timer_overflowed++;
 }
 

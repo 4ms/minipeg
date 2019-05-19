@@ -4,7 +4,7 @@
  
 #include "adc.h"
 
-void init_adc(uint16_t *ADC_Buffer)
+void init_adc(uint16_t *ADC_Buffer, uint8_t adc_buffer_size)
 {
 	DMA_InitTypeDef DMA_InitStructure;
 	ADC_InitTypeDef ADC_InitStructure;
@@ -18,7 +18,7 @@ void init_adc(uint16_t *ADC_Buffer)
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
 	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ADC_Buffer;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-	DMA_InitStructure.DMA_BufferSize = 6;
+	DMA_InitStructure.DMA_BufferSize = adc_buffer_size;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
