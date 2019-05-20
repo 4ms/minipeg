@@ -42,14 +42,6 @@
 #define EOF_OFF PIN_LOW(EOF_GPIO, EOF_pin)
 
 
-
-#define ENVPWM_GPIO GPIOB
-#define ENVPWM_pin GPIO_Pin_0
-#define ENVPWM_source GPIO_PinSource0
-#define ENVPWM_AF GPIO_AF_2 //todo: check this
-
-
-
 /*PEG v2
 
 #define PINGLED_pin PB1
