@@ -24,17 +24,19 @@ enum PwmOutputs {
 	PWM_PINGBUT_B,
 
 	NUM_PWMS
-}
+};
 
 struct PWMOutput pwm[NUM_PWMS];
 
 //Private:
 void init_pwm_out_pin(struct PWMOutput *p);
-void populate_pwm_pins(void);
+void populate_pwm_pins(struct PWMOutput *p);
 
 
 void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 {
+	uint8_t channel;
+
 	pwmval = pwmval >> 2; //12-bit to 10-bit
 
 	channel = pwm[pwmnum].timchan;
@@ -56,20 +58,20 @@ void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 
 
 
-void populate_pwm_pins(struct PWMOutput **p) {
-	p[PWM_ENV]->gpio = GPIOB;
-	p[PWM_ENV]->pinnum = 0;
-	p[PWM_ENV]->af = GPIO_AF_2;
-	p[PWM_ENV]->tim = TIM3;
-	p[PWM_ENV]->timchan = 3;
-	p[PWM_ENV]->period = 1024;
+void populate_pwm_pins(struct PWMOutput p[]) {
+	p[PWM_ENV].gpio = GPIOB;
+	p[PWM_ENV].pinnum = 0;
+	p[PWM_ENV].af = GPIO_AF_2;
+	p[PWM_ENV].tim = TIM3;
+	p[PWM_ENV].timchan = 3;
+	p[PWM_ENV].period = 1024;
 
-	p[PWM_EOFLED]->gpio = GPIOB;
-	p[PWM_EOFLED]->pinnum = 1;
-	p[PWM_EOFLED]->af = GPIO_AF_2;
-	p[PWM_EOFLED]->tim = TIM3;
-	p[PWM_EOFLED]->timchan = 4;
-	p[PWM_EOFLED]->period = 1024;
+	p[PWM_EOFLED].gpio = GPIOB;
+	p[PWM_EOFLED].pinnum = 1;
+	p[PWM_EOFLED].af = GPIO_AF_2;
+	p[PWM_EOFLED].tim = TIM3;
+	p[PWM_EOFLED].timchan = 4;
+	p[PWM_EOFLED].period = 1024;
 
 }
 

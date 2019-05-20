@@ -4,26 +4,7 @@
 
 #include "dig_inouts.h"
 
-struct PWMOutputPin{
-	GPIO_TypeDef 	*gpio;
-	uint8_t			pinnum;
-	uint8_t			af;
-};
 
-void init_pwm_out_pin(struct PWMOutputPin *p){
-	GPIO_InitTypeDef gpio;
-	GPIO_StructInit(&gpio);
-
-	gpio.GPIO_Mode = GPIO_Mode_AF;
-	gpio.GPIO_Speed = GPIO_Speed_50MHz;
-	gpio.GPIO_OType = GPIO_OType_PP;
-	gpio.GPIO_PuPd = GPIO_PuPd_UP;
-
-	gpio.GPIO_Pin = 1<<(p->pinnum);
-	GPIO_Init(p->gpio, &gpio);
-	GPIO_PinAFConfig(p->gpio, p->pinnum, p->af);
-
-}
 
 void init_dig_inouts(void){
 	GPIO_InitTypeDef gpio;
@@ -40,31 +21,11 @@ void init_dig_inouts(void){
 	gpio.GPIO_Pin = EOF_pin;	GPIO_Init(EOF_GPIO, &gpio);
 
 
-	//PWM output pins
-	gpio.GPIO_Mode = GPIO_Mode_AF;
-	gpio.GPIO_Speed = GPIO_Speed_50MHz;
-	gpio.GPIO_OType = GPIO_OType_PP;
-	gpio.GPIO_PuPd = GPIO_PuPd_UP;
-
-	gpio.GPIO_Pin = ENV_PWM_pin; GPIO_Init(ENV_PWM_GPIO, &gpio);
-	GPIO_PinAFConfig(ENV_PWM_GPIO, ENV_PWM_source, ENV_PWM_AF);
-
 	//Configure inputs
 	gpio.GPIO_Mode = GPIO_Mode_IN;
 	gpio.GPIO_Speed = GPIO_Speed_2MHz;
 	gpio.GPIO_PuPd = GPIO_PuPd_UP;
 
-	//TAP Buttons
-	RCC_AHBPeriphClockCmd(TAPBUT_RCC, ENABLE);
-	gpio.GPIO_Pin = TAPBUT1_pin | TAPBUT2_pin | TAPBUT3_pin | TAPBUT4_pin;	GPIO_Init(TAPBUT_GPIO, &gpio);
-
-	//Ping jacks
-	RCC_AHBPeriphClockCmd(PING_RCC, ENABLE);
-	gpio.GPIO_Pin = PING1_pin | PING2_pin | PING3_pin | PING4_pin;	GPIO_Init(PING_GPIO, &gpio);
-
-	//Reset jacks
-	RCC_AHBPeriphClockCmd(RESET_RCC, ENABLE);
-	gpio.GPIO_Pin = RESET1_pin | RESET2_pin | RESET3_pin;	GPIO_Init(RESET123_GPIO, &gpio);
 	gpio.GPIO_Pin = RESET4;	GPIO_Init(RESET4_GPIO, &gpio);
 
 }
