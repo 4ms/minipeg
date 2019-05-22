@@ -206,13 +206,7 @@ char BLUE_DETECT=0;
 
 
 void init_dig_inouts(void);
-void init_EXTI_inputs(void);
-void init_inputread_timer(void);
-
-void TAPLED_ON(uint8_t x);
-void TAPLED_OFF(uint8_t x);
-uint32_t TAPBUT(uint8_t x);
-uint32_t PING(uint8_t x);
-uint32_t RESETJACK(uint8_t x);
+// void init_EXTI_inputs(void);
+// void init_inputread_timer(void);
 
 #endif /* INOUTS_H_ */

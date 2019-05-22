@@ -24,9 +24,15 @@ void init_dig_inouts(void){
 	//Configure inputs
 	gpio.GPIO_Mode = GPIO_Mode_IN;
 	gpio.GPIO_Speed = GPIO_Speed_2MHz;
-	gpio.GPIO_PuPd = GPIO_PuPd_UP;
 
-	gpio.GPIO_Pin = RESET4;	GPIO_Init(RESET4_GPIO, &gpio);
+	gpio.GPIO_PuPd = GPIO_PuPd_UP;
+	gpio.GPIO_Pin = PINGBUT_pin;	GPIO_Init(PINGBUT_GPIO, &gpio);
+	gpio.GPIO_Pin = CYCLEBUT_pin;	GPIO_Init(CYCLEBUT_GPIO, &gpio);
+
+	gpio.GPIO_PuPd = GPIO_PuPd_DOWN;
+	gpio.GPIO_Pin = TRIGJACK_pin;	GPIO_Init(TRIGJACK_GPIO, &gpio);
+	gpio.GPIO_Pin = PINGJACK_pin;	GPIO_Init(PINGJACK_GPIO, &gpio);
+	gpio.GPIO_Pin = CYCLEJACK_pin;	GPIO_Init(CYCLEJACK_GPIO, &gpio);
 
 }
 
