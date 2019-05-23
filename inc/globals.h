@@ -52,3 +52,15 @@ enum envelopeShapes {
 	LIN75,
 	LOG
 }
+
+// static inline uint8_t diff(uint8_t a, uint8_t b);
+static inline uint8_t diff(uint8_t a, uint8_t b){
+	if (a>b) return (a-b);
+	else return (b-a);
+}
+
+// uint32_t diff32(uint32_t a, uint32_t b);
+static inline uint32_t diff32(uint32_t a, uint32_t b){
+	if (a>b) return (a-b);
+	else return(b-a);
+}

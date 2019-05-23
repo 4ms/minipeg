@@ -4,8 +4,6 @@
 
 #include "dig_inouts.h"
 
-
-
 void init_dig_inouts(void){
 	GPIO_InitTypeDef gpio;
 	GPIO_StructInit(&gpio);
@@ -36,73 +34,6 @@ void init_dig_inouts(void){
 
 }
 
-/**exti_ins.c**/
-
-void init_EXTI_inputs(void)
-{
-/*
- 	EXTI_InitTypeDef   EXTI_InitStructure;
-	NVIC_InitTypeDef   NVIC_InitStructure;
-
-	  //Set Priority Grouping mode to 2-bits for priority and 2-bits for sub-priority
-	  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-
-	  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-
-	  SYSCFG_EXTILineConfig(EXTI_PINGJACK_GPIO, EXTI_PINGJACK_pin);
-	  EXTI_InitStructure.EXTI_Line = EXTI_PINGJACK_line;
-	  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	  EXTI_Init(&EXTI_InitStructure);
-
-	  NVIC_InitStructure.NVIC_IRQChannel = EXTI_PINGJACK_IRQ;
-	  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
-	  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-	  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-
-	  NVIC_Init(&NVIC_InitStructure);
-*/
-
-}
-
-/*
-void EXTI2_IRQHandler(void)
-{
-  if(EXTI_GetITStatus(EXTI_PINGJACK_line) != RESET)
-  {
-	  //This should be software de-bounced, we can't rely on the external clock having a perfectly sharp rising edge...
-	  //Probably need to set the interrupt to record both edges, and ignore the up if a down happens shortly thereafter...?
-	  //Or grab PEG's ping code, which grabs the ping_tmr in the interrupt uses that to flag the main loop to check again if the jack is still high
-	  //..and if so, then it initiates the new timing information
-
-
-	  ping_button_state = 0;
-
-		if (ping_jack_state==1){ //second time we got a rising edge
-			ping_jack_state = 0;
-
-			//Log how much time has elapsed since last ping
-			ping_time=ping_tmr;
-
-			//Reset the timers
-			ping_ledbut_tmr=0;
-			clkout_trigger_tmr=0;
-
-			//Flag to update the divmult parameters
-			flag_ping_was_changed=1;
-		} else {
-
-			// This is the first rising edge, so start the ping timer
-			ping_tmr = 0;
-			ping_jack_state = 1;
-		}
-
-    EXTI_ClearITPendingBit(EXTI_PINGJACK_line);
-  }
-
-}
-*/
 
 
 

@@ -59,6 +59,20 @@ void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 
 
 void populate_pwm_pins(struct PWMOutput p[]) {
+	p[PWM_CYCLEBUT_G].gpio = GPIOB;
+	p[PWM_CYCLEBUT_G].pinnum = 4;
+	p[PWM_CYCLEBUT_G].af = GPIO_AF_2;
+	p[PWM_CYCLEBUT_G].tim = TIM3;
+	p[PWM_CYCLEBUT_G].timchan = 1;
+	p[PWM_CYCLEBUT_G].period = 1024;
+
+	p[PWM_ENVLED].gpio = GPIOA;
+	p[PWM_ENVLED].pinnum = 7;
+	p[PWM_ENVLED].af = GPIO_AF_2;
+	p[PWM_ENVLED].tim = TIM3;
+	p[PWM_ENVLED].timchan = 2;
+	p[PWM_ENVLED].period = 1024;
+
 	p[PWM_ENV].gpio = GPIOB;
 	p[PWM_ENV].pinnum = 0;
 	p[PWM_ENV].af = GPIO_AF_2;
@@ -73,6 +87,47 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_EOFLED].timchan = 4;
 	p[PWM_EOFLED].period = 1024;
 
+	p[PWM_PINGBUT_R].gpio = GPIOA;
+	p[PWM_PINGBUT_R].pinnum = 8;
+	p[PWM_PINGBUT_R].af = GPIO_AF_2;
+	p[PWM_PINGBUT_R].tim = TIM1;
+	p[PWM_PINGBUT_R].timchan = 1;
+	p[PWM_PINGBUT_R].period = 1024;
+
+	p[PWM_PINGBUT_G].gpio = GPIOA;
+	p[PWM_PINGBUT_G].pinnum = 9;
+	p[PWM_PINGBUT_G].af = GPIO_AF_2;
+	p[PWM_PINGBUT_G].tim = TIM1;
+	p[PWM_PINGBUT_G].timchan = 2;
+	p[PWM_PINGBUT_G].period = 1024;
+
+	p[PWM_PINGBUT_B].gpio = GPIOA;
+	p[PWM_PINGBUT_B].pinnum = 10;
+	p[PWM_PINGBUT_B].af = GPIO_AF_2;
+	p[PWM_PINGBUT_B].tim = TIM1;
+	p[PWM_PINGBUT_B].timchan = 3;
+	p[PWM_PINGBUT_B].period = 1024;
+
+	p[PWM_CYCLEBUT_R].gpio = GPIOA;
+	p[PWM_CYCLEBUT_R].pinnum = 11;
+	p[PWM_CYCLEBUT_R].af = GPIO_AF_2;
+	p[PWM_CYCLEBUT_R].tim = TIM1;
+	p[PWM_CYCLEBUT_R].timchan = 4;
+	p[PWM_CYCLEBUT_R].period = 1024;
+
+	p[PWM_5VENV].gpio = GPIOA;
+	p[PWM_5VENV].pinnum = 6;
+	p[PWM_5VENV].af = GPIO_AF_2;
+	p[PWM_5VENV].tim = TIM16;
+	p[PWM_5VENV].timchan = 1;
+	p[PWM_5VENV].period = 1024;
+
+	p[PWM_CYCLEBUT_B].gpio = GPIOB;
+	p[PWM_CYCLEBUT_B].pinnum = 7;
+	p[PWM_CYCLEBUT_B].af = GPIO_AF_2;
+	p[PWM_CYCLEBUT_B].tim = TIM17;
+	p[PWM_CYCLEBUT_B].timchan = 4;
+	p[PWM_CYCLEBUT_B].period = 1024;
 }
 
 void init_pwm_out_pin(struct PWMOutput *p) {
@@ -97,7 +152,7 @@ void init_pwm_tim(struct PWMOutput *p)
 
 	tim.TIM_Prescaler = 0;
 	tim.TIM_CounterMode = TIM_CounterMode_Up;
-	tim.TIM_Period = 1024;
+	tim.TIM_Period = p->period;
 	tim.TIM_ClockDivision = 0;
 	tim.TIM_RepetitionCounter = 0;
 

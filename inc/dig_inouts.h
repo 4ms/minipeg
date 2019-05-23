@@ -2,8 +2,7 @@
  * dig_inouts.h
  */
 
-#ifndef INOUTS_H_
-#define INOUTS_H_
+#pragma once
 
 #include <stm32f0xx.h>
 
@@ -40,6 +39,8 @@
 #define EOF_GPIO GPIOA
 #define EOF_ON PIN_HIGH(EOF_GPIO, EOF_pin)
 #define EOF_OFF PIN_LOW(EOF_GPIO, EOF_pin)
+
+
 
 
 /*PEG v2
@@ -155,12 +156,6 @@ char BLUE_DETECT=0;
 #define RESET4 ((RESET4_GPIO->IDR & RESET4_pin))
 */
 
-/*
-#define EXTI_CLOCK_GPIO EXTI_PortSourceGPIOB
-#define EXTI_CLOCK_pin EXTI_PinSource12
-#define EXTI_CLOCK_line EXTI_Line12
-#define EXTI_CLOCK_IRQ EXTI15_10_IRQn
-*/
 
 
 //OUTPUTS
@@ -206,7 +201,4 @@ char BLUE_DETECT=0;
 
 
 void init_dig_inouts(void);
-// void init_EXTI_inputs(void);
 // void init_inputread_timer(void);
-
-#endif /* INOUTS_H_ */
