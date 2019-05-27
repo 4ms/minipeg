@@ -11,27 +11,11 @@ struct PWMOutput{
 	uint32_t 		period;
 };
 
-enum PwmOutputs {
-	PWM_ENV,
-	PWM_ENVLED,
-	PWM_5VENV,
-	PWM_EOFLED,
-	PWM_CYCLEBUT_R,
-	PWM_CYCLEBUT_G,
-	PWM_CYCLEBUT_B,
-	PWM_PINGBUT_R,
-	PWM_PINGBUT_G,
-	PWM_PINGBUT_B,
-
-	NUM_PWMS
-};
-
 struct PWMOutput pwm[NUM_PWMS];
 
 //Private:
 void init_pwm_out_pin(struct PWMOutput *p);
 void populate_pwm_pins(struct PWMOutput *p);
-
 
 void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 {
@@ -52,11 +36,7 @@ void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 
 	else if (channel==3)
 		TIM_SetCompare4(pwm[pwmnum].tim, pwmval);
-
 }
-
-
-
 
 void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_CYCLEBUT_G].gpio = GPIOB;
@@ -80,12 +60,12 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_ENV].timchan = 3;
 	p[PWM_ENV].period = 1024;
 
-	p[PWM_EOFLED].gpio = GPIOB;
-	p[PWM_EOFLED].pinnum = 1;
-	p[PWM_EOFLED].af = GPIO_AF_2;
-	p[PWM_EOFLED].tim = TIM3;
-	p[PWM_EOFLED].timchan = 4;
-	p[PWM_EOFLED].period = 1024;
+	p[PWM_TRIGOUTLED].gpio = GPIOB;
+	p[PWM_TRIGOUTLED].pinnum = 1;
+	p[PWM_TRIGOUTLED].af = GPIO_AF_2;
+	p[PWM_TRIGOUTLED].tim = TIM3;
+	p[PWM_TRIGOUTLED].timchan = 4;
+	p[PWM_TRIGOUTLED].period = 1024;
 
 	p[PWM_PINGBUT_R].gpio = GPIOA;
 	p[PWM_PINGBUT_R].pinnum = 8;

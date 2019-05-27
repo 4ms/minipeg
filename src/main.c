@@ -3,43 +3,97 @@
 #include "dig_inouts.h"
 #include "pwm.h"
 #include "adc.h"
+#include "exti.h"
+#include "envelope.h"
+#include "flash_user.h"
 #include "log4096.h"
 
-
-
-/************************
- * Time keeping			*
- ************************/
 volatile uint32_t tapouttmr;
 volatile uint32_t tapintmr;
 volatile uint32_t pingtmr;
 volatile uint32_t divpingtmr;
-volatile uint32_t eoftmr;
+volatile uint32_t trigouttmr;
 volatile uint8_t timer_overflowed=0;
-
-volatile uint32_t ping_irq_timestamp=0
+volatile uint32_t ping_irq_timestamp=0;
 volatile uint32_t trig_irq_timestamp=0;
-volatile uint8_t reset_nextping_flag=0;
-volatile uint8_t sync_to_ping_mode=1;
+
+uint32_t last_tapin_time=0;
+uint16_t timer_overflowed_running_total=0;
+char use_timer_overflowed=0;
+uint32_t elapsed_time=0;
+uint32_t tapout_clk_time=0;
+
+uint32_t clk_time=0;
+uint32_t div_clk_time=0;
+uint32_t rise_time=0;
+uint32_t fall_time=0;
+uint32_t rise_inc=0;
+uint32_t fall_inc=0;
+
+char curve_rise=LIN;
+char curve_fall=LIN;
+char cur_curve=LIN;
+
+uint32_t async_phase_diff=0;
+uint8_t async_env_changed_shape=1;
+
+int8_t clock_divider_amount=1;
+int8_t new_clock_divider_amount=1;
+
+char envelope_running=0;
+enum envelopeStates env_state=WAIT;
+char next_env_state=WAIT;
+
+int32_t accum=0;
+int16_t t_dacout=0;
+int32_t new_accum=0;
+int16_t new_dacout=0;
+
+
+uint8_t trigout_high=0;
 volatile uint8_t trig_jack_down=0;
 volatile uint8_t using_tap_clock=0;
 
-uint8_t eof_high=0;
+volatile uint8_t reset_nextping_flag=0;
+volatile uint8_t sync_to_ping_mode=1;
+char reset_now_flag=0;
+char end_env_flag=0;
+char end_segment_flag=0;
+uint8_t update_risefallincs=0;
+char divmult_changed=0;
+uint8_t didnt_change_divmult=0;
+char tracking_changedrisefalls=0;
+int32_t transition_inc=0;
+int8_t transition_ctr=0;
+char outta_sync=0;
+uint32_t rise_per_clk=0;
+
+int8_t ping_div_ctr=0;
+char div_ping_led=0;
+char ready_to_start_async=0;
+char got_tap_clock=0;
+
+uint32_t entering_system_mode=0;
+uint8_t system_mode_cur=0;
+uint8_t initial_cycle_button_state=0;
+char update_cycle_button_now=0;
+
 
 //Settings
-char EOF_IS_TAPCLKOUT=0;
 char NO_FREERUNNING_PING=0;
-char EOF_IS_HALFRISE=0;
-char EOF_IS_TRIG=0;
 char LIMIT_SKEW=0;
 char ROLLOFF_PING=1;
 char TRIG_IS_ASYNC=1;
 char TRIG_CAN_SUSTAIN=1;
 
+char TRIGOUT_IS_ENDOFRISE = 1;
+char TRIGOUT_IS_ENDOFFALL = 0;
+char TRIGOUT_IS_HALFRISE = 0;
+char TRIGOUT_IS_TAPCLKOUT = 0;
+char TRIGOUT_IS_TRIG = 0;
 
-volatile uint16_t adc_buffer[6];
+volatile uint16_t adc_buffer[NUM_ADCS];
 int16_t t_dacout[6]={0};
-
 
 void SysTick_Handler(void)
 {
@@ -47,7 +101,7 @@ void SysTick_Handler(void)
 	tapintmr++;
 	pingtmr++;
 	divpingtmr++;
-	eortmr++;
+	trigouttmr++;
 	timer_overflowed++;
 }
 
@@ -57,648 +111,178 @@ void init_tmrs(void)
 	tapintmr=0;
 	pingtmr=0;
 	divpingtmr=0;
-	eortmr=0;
+	trigouttmr=0;
 }
-
-int8_t get_clk_div_nominal(uint8_t adc_val){
-	if (adc_val<=1) 	  // /8 <=0..2 (3)
-		return(8);
-	else if (adc_val<=10) // /7 <= 3..15 (13)
-		return(7);
-	else if (adc_val<=26) // /6 <= 16..33 (18)
-		return(6);
-	else if (adc_val<=46) // /5 <= 34..53 (20)
-		return(5);
-	else if (adc_val<=65) // /4 <= 54..78 (27)
-		return(4);
-	else if (adc_val<=85) // /3 <= 79..97 (19)
-		return(3);
-	else if (adc_val<=100) // /2 <= 98..114 (19)
-		return(2);
-	else if (adc_val<=118) // =1 <= 117..134 (18)
-		return(1);
-	else if (adc_val<=128) // x2 <= 135..154 (20)
-		return(-2);	
-	else if (adc_val<=150) // x3 <= 155..177 (23)
-		return(-3);	
-	else if (adc_val<=170) // x4 was 196 <= 178..200 (23)
-		return(-4);
-	else if (adc_val<=188) // x5 <= 201..220 (20)
-		return(-5);
-	else if (adc_val<=207) // x6 was 246 <= 221..242 ()
-		return(-6);
-	else if (adc_val<=220) // x7 was 251 <= 243..253 ()
-		return(-7);
-	else /*if (adc_val<=255)*/ // x8 <=253..255 (3)
-		return(-8);
-}
-
-uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time){
-	if (clock_divide_amount>1)
-		return clk_time*clock_divide_amount;
-	else if (clock_divide_amount<-1)
-		return clk_time/clock_divide_amount;
-	else
-		return clock_divide_amount;
-}
-
-
-uint32_t get_fall_time(uint8_t skew_adc, uint32_t div_clk_time){
-	uint32_t t,u;
-	uint8_t rev_skew;
-
-	if (!LIMIT_SKEW || (div_clk_time<(LIMIT_SKEW_TIME>>1)) ){
-		if (skew_adc==0)
-			return (768);
-
-		else if (skew_adc==1)
-			return(1024);
-
-		else if (skew_adc==2)
-			return(1280);
-
-		else if (skew_adc<=25){
-			t=(skew_adc) * (div_clk_time >> 8);
-			u=(skew_adc*skew_adc*64)+960;
-		
-			if (t<1280) t=1280;
-			if (t<u) return t;
-			else 
-			return u;
-
-		}
-		else if (skew_adc>=220) 
-			return(div_clk_time-256);
-		
-		else if (skew_adc>200){
-			t=(skew_adc) * (div_clk_time >> 8);
-			if (t>(div_clk_time-256)) t= div_clk_time-256;
-
-			rev_skew=255-skew_adc;
-			u=rev_skew*rev_skew*64;
-
-			if (u>(div_clk_time-256)){
-					return t;
-			} else {
-				u=div_clk_time-u;
-				if(t>u)	return t;
-				else return u;
-			}
-		}
-		else if ((skew_adc>101) && (skew_adc<=114))
-			return(div_clk_time>>1);
-		
-		else 
-			return ((skew_adc) * (div_clk_time >> 8));
-	}
-
-	else { //LIMIT_SKEW
-
-		if ((skew_adc>101) && (skew_adc<=114)){
-			return(div_clk_time>>1);
-		} else {
-			t=(skew_adc) * (div_clk_time >> 8);
-
-			if (t<LIMIT_SKEW_TIME) t=LIMIT_SKEW_TIME;
-			if (t>(div_clk_time-LIMIT_SKEW_TIME)) t=div_clk_time-LIMIT_SKEW_TIME;
-
-			return(t);
-		}
-	}
-}
-
-int16_t calc_curve(int16_t t_dacout, char cur_curve){
-	//Todo: crossfade between values, cur_curve should be 0..255
-	uint16_t t_loga, t_inv_loga;
-
-	t_loga=loga[t_dacout];
-	t_inv_loga=4095-loga[4095-t_dacout];
-
-	if (cur_curve==LIN)
-		return (t_dacout);
-	
-	else if (cur_curve==LOG)
-		return(t_loga);
-
-	else if (cur_curve==EXP)
-		return(t_inv_loga);
-
-	else if (cur_curve==EXP25){	//25% exp 75% lin
-		return((t_dacout >> 1) + (t_dacout >> 2) + (t_inv_loga >> 2));
-	}
-	else if (cur_curve==EXP50)		//50% exp 50% lin
-		return((t_inv_loga >> 1) + (t_dacout>>1));
-
-	else if (cur_curve==EXP75){	//75% exp 25% lin
-		return((t_inv_loga >> 1) + (t_inv_loga >> 2) + (t_dacout >> 2));
-	}
-
-	else if (cur_curve==LIN25){	//25% lin 75% log
-		return((t_loga >> 1) + (t_loga >> 2) + (t_dacout >> 2));
-	}
-	else if (cur_curve==LIN50)	//50% lin 50% log
-		return((t_loga >> 1) + (t_dacout>>1));
-
-	else if (cur_curve==LIN75){	//75% lin 25% log
-		return((t_dacout >> 1) + (t_dacout >> 2) + (t_loga >> 2));
-	}
-	else return(t_dacout);
-}
-
-
-void eo1_on(void);
-void eo2_on(void);
-void eo1_off(void);
-void eo2_off(void);
-
-void eor_on(void);
-void eor_off(void);
-void eof_on(void);
-void eof_off(void);
-void hr_on(void);
-void hr_off(void);
-void tapclkout_off(void);
-void tapclkout_on(void);
-
-void eo1_on(void){
-	if (!eo1_high){
-		EO1_ON;
-		eo1_high=1;
-		reset_eo1tmr();
-	}
-}
-
-void eo2_on(void){
-	if (!eo2_high){
-		EO2_ON;
-		eo2_high=1;
-		reset_eo2tmr();
-	}
-}
-
-void eo1_off(void){
-	if (!EO1_IS_TRIG && (eo1tmr>EO_GATE_TIME)) {
-		EO1_OFF;
-		reset_eo1tmr();
-	}
-	eo1_high=0;
-}
-void eo2_off(void){
-	if (!EO2_IS_TRIG && (eo2tmr>EO_GATE_TIME)) {
-		EO2_OFF;
-		reset_eo2tmr();
-	}
-	eo2_high=0;
-}
-
-inline void eor_on(void){
-	if (!EO_IS_HALFRISE)
-		eo_on();
-}
-inline void eor_off(void){
-	if (!EO_IS_HALFRISE)
-		eo_off();
-}
-
-inline void eof_on(void){
-	if (!EO_IS_TAPCLKOUT)
-		eo_on();
-}
-inline void eof_off(void){
-	if (!EO_IS_TAPCLKOUT)
-		eo_off();
-}
-
-inline void hr_on(void){
-	if (EO_IS_HALFRISE)
-		eo_on();
-}
-inline void hr_off(void){
-	if (EO_IS_HALFRISE)
-		eo_off();
-}
-
-inline void tapclkout_on(void){
-	if (EO_IS_TAPCLKOUT) 
-		eo_on();
-}
-inline void tapclkout_off(void){
-	if (EO_IS_TAPCLKOUT) 
-		eo_off();
-}
-
-
-
 
 int main(void)
 {
-
-
+	uint64_t time_tmp=0;
+	int8_t t_clock_divider_amount=1;
+	int8_t hys_clock_divider_amount=0;
+	int8_t c_d_a=1;
 
 	init_tmrs();
 	init_dig_inouts();
-	init_adc((uint16_t *)adc_buffer);
-
-	//delay();
+	init_adc(adc_buffer, NUM_ADCS);
 
 	init_pwm();
 	SysTick_Config(SystemCoreClock/10000); //1000 is 1ms ticks, 10000 is 100us ticks, 100000 is 10us ticks
 
 	init_EXTI_inputs();
+	init_rgb_leds();
+	init_palette();
+	
+	set_rgb_led(LED_PING, c_OFF);
+	set_rgb_led(LED_CYCLE, c_OFF);
+	set_mono_led(PWM_TRIGOUTLED, 0);
+	set_mono_led(PWM_ENVLED, 0);
+
+	eor_off();
+	eof_off();
+	hr_off();
+	tapclkout_off();
+
+	//read settings from flash
+
+	clk_time=0;
+	div_clk_time=0;
+	last_tapin_time=0;
+	sync_to_ping_mode=1;
+	accum=0;
+
+	while (1) {
+
+		read_taptempo();
+		read_trigjacks();
 
 
+	}
+
+}
+
+void read_taptempo(void)
+{
+	uint32_t now;
+	static uint8_t tapin_down=0;
+	static uint8_t tapin_up=0;
 
 
+	if (PINGBUT){
+		tapin_down=0;
+		now=tapintmr;
 
+		if (!(tapin_up)){
+			tapin_up=1;
+			using_tap_clock=1;
 
-
-
-
-	TAPLED_OFF(1);
-	TAPLED_OFF(2);
-	TAPLED_OFF(3);
-	TAPLED_OFF(0);
-	tapled_state[0]=0;
-	tapled_state[1]=0;
-	tapled_state[2]=0;
-	tapled_state[3]=0;
-
-	running[0]=0;
-	running[1]=0;
-	running[2]=0;
-	running[3]=0;
-
-	clk_time[0]=0;
-	clk_time[1]=0;
-	clk_time[2]=0;
-	clk_time[3]=0;
-
-	while (1){
-
-		if (++chan>=4) chan=0;
-
-		/***************** READ PING *********************
-		 *  On rising edge of input ping, record the time
-		 *  since the last ping. Save this into clk_time
-		 *************************************************/
-
-		if (TAPBUT(chan))
-		{
-			if (!(tapin_up[chan]))
-			{
-				if (running[chan]==1) running[chan]=2;
-				else if (running[chan]==0) running[chan]=1;
-
-				tapled_state[chan]=1;
-				TAPLED_ON(chan);
-				tapin_up[chan]=1;
-
-				clk_time[chan] = tmr_tapin[chan];
-
-				tmr_tapin[chan]=0;
-				tmr_tapout[chan]=0;
-				tmr_reset[chan]=0;
-				ready_to_reset[chan]=1;
-
-				clk_time_changed[chan]=1;
+			if (last_tapin_time && (diff32(last_tapin_time,now)<(last_tapin_time>>1)) ) {
+				clk_time=(now>>1) + (last_tapin_time>>1);
+			} else {
+				clk_time=now;
+				last_tapin_time=now;
 			}
-			//Check for long hold of tap button
-			if (tmr_tapin[chan] > HOLDTIMECLEAR)
-			{
-				if (running[chan])
-				{
-					TAPLED_OFF(chan);
-					tapled_state[chan]=0;
-				}
-				running[chan]=0;
-				//clk_time[chan]=0;
-			}
+
+			tapout_clk_time=clk_time;
+
+			tapintmr = 0;
+			tapouttmr = 0;
+
+			div_clk_time=get_clk_div_time(clock_divider_amount,clk_time);
+			fall_time=get_fall_time(skew_adc, div_clk_time);
+			rise_time=div_clk_time-fall_time;
+			rise_inc=udiv32(rise_time>>5);
+			fall_inc=udiv32(fall_time>>5);
+
+			didnt_change_divmult=NUM_ADC_CYCLES_BEFORE_TRANSITION; //force us to do a transition mode as if divmult or skew was changed
+			poll_user_input=USER_INPUT_POLL_TIME; //force us to enter the ADC block
+
 		} else {
-			if (tapin_up[chan])
-			{
-				tapin_up[chan]=0;
-				tapled_state[chan]=0;
-				TAPLED_OFF(chan);
-			}
-		}
+			if (now > HOLDTIMECLEAR){ //button has been down for more than 2 seconds
 
+				if (using_tap_clock){
+					env_state=WAIT;
+					envelope_running=0;
 
-		if (PING(chan))
-		{
-			if (!(ping_high[chan])){
-				running[chan]=2;
+					divpingtmr=0;
+					clk_time=0;
+					div_clk_time=0;
 
-				tapled_state[chan]=1;
-				TAPLED_ON(chan);
-				ping_high[chan]=1;
-
-				new_clk_time = tmr_ping[chan];
-
-				if (new_clk_time > clk_time[chan])	t32=new_clk_time - clk_time[chan];
-				else t32=clk_time[chan]-new_clk_time;
-
-				if (t32>10){ //better would be to make it a percent of clk_time
-					clk_time[chan] = new_clk_time;
-					clk_time_changed[chan]=1;
+					accum=0;
+					using_tap_clock=0;
+					timer_overflowed=1;
 				}
+				tapout_clk_time=0;
+				last_tapin_time=0;
+				tapouttmr=0;
 
-				tmr_ping[chan]=0;
-				tmr_tapout[chan]=0;
-				tmr_reset[chan]=0;
-				ready_to_reset[chan]=1;
+				set_rgb_led(PINGLED, c_OFF);
 
-			}
-		} else {
-			if (ping_high[chan]){
-				ping_high[chan]=0;
-				tapled_state[chan]=0;
-				TAPLED_OFF(chan);
-			}
-		}
-
-
-		//
-		// Flash the TAP button LED with a 50% duty cycle
-		// Reset Tap LED timer if it overflows the channel's period
-		//
-		if (running[chan]==2){
-			now = tmr_tapout[chan];
-			if (tapled_state[chan] && (now >= (clk_time[chan] >> 1)))
-			{
-				tapled_state[chan]=0;
-				TAPLED_OFF(chan);
+			} else {
+				set_rgb_led(PINGLED, c_WHITE);
 			}
 
-			if (now >= clk_time[chan]){
-				t32 = (now - clk_time[chan]);
-				tmr_tapout[chan]=t32;
-				tmr_reset[chan]=t32;
-
-				//tmr_tapout[chan]=0;
-
-				tapled_state[chan]=1;
-				ready_to_reset[chan]=1;
-				TAPLED_ON(chan);
-			}
 		}
-
-
-		if (clk_time_changed[chan])
-		{
-			clk_time_changed[chan]=0;
-
-			tmr_reset[chan]=0;
-
-			//clk_time changed, so see if reset_offset_time is still valid
-			//reset it to 0 if it's greater than the ping period or 2ms under the period
-			if ((reset_offset_time[chan]+20)>=clk_time[chan]) {
-				reset_offset_time[chan]=0;
-			}
-
-			ready_to_reset[chan]=1;
-
-			rise_time[chan] = calc_rise_time(skew_adc[chan], clk_time[chan]);
-			fall_time[chan] = clk_time[chan] - rise_time[chan];
-
-			rise_inc[chan] = (1<<28)/(rise_time[chan]);
-			fall_inc[chan] = (1<<28)/(fall_time[chan]);
-
+	}
+	else {
+		tapin_up=0;
+		if (!(tapin_down)){
+			PINGLEDLOW;
+			tapin_down=1;
 		}
-
-
-
-		if (RESETJACK(chan))
-		{
-			if (!reset_up[chan])
-			{
-			//	if (env_state!=WAIT){
-					reset_offset_time[chan]=tmr_reset[chan];
-
-					//see if the new reset_offset_time is still valid
-					//reset it to 0 if it's greater than the ping period or 2ms under the period
-					if ((reset_offset_time[chan]+20)>=clk_time[chan]) {
-						reset_offset_time[chan]=0;
-					}
-			//	}
-
-				reset_now_flag[chan]=1;
-				reset_up[chan]=1;
-				ready_to_reset[chan]=0;
-			}
-			else
-			{
-				if (env_state[chan]!=WAIT)
-					ready_to_reset[chan]=0; //disable resetting if RESET is held high "analog mode"
-			}
-		}
-		else
-		{
-			reset_up[chan]=0;
-		}
-
-
-
-		/*******************
-		*
-		* Reset Lock Point
-		*
-		********************/
-
-		t32=tmr_reset[chan];
-
-		if (ready_to_reset[chan] && (t32>reset_offset_time[chan]))
-		{
-			//If we haven't recently modulated skew, then force a reset
-			if (is_modulating_skew[chan]==0)
-				reset_now_flag[chan]=1;
-
-			if (env_state[chan]==WAIT)
-				reset_now_flag[chan]=1;
-			ready_to_reset[chan]=0;
-		}
-
-
-
-		/********************* READ SKEW ADC ************************
-		 * 		Read the ADC for the Skew value.       			*
-		 *		If it's changed more than ADC_DRIFT,    		*
-		 *		re-cacluate the rise and fall times     		*
-		 ********************************************************/
-
-		t16=adc_buffer[chan];
-		if (skew_adc[chan]>t16)
-			t=skew_adc[chan]-t16;
-		else
-			t=t16-skew_adc[chan];
-
-		if (t>ADC_DRIFT)
-		{
-			is_modulating_skew[chan]=SKEW_TRACKING_TIME;
-			skew_adc[chan]=adc_buffer[chan];
-
-			rise_time[chan] = calc_rise_time(skew_adc[chan], clk_time[chan]);
-			fall_time[chan]=clk_time[chan]-rise_time[chan];
-
-			rise_inc[chan]=(1<<28)/(rise_time[chan]);
-			fall_inc[chan]=(1<<28)/(fall_time[chan]);
-
-		}
-		else
-		{
-			if (is_modulating_skew[chan]>0)
-				is_modulating_skew[chan]--;
-		}
-
-
-		/**************** UPDATE THE ENVELOPE *******************
-		 *  Update only when timer has overflowed
-		 * -restart if needed
-		 * -calculate new position
-		 * -change curve step (RISE/FALL)
-		 ********************************************************/
-
-		if (chan==3)
-		{
-
-			t_of=timer_overflowed;
-
-			if (t_of /*|| reset_now_flag[i]*/)
-			{
-
-				for (i=0;i<4;i++)
-				{
-
-					// Handle the reset_now_flag by resetting the envelope
-					if (reset_now_flag[i])
-					{
-						reset_now_flag[i]=0;
-
-						env_state[i]=RISE;
-
-						if (skew_adc[i]<=PLUCKY_CURVE_ADC)
-						{
-							if (skew_adc[i]<=TRIGOUT_CURVE_ADC)
-								do_plucky_curve[i]=1;
-							else
-								do_plucky_curve[i]=skew_adc[i];
-						}
-						else
-						{
-							do_plucky_curve[i]=0;
-						}
-
-						accum[i]=0;
-						sample_ctr[i]=0;
-					}
-
-					t_dacout[i]=0;
-					sample_ctr[i]++;
-					switch (env_state[i])
-					{
-						case(RISE):
-							accum[i] += rise_inc[i] * t_of;
-							t_dacout[i]=accum[i]>>18;
-
-							if (t_dacout[i]>=1023)
-							{
-								accum[i]=1023<<18;
-								t_dacout[i]=1023;
-								env_state[i]=FALL;
-							}
-						break;
-
-
-						case(FALL):
-
-							if (accum[i] > (fall_inc[i] * t_of))
-							accum[i] -= fall_inc[i] * t_of;
-							else accum[i]=0;
-
-							t_dacout[i] = accum[i]>>18;
-
-							if ((t_dacout[i]<1) || (t_dacout[i]>1023)){
-								accum[i]=0;
-								t_dacout[i]=0;
-
-								#ifndef FREERUN
-									env_state[i]=WAIT;
-
-									//when modulating skew with a slower LFO:
-									//usually we don't get to env_state=RISE because of the clk_time comparison, but sometimes it's because is_mod_skew==0
-									if (RESETJACK(i) || (is_modulating_skew[i]>0)){
-
-										t32=tmr_reset[i]>>1; //half the time since the last ping
-
-										if (t32<clk_time[i])//if time since last ping is less than twice the LFO period
-										{
-											env_state[i]=RISE;
-
-											if (skew_adc[i]<=PLUCKY_CURVE_ADC)
-											{
-												if (skew_adc[i]<=TRIGOUT_CURVE_ADC)
-													do_plucky_curve[i]=1;
-												else
-													do_plucky_curve[i] = skew_adc[i];
-											}
-											else
-											{
-												do_plucky_curve[i]=0;
-											}
-											sample_ctr[i]=0;
-
-										}
-									}
-								#else
-									reset_now_flag[i]=1;
-								#endif
-								//clk_time_changed[i]=0;
-							}
-						break;
-
-						default:
-							env_state[i]=WAIT;
-
-							accum[i]=0;
-							t_dacout[i]=0;
-						break;
-
-					}
-
-					if (do_plucky_curve[i])
-					{
-						//TRIGOUT
-						if (do_plucky_curve[i]==1)
-						{
-							if (sample_ctr[i]<TRIGOUT_WIDTH)
-								t_dacout[i]=1023;
-							else
-								t_dacout[i]=1;
-						}
-						else //CURVEOUT
-						{
-							//square
-							t_dacout[i]=(((int32_t)t_dacout[i])*((int32_t)t_dacout[i]))>>10;
-
-							//cubic
-							if (do_plucky_curve[i]<=PLUCKY_CUBIC_ADC)
-								t_dacout[i]=(((int32_t)t_dacout[i])*((int32_t)t_dacout[i]))>>10;
-
-							if (do_plucky_curve[i]<=PLUCKY_QUADRATIC_ADC)
-								t_dacout[i]=(((int32_t)t_dacout[i])*((int32_t)t_dacout[i]))>>10;
-						}
-
-					}
-
-				} //loop i
-
-				timer_overflowed-=t_of;
-
-				TIM_SetCompare1(TIM1, t_dacout[0]);
-				TIM_SetCompare2(TIM1, t_dacout[1]);
-				TIM_SetCompare3(TIM1, t_dacout[2]);
-				TIM_SetCompare4(TIM1, t_dacout[3]);
-
-			} //if (t_of)
-		} //chan==3
 	}
 }
+
+void read_trigjacks(void)
+{
+	static uint8_t triga_jack_down=0;
+	
+	if (trig_irq_timestamp){ //this is set when the pinchange interrupt detects a TRIGQ jack going high
+		trig_irq_timestamp=0; //clear it so we only run this once per TRIGQ
+
+		if (TRIG_IS_ASYNC){
+			if (TRIGJACK){
+				if (!triga_jack_down){
+				
+					sync_to_ping_mode=0;
+					triga_jack_down=1;
+
+					reset_now_flag=1;
+					ready_to_start_async=0;
+					
+					if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+						outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
+
+					//start each envelope the same time after the divided clock
+					async_phase_diff=get_divpingtmr();
+					
+				}
+
+
+			}
+			else
+				triga_jack_down=0;
+
+		}
+		else {
+			/*
+			When Cycle is on, a TRIGQ should always re-phase (re-start) a divided-ping env.
+			When Cycle is off, if and only if QNT_REPHASES_WHEN_CYCLE_OFF is set, then a TRIGQ should rephase 
+			
+			If the envelope is not running, a TRIGQ should always start the envelope.
+			
+			ping_div_ctr=clock_divider_amount makes sure that a divided-ping envelope will start from its beginning on the next ping
+			*/
+			if (QNT_REPHASES_WHEN_CYCLE_OFF || CYCLE_BUT || !envelope_running){
+				ping_div_ctr=clock_divider_amount;
+				if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+					outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
+			}
+
+			tracking_changedrisefalls=0;
+
+			curve_rise=next_curve_rise;
+			curve_fall=next_curve_fall;
+		}
+
+}
+

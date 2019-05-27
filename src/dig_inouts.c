@@ -16,7 +16,7 @@ void init_dig_inouts(void){
 	gpio.GPIO_OType = GPIO_OType_PP;
 	gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
-	gpio.GPIO_Pin = EOF_pin;	GPIO_Init(EOF_GPIO, &gpio);
+	gpio.GPIO_Pin = TRIGOUT_pin;	GPIO_Init(TRIGOUT_GPIO, &gpio);
 
 
 	//Configure inputs

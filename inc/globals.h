@@ -26,8 +26,8 @@
 //9 is 1.1ms
 //4 is 500us
 //1 is 212us
-#define EO_TRIG_TIME 91
-#define EO_GATE_TIME 37
+#define TRIGOUT_TRIG_TIME 91
+#define TRIGOUT_MIN_GATE_TIME 37
 
 //The following are not user modifiable, change at your own risk!
 #define QNT_REPHASES_WHEN_CYCLE_OFF 0
@@ -39,7 +39,7 @@ enum envelopeStates {
 	SUSTAIN = 2,
 	FALL = 3,
 	TRANSITION = 4
-}
+};
 
 enum envelopeShapes {
 	EXP,
@@ -51,7 +51,18 @@ enum envelopeShapes {
 	LIN50,
 	LIN75,
 	LOG
-}
+};
+
+enum AdcChannels {
+	POT_DIVMULT,
+	CV_SHAPE,
+	CV_DIVMULT,
+	POT_SHAPE,
+	POT_OFFSET,
+	POT_SCALE,
+
+	NUM_ADCS
+};
 
 // static inline uint8_t diff(uint8_t a, uint8_t b);
 static inline uint8_t diff(uint8_t a, uint8_t b){
