@@ -1,6 +1,6 @@
 #pragma once
 
-#define SKEW_ADC_DRIFT 1
+#define ADC_DRIFT 1
 #define USER_INPUT_POLL_TIME 400
 #define DIV_ADC_HYSTERESIS 1
 
@@ -65,7 +65,7 @@ enum AdcChannels {
 };
 
 // static inline uint8_t diff(uint8_t a, uint8_t b);
-static inline uint8_t diff(uint8_t a, uint8_t b){
+static inline uint16_t diff(uint16_t a, uint16_t b){
 	if (a>b) return (a-b);
 	else return (b-a);
 }

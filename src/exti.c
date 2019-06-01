@@ -46,16 +46,17 @@ void EXTI4_15_IRQHandler(void)
 		EXTI_ClearITPendingBit(EXTI_CLOCK_PING_line);
 	}
 
-	if(EXTI_GetITStatus(EXTI_CLOCK_TRIG_line) != RESET)
-	{
-		if (TRIGJACK){
-			trig_irq_timestamp=1;
-			sync_to_ping_mode=1;
-			reset_nextping_flag=1;
-			trig_jack_down=1;
-		} else {
-			trig_jack_down=0;
-		}
-		EXTI_ClearITPendingBit(EXTI_CLOCK_TRIG_line);
-	}
+	// if(EXTI_GetITStatus(EXTI_CLOCK_TRIG_line) != RESET)
+	// {
+	// 	if (TRIGJACK){
+	// 		trig_irq_timestamp=1;
+	// 		// Todo: these were moved to read_trig_jacks(), is that working?
+	// 		// sync_to_ping_mode=1;
+	// 		// reset_nextping_flag=1;
+	// 		trig_jack_down=1;
+	// 	} else {
+	// 		trig_jack_down=0;
+	// 	}
+	// 	EXTI_ClearITPendingBit(EXTI_CLOCK_TRIG_line);
+	// }
 }

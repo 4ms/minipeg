@@ -3,6 +3,7 @@
 
 extern const uint16_t loga[4096];
 
+//todo: use calibrated break-points code from QCD
 int8_t get_clk_div_nominal(uint8_t adc_val){
 	if (adc_val<=1) 	  // /8 <=0..2 (3)
 		return(8);
@@ -46,23 +47,23 @@ uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time){
 }
 
 
-uint32_t get_fall_time(uint8_t skew_adc, uint32_t div_clk_time){
+uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time){
 	uint32_t t,u;
 	uint8_t rev_skew;
 
 	if (!LIMIT_SKEW || (div_clk_time<(LIMIT_SKEW_TIME>>1)) ){
-		if (skew_adc==0)
+		if (skew==0)
 			return (768);
 
-		else if (skew_adc==1)
+		else if (skew==1)
 			return(1024);
 
-		else if (skew_adc==2)
+		else if (skew==2)
 			return(1280);
 
-		else if (skew_adc<=25){
-			t=(skew_adc) * (div_clk_time >> 8);
-			u=(skew_adc*skew_adc*64)+960;
+		else if (skew<=25){
+			t=(skew) * (div_clk_time >> 8);
+			u=(skew*skew*64)+960;
 		
 			if (t<1280) t=1280;
 			if (t<u) return t;
@@ -70,14 +71,14 @@ uint32_t get_fall_time(uint8_t skew_adc, uint32_t div_clk_time){
 			return u;
 
 		}
-		else if (skew_adc>=220) 
+		else if (skew>=220) 
 			return(div_clk_time-256);
 		
-		else if (skew_adc>200){
-			t=(skew_adc) * (div_clk_time >> 8);
+		else if (skew>200){
+			t=(skew) * (div_clk_time >> 8);
 			if (t>(div_clk_time-256)) t= div_clk_time-256;
 
-			rev_skew=255-skew_adc;
+			rev_skew=255-skew;
 			u=rev_skew*rev_skew*64;
 
 			if (u>(div_clk_time-256)){
@@ -88,19 +89,19 @@ uint32_t get_fall_time(uint8_t skew_adc, uint32_t div_clk_time){
 				else return u;
 			}
 		}
-		else if ((skew_adc>101) && (skew_adc<=114))
+		else if ((skew>101) && (skew<=114))
 			return(div_clk_time>>1);
 		
 		else 
-			return ((skew_adc) * (div_clk_time >> 8));
+			return ((skew) * (div_clk_time >> 8));
 	}
 
 	else { //LIMIT_SKEW
 
-		if ((skew_adc>101) && (skew_adc<=114)){
+		if ((skew>101) && (skew<=114)){
 			return(div_clk_time>>1);
 		} else {
-			t=(skew_adc) * (div_clk_time >> 8);
+			t=(skew) * (div_clk_time >> 8);
 
 			if (t<LIMIT_SKEW_TIME) t=LIMIT_SKEW_TIME;
 			if (t>(div_clk_time-LIMIT_SKEW_TIME)) t=div_clk_time-LIMIT_SKEW_TIME;
@@ -110,13 +111,35 @@ uint32_t get_fall_time(uint8_t skew_adc, uint32_t div_clk_time){
 	}
 }
 
-int16_t calc_curve(int16_t t_dacout, char cur_curve){
-	//Todo: crossfade between values, cur_curve should be 0..255
-	uint16_t t_loga, t_inv_loga;
+// shape: 0..4095 (adc value)
+// returns skew: 0..255
+// returns next_curve_rise/fall: 0..255: expo/linear/log
+void calc_skew_and_curves(uint16_t shape, uint8_t *skew, &next_curve_rise, &next_curve_fall);
+{
 
-	t_loga=loga[t_dacout];
-	t_inv_loga=4095-loga[4095-t_dacout];
+}
 
+//linear: 0..4095
+//curve_amt: 0..255 amount of curve (0=100% expo, 127/128=linear 255=100% log)
+//returns: 0..4095 dac value
+int16_t calc_curve(int16_t linear, char cur_curve){
+
+	if (cur_curve==127 || cur_curve==128)
+		return linear;
+
+	else if (cur_curve<127) {
+		uint16_t t_loga=loga[linear];
+		return (linear*cur_curve + t_loga*(127-cur_curve)) >> 7;
+	}
+
+	else { //cur_curve>128
+		cur_curve-=128;
+		uint16_t t_inv_loga=4095-loga[4095-linear];
+		return (linear*(127-cur_curve) + t_inv_loga*cur_curve) >> 7;
+	}
+
+
+	/*
 	if (cur_curve==LIN)
 		return (t_dacout);
 	
@@ -146,4 +169,5 @@ int16_t calc_curve(int16_t t_dacout, char cur_curve){
 		return((t_dacout >> 1) + (t_dacout >> 2) + (t_loga >> 2));
 	}
 	else return(t_dacout);
+	*/
 }
