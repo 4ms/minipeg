@@ -47,7 +47,9 @@ uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time){
 }
 
 
-uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time){
+//skew: 0..255, 0 means fall=min
+uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)
+{
 	uint32_t t,u;
 	uint8_t rev_skew;
 
@@ -66,9 +68,10 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time){
 			u=(skew*skew*64)+960;
 		
 			if (t<1280) t=1280;
-			if (t<u) return t;
+			if (t<u)
+				return t;
 			else 
-			return u;
+				return u;
 
 		}
 		else if (skew>=220) 
@@ -111,33 +114,99 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time){
 	}
 }
 
+enum ShapeRegions {
+	RAMPUP_EXP2LIN,
+	RAMPUP2SYM_LIN2EXP,
+	SYM_EXP2LOG,
+	SYM2RAMPDOWN_LOG2LIN,
+	RAMPDOWN_EXP2LIN,
+
+	NUM_SHAPE_REGIONS
+};
+enum PureSkews {
+	RAMPUP = 0,
+	SYM = 127,
+	RAMPDOWN = 255
+};
+enum PureCurves {
+	EXPO = 0,
+	LINEAR = 127,
+	LOG = 255
+};
+#define SHAPE_REGION_SIZE 820 //(4095/NUM_SHAPE_REGIONS) + 1;
+
 // shape: 0..4095 (adc value)
 // returns skew: 0..255
-// returns next_curve_rise/fall: 0..255: expo/linear/log
-void calc_skew_and_curves(uint16_t shape, uint8_t *skew, &next_curve_rise, &next_curve_fall);
+// returns next_curve_rise and _fall: 0..255: expo/linear/log
+void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_rise, uint8_t *next_curve_fall)
 {
+	uint16_t shape_region = shape/SHAPE_REGION_SIZE;
+	uint16_t shape_variation = shape - shape_region*SHAPE_REGION_SIZE;
 
+	uint8_t var_127; //shape variation normalized to 0..127
+	var_127 = shape_variation/6;
+	if (var_127>127)
+		var_127 = 127;
+
+	// uint16_t var_255 = shape_variation/3;
+	// if (var_255>255)
+	// 	var_255 = 255;
+
+	switch (shape_region)
+	{
+		case RAMPUP_EXP2LIN:
+			*skew = RAMPUP;
+			*next_curve_rise = var_127;
+			*next_curve_fall = EXPO;
+			break;
+
+		case RAMPUP2SYM_LIN2EXP:
+			*skew = var_127;
+			*next_curve_rise = 127 - var_127;
+			*next_curve_fall = EXPO;
+			break;
+
+		case SYM_EXP2LOG:
+			*skew = SYM;
+			*next_curve_rise = var_127 * 2;
+			*next_curve_fall = var_127 * 2;
+			break;
+
+		case SYM2RAMPDOWN_LOG2LIN:
+			*skew = var_127+128;
+			*next_curve_rise = 255 - var_127*2;
+			*next_curve_fall = 255 - var_127;
+			break;
+
+		default:
+		case RAMPDOWN_EXP2LIN:
+			*skew = RAMPDOWN;
+			*next_curve_rise = EXPO;
+			*next_curve_fall = var_127;
+			break;
+
+	}
 }
 
-//linear: 0..4095
-//curve_amt: 0..255 amount of curve (0=100% expo, 127/128=linear 255=100% log)
+//phase: 0..4095
+//curve_amt: 0..255 amount of curve (0=100% expo, 127/128=linear=phase 255=100% log)
 //returns: 0..4095 dac value
-int16_t calc_curve(int16_t linear, char cur_curve){
-
+int16_t calc_curve(int16_t phase, char cur_curve)
+{
 	if (cur_curve==127 || cur_curve==128)
-		return linear;
+		return phase;
 
 	else if (cur_curve<127) {
-		uint16_t t_loga=loga[linear];
-		return (linear*cur_curve + t_loga*(127-cur_curve)) >> 7;
+		uint16_t t_loga=loga[phase];
+		return (phase*cur_curve + t_loga*(127-cur_curve)) >> 7;
 	}
 
 	else { //cur_curve>128
 		cur_curve-=128;
-		uint16_t t_inv_loga=4095-loga[4095-linear];
-		return (linear*(127-cur_curve) + t_inv_loga*cur_curve) >> 7;
+		uint16_t t_inv_loga=4095-loga[4095-phase];
+		return (phase*(127-cur_curve) + t_inv_loga*cur_curve) >> 7;
 	}
-
+}
 
 	/*
 	if (cur_curve==LIN)
@@ -170,4 +239,3 @@ int16_t calc_curve(int16_t linear, char cur_curve){
 	}
 	else return(t_dacout);
 	*/
-}

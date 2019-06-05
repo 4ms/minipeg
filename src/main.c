@@ -614,7 +614,8 @@ void update_adc_params(void)
 {
 	uint16_t tmp;
 
-	if (++poll_user_input>USER_INPUT_POLL_TIME) {
+	if (++poll_user_input>USER_INPUT_POLL_TIME)
+	{
 		poll_user_input=0;
 
 		update_risefallincs=0;
@@ -622,7 +623,8 @@ void update_adc_params(void)
 		tmp = adc_buffer[CV_SHAPE] + adc_buffer[POT_SHAPE];
 		if (tmp>4095) tmp=4095;
 		
-		if (diff(tmp, shape)>ADC_DRIFT){
+		if (diff(tmp, shape)>ADC_DRIFT)
+		{
 			shape=tmp;
 			update_risefallincs=1;
 			new_clock_divider_amount=clock_divider_amount;
@@ -630,102 +632,75 @@ void update_adc_params(void)
 			calc_skew_and_curves(shape, &skew, &next_curve_rise, &next_curve_fall);
 		}
 
-		else if (last_adc_channel==CURVE_adc){
+		tmp = adc_buffer[CV_DIVMULT] + adc_buffer[POT_DIVMULT];
+		if (tmp>4095) tmp=4095;
 
-			//don't need to check for drift or hysterias because shape is only updated at end of envelope curve
-			curve_adc=adch;
+		d = diff(tmp, clock_div);
 
-			if (curve_adc<1) {next_curve_rise=EXP;next_curve_fall=LOG;}
-			else if (curve_adc<=4) {next_curve_rise=EXP;next_curve_fall=LIN50;}
-
-			else if (curve_adc<=21) {next_curve_rise=EXP;next_curve_fall=LIN;}
-			else if (curve_adc<=35) {next_curve_rise=EXP;next_curve_fall=EXP50;}
-
-			else if (curve_adc<=51) {next_curve_rise=EXP;next_curve_fall=EXP;}
-			else if (curve_adc<=69) {next_curve_rise=EXP75;next_curve_fall=EXP75;}
-			else if (curve_adc<=79) {next_curve_rise=EXP50;next_curve_fall=EXP50;}
-			else if (curve_adc<=100) {next_curve_rise=EXP25;next_curve_fall=EXP25;}
-
-			else if (curve_adc<=120) {next_curve_rise=LIN;next_curve_fall=LIN;}
-			else if (curve_adc<=137) {next_curve_rise=LIN75;next_curve_fall=LIN75;}
-			else if (curve_adc<=149) {next_curve_rise=LIN50;next_curve_fall=LIN50;}
-			else if (curve_adc<=166) {next_curve_rise=LIN25;next_curve_fall=LIN25;}
-
-			else if (curve_adc<=183) {next_curve_rise=LOG;next_curve_fall=LOG;}
-			else if (curve_adc<=200) {next_curve_rise=LOG;next_curve_fall=LIN50;}
-			else if (curve_adc<=211) {next_curve_rise=LOG;next_curve_fall=LIN;}
-			else if (curve_adc<=223) {next_curve_rise=LOG;next_curve_fall=EXP50;}
-			else if (curve_adc<=255) {next_curve_rise=LOG;next_curve_fall=EXP;}
+		if ((env_state==TRANSITION) && envelope_running) {
+			temp_u8=0;  //do nothing
 		}
+		else if (d > DIV_ADC_HYSTERESIS)
+		{ 
+			clock_div=tmp;
+			new_clock_divider_amount=get_clk_div_nominal(clock_div);
 
-		else if (last_adc_channel==CLKDIV_adc){
-
-			d=diff(clock_div_adc, adch);
-
-			if ((env_state==TRANSITION) && envelope_running){
-				temp_u8=0;  //do nothing
+			if (clk_time) {
+				update_risefallincs=1;
+				divmult_changed=1;
+			} else {
+				clock_divider_amount=new_clock_divider_amount;
 			}
-			else if (d==0) {
-				temp_u8=0; //do nothing
 
-			} else if (d > DIV_ADC_HYSTERESIS){ //if the adc changed by more than the hysteresis, then we can just use the new adc value
+		} else if (d>0) { 
+			/* CHECK FOR HYSTERESIS
+			 If we moved into a faster divmult than the current divmult, add DIV_ADC_HYSTERESIS to the current adc (adding=slower)
+		 	 If we moved slower, subtract DIV_ADC_HYSTERESIS from the current adc (subtracting=faster)
+			 This will see if we moved far enough into the new divmult territory
 
-				clock_div_adc=adch;
-				new_clock_divider_amount=get_clk_div_nominal(clock_div_adc);
+			 If adc+/-HYSTER pushes us into a different divmult amount than the straigh measured adc, 
+			 then we haven't moved far enough into this divmult range, so we should reject the change.
+			 Otherwise, accept the new change and set update_risefallincs flag to 1
+			*/
 
-				if (clk_time){
+			clock_div=tmp;
+			t_clock_divider_amount=get_clk_div_nominal(clock_div); 
+
+			if (t_clock_divider_amount > clock_divider_amount)
+			{
+				if (clock_div <= (0xFF - DIV_ADC_HYSTERESIS)) //Make sure we don't overflow past 0xFF
+					temp_u8=clock_div + DIV_ADC_HYSTERESIS;
+				else temp_u8=0xFF;
+			
+				hys_clock_divider_amount=get_clk_div_nominal(temp_u8);
+			}
+			else if (t_clock_divider_amount < clock_divider_amount) {
+				if (clock_div_adc > DIV_ADC_HYSTERESIS)
+					temp_u8=clock_div_adc - DIV_ADC_HYSTERESIS;
+				else temp_u8=0;
+
+				hys_clock_divider_amount=get_clk_div_nominal(temp_u8);
+
+			} else {
+				hys_clock_divider_amount=99; //clock_divider_amount has not changed, do nothing
+			}
+
+			if (hys_clock_divider_amount == t_clock_divider_amount)
+			{
+				new_clock_divider_amount=t_clock_divider_amount;
+
+				if (clk_time) {
 					update_risefallincs=1;
 					divmult_changed=1;
-				}else{
-					clock_divider_amount=new_clock_divider_amount;
-				}
+				} else
+					clock_divider_amount=new_clock_divider_amount; 
+			}
 
-			} else { 
-				/* CHECK FOR HYSTERESIS
-				 If we moved into a faster divmult than the current divmult, add DIV_ADC_HYSTERESIS to the current adc (adding=slower)
-			 	 If we moved slower, subtract DIV_ADC_HYSTERESIS from the current adc (subtracting=faster)
-				 This will see if we moved far enough into the new divmult territory
+		} //if (d...)
 
-				 If adc+/-HYSTER pushes us into a different divmult amount than the straigh measured adc, 
-				 then we haven't moved far enough into this divmult range, so we should reject the change.
-				 Otherwise, accept the new change and set update_risefallincs flag to 1
-				*/
 
-				clock_div_adc=adch;
-				t_clock_divider_amount=get_clk_div_nominal(clock_div_adc); 
 
-				if (t_clock_divider_amount > clock_divider_amount){
 
-						if (clock_div_adc <= (0xFF - DIV_ADC_HYSTERESIS)) //Make sure we don't overflow past 0xFF
-							temp_u8=clock_div_adc + DIV_ADC_HYSTERESIS;
-						else temp_u8=0xFF;
-					
-						hys_clock_divider_amount=get_clk_div_nominal(temp_u8);
-			
-				} else if (t_clock_divider_amount < clock_divider_amount){
-						if (clock_div_adc > DIV_ADC_HYSTERESIS)
-							temp_u8=clock_div_adc - DIV_ADC_HYSTERESIS;
-						else temp_u8=0;
-
-						hys_clock_divider_amount=get_clk_div_nominal(temp_u8);
-
-				} else {
-					hys_clock_divider_amount=99; //clock_divider_amount has not changed, do nothing
-				}
-		
-				if (hys_clock_divider_amount == t_clock_divider_amount){
-					new_clock_divider_amount=t_clock_divider_amount;
-
-					if (clk_time){
-						update_risefallincs=1;
-						divmult_changed=1;
-					}else
-						clock_divider_amount=new_clock_divider_amount; 
-				}
-
-			} //if (d...)
-
-		} //if last_adc_channel ==...
 
 	/********************
 	 Update to the new envelope shape 
