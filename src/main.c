@@ -174,6 +174,8 @@ int main(void)
 		read_ping_clock();
 		update_adc_params();
 
+		handle_trigout_trigfall();
+		
 	}
 
 }
@@ -310,6 +312,7 @@ void read_trigjacks(void)
 void read_cycle_button(void)
 {
 	static uint8_t cycle_down = 0;
+	uint64_t time_tmp=0;
 
 	// Start the envelope mid-way in it's curve (must be calculated)
  	// Also if we change the divide amount while the envelope is running, we want to do the same calculation as
@@ -353,7 +356,7 @@ void read_cycle_button(void)
 
 
 						if (elapsed_time <= rise_time) {  //Are we on the rise?
-							time_tmp=((uint64_t)elapsed_time) * 4096;
+							time_tmp=((uint64_t)elapsed_time) << 12;
 							accum = time_tmp/rise_time;
 							accum<<=16;
 							env_state=RISE;
@@ -366,7 +369,7 @@ void read_cycle_button(void)
 						}
 						else {
 							elapsed_time=elapsed_time-rise_time;
-							time_tmp=((uint64_t)elapsed_time) * 4096; //accum = 4096 * elapsed_time/curve_time
+							time_tmp=((uint64_t)elapsed_time) << 12; //accum = 4096 * elapsed_time/curve_time
 							accum = 4096 - (time_tmp/fall_time);
 							accum<<=16;
 							env_state=FALL;
@@ -527,7 +530,7 @@ void read_ping_clock(void)
 			}
 		}
 
-		fall_time=get_fall_time(skew_adc, div_clk_time);
+		fall_time=get_fall_time(skew, div_clk_time);
 		rise_time=div_clk_time-fall_time;
 		rise_inc=udiv32(rise_time>>5);
 		fall_inc=udiv32(fall_time>>5);
@@ -584,7 +587,7 @@ void read_ping_clock(void)
 					using_tap_clock=1;				
 					clk_time=tapout_clk_time;
 					div_clk_time=get_clk_div_time(clock_divider_amount,clk_time);
-					fall_time=get_fall_time(skew_adc, div_clk_time);
+					fall_time=get_fall_time(skew, div_clk_time);
 					rise_time=div_clk_time-fall_time;
 					rise_inc=udiv32(rise_time>>5);
 					fall_inc=udiv32(fall_time>>5);
@@ -613,6 +616,7 @@ uint16_t shape, skew, curve;
 void update_adc_params(void)
 {
 	uint16_t tmp;
+	uint64_t time_tmp=0;
 
 	if (++poll_user_input>USER_INPUT_POLL_TIME)
 	{
@@ -632,8 +636,8 @@ void update_adc_params(void)
 			calc_skew_and_curves(shape, &skew, &next_curve_rise, &next_curve_fall);
 		}
 
-		tmp = adc_buffer[CV_DIVMULT] + adc_buffer[POT_DIVMULT];
-		if (tmp>4095) tmp=4095;
+		tmp = (adc_buffer[CV_DIVMULT] + adc_buffer[POT_DIVMULT]) >> 4;
+		if (tmp>255) tmp=255;
 
 		d = diff(tmp, clock_div);
 
@@ -652,7 +656,9 @@ void update_adc_params(void)
 				clock_divider_amount=new_clock_divider_amount;
 			}
 
-		} else if (d>0) { 
+		}
+		else if (d>0)
+		{ 
 			/* CHECK FOR HYSTERESIS
 			 If we moved into a faster divmult than the current divmult, add DIV_ADC_HYSTERESIS to the current adc (adding=slower)
 		 	 If we moved slower, subtract DIV_ADC_HYSTERESIS from the current adc (subtracting=faster)
@@ -674,7 +680,8 @@ void update_adc_params(void)
 			
 				hys_clock_divider_amount=get_clk_div_nominal(temp_u8);
 			}
-			else if (t_clock_divider_amount < clock_divider_amount) {
+			else if (t_clock_divider_amount < clock_divider_amount)
+			{
 				if (clock_div_adc > DIV_ADC_HYSTERESIS)
 					temp_u8=clock_div_adc - DIV_ADC_HYSTERESIS;
 				else temp_u8=0;
@@ -699,42 +706,36 @@ void update_adc_params(void)
 		} //if (d...)
 
 
-
-
-
-	/********************
-	 Update to the new envelope shape 
-	*******************/
+	// Update to the new envelope shape 
 		if (didnt_change_divmult) //if it's 0 then that means we already did a TRANSITION for the update_risefallincs
 			didnt_change_divmult++; //increment it so that we know how many ADC read cycles we've done since it was reset to 1
 									//(which happens when update_risefallincs is true)
 
-		if (update_risefallincs){
+		if (update_risefallincs)
+		{
 			didnt_change_divmult=1; //reset this to 1 which indicates we've made a change to risefallincs
 			if (envelope_running && sync_to_ping_mode)
 				tracking_changedrisefalls=1;
 			
 			async_env_changed_shape=1;
 
-			if (divmult_changed){
+			if (divmult_changed)
+			{
 				clock_divider_amount=new_clock_divider_amount;
 				
 				if (ping_div_ctr<0) ping_div_ctr=0;
 				if (ping_div_ctr>clock_divider_amount) ping_div_ctr=clock_divider_amount;
 
-				div_clk_time=get_clk_div_time(new_clock_divider_amount,clk_time);
-
+				div_clk_time=get_clk_div_time(new_clock_divider_amount, clk_time);
 			}
 
-			fall_time=get_fall_time(skew_adc, div_clk_time);
+			fall_time=get_fall_time(skew, div_clk_time);
 			rise_time=div_clk_time-fall_time;
 			rise_inc=udiv32(rise_time>>5);
 			fall_inc=udiv32(fall_time>>5);
 
 			update_risefallincs=0;
-
-
-		} //update_risefallincs
+		}
 
 			/************* SLEW LIMITED TRANSITION *************
 				Only do a slew-limited transition if we're running locking to ping (which is always, in some versions)
@@ -747,26 +748,29 @@ void update_adc_params(void)
 				 TRANSITION block until update_risefallincs goes 1 again
 			****************************************************/
 
-		if (/*envelope_running && */ div_clk_time && sync_to_ping_mode && (didnt_change_divmult>=NUM_ADC_CYCLES_BEFORE_TRANSITION)){
+		if (/*envelope_running && */ div_clk_time && sync_to_ping_mode && (didnt_change_divmult>=NUM_ADC_CYCLES_BEFORE_TRANSITION))
+		{
 			tracking_changedrisefalls=0;
 			didnt_change_divmult=0;	
 			divmult_changed=0;
 
 			if (using_tap_clock)
-				elapsed_time=get_tapouttmr();
+				elapsed_time=tapouttmr;
 			else
-				elapsed_time=get_pingtmr();
+				elapsed_time=pingtmr;
 
-			if (clock_divider_amount<=1){	
+			if (clock_divider_amount<=1) {	
 				while (elapsed_time > div_clk_time)
 					elapsed_time -= div_clk_time;
-			} else {
-				
-				if (envelope_running){
-
-					if (env_state==RISE){
+			}
+			else
+			{	
+				if (envelope_running)
+				{
+					if (env_state==RISE)
+					{
 						ping_div_ctr=0;
-						if (rise_time>clk_time) //otherwise rise_time<=clk_time, so leave ping_div_ctr=0
+						if (rise_time>clk_time)
 						{ 
 							rise_per_clk=rise_inc * (clk_time>>8);
 							if (rise_per_clk<32) rise_per_clk=32;
@@ -778,7 +782,8 @@ void update_adc_params(void)
 								if (accum>=temp_u32) ping_div_ctr++;
 							}
 						}
-					} else if (env_state==FALL){
+					} else if (env_state==FALL)
+					{
 						ping_div_ctr=clock_divider_amount-1;
 						if (fall_time>clk_time) //otherwise leave ping_div_ctr at the last step
 						{
@@ -797,10 +802,9 @@ void update_adc_params(void)
 					while (elapsed_time >= clk_time)
 						elapsed_time -= clk_time;
 					elapsed_time+=(ping_div_ctr*clk_time);
-
-
-				} else { //envelope not running
-
+				}
+				else //envelope not running
+				{ 
 					ping_div_ctr=clock_divider_amount; //the next ping will be the one that the envelope starts on
 					while (elapsed_time <= div_clk_time)
 						elapsed_time += clk_time;
@@ -808,9 +812,7 @@ void update_adc_params(void)
 				}
 			}
 
-			cli();
 			divpingtmr=elapsed_time>>8;
-			sei();
 			
 			if (envelope_running){
 				elapsed_time=elapsed_time + ((uint32_t)0x00008000); //offset to account for transition period: 128 timer overflows
@@ -818,17 +820,17 @@ void update_adc_params(void)
 					elapsed_time-=div_clk_time;
 
 				if (elapsed_time <= rise_time) {  //Are we on the rise?
-					time_t=((uint64_t)elapsed_time) << 12;
-					new_dacout = time_t/rise_time;
+					time_tmp=((uint64_t)elapsed_time) << 12;
+					new_dacout = time_tmp/rise_time;
 					new_accum = ((int32_t)new_dacout) <<16;
 					new_dacout=calc_curve(new_dacout,next_curve_rise);
 					next_env_state=RISE;
 				} else {
 					elapsed_time=elapsed_time-rise_time;
-					time_t=((uint64_t)elapsed_time) << 12; 
-					new_dacout = 4096 - (time_t/fall_time);
+					time_tmp=((uint64_t)elapsed_time) << 12; 
+					new_dacout = 4096 - (time_tmp/fall_time);
 					new_accum = ((int32_t)new_dacout) <<16;
-					new_dacout=calc_curve(new_dacout,next_curve_fall);
+					new_dacout=calc_curve(new_dacout, next_curve_fall);
 					next_env_state=FALL;
 				}
 
@@ -884,6 +886,5 @@ void update_adc_params(void)
 			}
 				
 		}
-
 	}
 }
