@@ -2,14 +2,14 @@
   ******************************************************************************
   * @file      startup_stm32f0xx.s
   * @author    MCD Application Team
-  * @version   V1.0.0
-  * @date      23-March-2012
-  * @brief     STM32F0xx Devices vector table for Atollic toolchain.
+  * @version   V1.5.0
+  * @date      05-December-2014
+  * @brief     STM32F030 Devices vector table for RIDE7 toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
   *                - Set the vector table entries with the exceptions ISR address
-  *                - Configure the clock system
+  *                - Configure the system clock 
   *                - Branches to main in the C library (which eventually
   *                  calls main()).
   *            After Reset the Cortex-M0 processor is in Thread mode,
@@ -17,7 +17,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT 2014 STMicroelectronics</center></h2>
   *
   * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
   * You may not use this file except in compliance with the License.
@@ -71,6 +71,27 @@ Reset_Handler:
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 
+/*Check if boot space corresponds to test memory*/
+ 
+    LDR R0,=0x00000004
+    LDR R1, [R0]
+    LSRS R1, R1, #24
+    LDR R2,=0x1F
+    CMP R1, R2
+    BNE ApplicationStart
+
+ /*SYSCFG clock enable*/
+
+    LDR R0,=0x40021018
+    LDR R1,=0x00000001
+    STR R1, [R0]
+
+/*Set CFGR1 register with flash memory remap at address 0*/
+    LDR R0,=0x40010000
+    LDR R1,=0x00000000
+    STR R1, [R0]
+
+ApplicationStart:
 /* Copy the data segment initializers from flash to SRAM */
   movs r1, #0
   b LoopCopyDataInit
@@ -103,9 +124,8 @@ LoopFillZerobss:
 
 /* Call the clock system intitialization function.*/
     bl  SystemInit
-/* Call static constructors */
-    bl __libc_init_array
-/* Call the application's entry point.*/
+    
+/* Call the applications entry point.*/
   bl main
   
 LoopForever:
@@ -142,6 +162,7 @@ Infinite_Loop:
 g_pfnVectors:
   .word _estack
   .word Reset_Handler
+
   .word NMI_Handler
   .word HardFault_Handler
   .word 0
@@ -156,24 +177,26 @@ g_pfnVectors:
   .word 0
   .word PendSV_Handler
   .word SysTick_Handler
+
+
   .word WWDG_IRQHandler
-  .word PVD_IRQHandler
+  .word 0  
   .word RTC_IRQHandler
   .word FLASH_IRQHandler
   .word RCC_IRQHandler
   .word EXTI0_1_IRQHandler
   .word EXTI2_3_IRQHandler
   .word EXTI4_15_IRQHandler
-  .word TS_IRQHandler
+  .word 0  
   .word DMA1_Channel1_IRQHandler
   .word DMA1_Channel2_3_IRQHandler
   .word DMA1_Channel4_5_IRQHandler
-  .word ADC1_COMP_IRQHandler 
+  .word ADC1_IRQHandler 
   .word TIM1_BRK_UP_TRG_COM_IRQHandler
   .word TIM1_CC_IRQHandler
-  .word TIM2_IRQHandler
+  .word 0  
   .word TIM3_IRQHandler
-  .word TIM6_DAC_IRQHandler
+  .word 0   
   .word 0  
   .word TIM14_IRQHandler
   .word TIM15_IRQHandler
@@ -186,10 +209,11 @@ g_pfnVectors:
   .word USART1_IRQHandler
   .word USART2_IRQHandler
   .word 0
-  .word CEC_IRQHandler
+  .word 0
   .word 0
   .word BootRAM          /* @0x108. This is for boot in RAM mode for 
                             STM32F0xx devices. */
+ 
 
 /*******************************************************************************
 *
@@ -216,10 +240,7 @@ g_pfnVectors:
 
   .weak WWDG_IRQHandler
   .thumb_set WWDG_IRQHandler,Default_Handler
-
-  .weak PVD_IRQHandler
-  .thumb_set PVD_IRQHandler,Default_Handler
-  
+ 
   .weak RTC_IRQHandler
   .thumb_set RTC_IRQHandler,Default_Handler
   
@@ -238,9 +259,6 @@ g_pfnVectors:
   .weak EXTI4_15_IRQHandler
   .thumb_set EXTI4_15_IRQHandler,Default_Handler
   
-  .weak TS_IRQHandler
-  .thumb_set TS_IRQHandler,Default_Handler
-  
   .weak DMA1_Channel1_IRQHandler
   .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
   
@@ -250,24 +268,18 @@ g_pfnVectors:
   .weak DMA1_Channel4_5_IRQHandler
   .thumb_set DMA1_Channel4_5_IRQHandler,Default_Handler
   
-  .weak ADC1_COMP_IRQHandler
-  .thumb_set ADC1_COMP_IRQHandler,Default_Handler
+  .weak ADC1_IRQHandler
+  .thumb_set ADC1_IRQHandler,Default_Handler
    
   .weak TIM1_BRK_UP_TRG_COM_IRQHandler
   .thumb_set TIM1_BRK_UP_TRG_COM_IRQHandler,Default_Handler
   
   .weak TIM1_CC_IRQHandler
   .thumb_set TIM1_CC_IRQHandler,Default_Handler
-  
-  .weak TIM2_IRQHandler
-  .thumb_set TIM2_IRQHandler,Default_Handler
-  
+    
   .weak TIM3_IRQHandler
   .thumb_set TIM3_IRQHandler,Default_Handler
-  
-  .weak TIM6_DAC_IRQHandler
-  .thumb_set TIM6_DAC_IRQHandler,Default_Handler
-  
+    
   .weak TIM14_IRQHandler
   .thumb_set TIM14_IRQHandler,Default_Handler
   
@@ -298,8 +310,6 @@ g_pfnVectors:
   .weak USART2_IRQHandler
   .thumb_set USART2_IRQHandler,Default_Handler
   
-  .weak CEC_IRQHandler
-  .thumb_set CEC_IRQHandler,Default_Handler
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

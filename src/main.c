@@ -12,12 +12,10 @@ Rename timer_overflowed to elapsed_ticks or ticks_since_envout
 #include "leds.h"
 #include "adc.h"
 #include "exti.h"
-#include "params.h"
 #include "trigout.h"
 #include "envelope_calcs.h"
 #include "envelope_out.h"
 #include "flash_user.h"
-#include "log4096.h"
 
 volatile uint32_t tapouttmr;
 volatile uint32_t tapintmr;
@@ -44,12 +42,12 @@ uint32_t fall_time=0;
 uint32_t rise_inc=0;
 uint32_t fall_inc=0;
 
-char curve_rise=127;
-char curve_fall=127;
-char cur_curve=127;
+uint8_t curve_rise=127;
+uint8_t curve_fall=127;
+uint8_t cur_curve=127;
 
-char next_curve_rise = 127;
-char next_curve_fall = 127;
+uint8_t next_curve_rise = 127;
+uint8_t next_curve_fall = 127;
 
 uint32_t async_phase_diff=0;
 uint8_t async_env_changed_shape=1;
@@ -64,9 +62,8 @@ int16_t t_dacout=0;
 int32_t new_accum=0;
 int16_t new_dacout=0;
 
-uint8_t cycle_but_on = 0; //Todo: replaces CYCLEBUT in peg.c
+uint8_t cycle_but_on = 0;
 
-uint8_t trigout_high=0;
 volatile uint8_t trig_jack_down=0;
 uint8_t trigq_down=0;
 uint8_t triga_down=0;
@@ -94,7 +91,8 @@ uint8_t initial_cycle_button_state=0;
 char update_cycle_button_now=0;
 
 uint16_t clock_div = 0;
-uint16_t shape, skew, curve;
+uint16_t shape;
+uint8_t skew, curve;
 uint16_t poll_user_input = 0;
 char divmult_changed=0;
 
@@ -655,6 +653,7 @@ void update_envelope(void)
 	uint64_t time_tmp;
 	uint32_t elapsed_time;
 	uint8_t end_segment_flag=0;
+	uint8_t end_env_flag=0;
 
 	if ((clk_time==0) || (div_clk_time==0))
 	{
@@ -840,8 +839,8 @@ void update_envelope(void)
 					}
 				break;
 
-
-
+				default:
+					break;
 			}
 		
 			t_dacout = calc_curve(t_dacout, cur_curve);
@@ -868,13 +867,11 @@ void update_envelope(void)
 				eor_off();	//should already be OFF, but make sure
 				hr_off();
 
-				end_env_flag = 0;
-
 				curve_rise = next_curve_rise;
 				curve_fall = next_curve_fall;
 
 				//Loop if needed
-				if (CYCLE_BUT || trigq_down || reset_nextping_flag)
+				if (cycle_but_on || trigq_down || reset_nextping_flag)
 				{
 					//Todo: SPEG code changed order here, check for race conditions
 					if (sync_to_ping_mode)
@@ -883,7 +880,7 @@ void update_envelope(void)
 					{
 						ready_to_start_async = 1;
 						if (async_env_changed_shape) //if we altered the waveshape, then re-calc the landing spot
-							async_phase_diff = get_divpingtmr();
+							async_phase_diff = divpingtmr;
 						async_env_changed_shape = 0;
 					}
 					envelope_running = 1;
@@ -917,6 +914,7 @@ void update_adc_params(uint8_t force_params_update)
 	uint16_t tmp, d;
 	uint64_t time_tmp = 0;
 	uint8_t temp_u8;
+	uint32_t temp_u32;
 	uint32_t elapsed_time;
 	uint8_t update_risefallincs;
 	int8_t t_clock_divider_amount=1;

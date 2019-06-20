@@ -1,27 +1,9 @@
-# put your *.o targets here, make should handle the rest!
-#SRCS = main.c system_stm32f0xx.c dig_inouts.c pwm.c adc.c
-
 SRCS  = $(wildcard src/*.c)
-
-# all the files will be generated with this name (main.elf, main.bin, main.hex, etc)
 BUILDDIR = build
 PROJ_NAME=$(BUILDDIR)/main
+STD_PERIPH_LIB=lib
+LDSCRIPT_INC=stm32/
 
-# Location of the Libraries folder from the STM32F0xx Standard Peripheral Library
-STD_PERIPH_LIB=Libraries
-
-# Location of the linker scripts
-LDSCRIPT_INC=Device/ldscripts
-
-# location of OpenOCD Board .cfg files (only used with 'make program')
-OPENOCD_BOARD_DIR=/usr/share/openocd/scripts/board
-
-# Configuration (cfg) file containing programming directives for OpenOCD
-OPENOCD_PROC_FILE=extra/stm32f0-openocd.cfg
-
-# that's it, no need to change anything below this line!
-
-###################################################
 
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
@@ -29,12 +11,10 @@ OBJDUMP=arm-none-eabi-objdump
 SIZE=arm-none-eabi-size
 
 CFLAGS  = -Wall -g -std=c99 -O3
-#CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m0 -march=armv6s-m
 CFLAGS += -mlittle-endian -mcpu=cortex-m0  -march=armv6-m -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Wl,--gc-sections -Wl,-Map=$(PROJ_NAME).map
-
-###################################################
+CFLAGS += --specs=nano.specs
 
 vpath %.c src
 vpath %.a $(STD_PERIPH_LIB)
@@ -43,15 +23,9 @@ ROOT=$(shell pwd)
 
 CFLAGS += -I inc -I $(STD_PERIPH_LIB) -I $(STD_PERIPH_LIB)/CMSIS/Device/ST/STM32F0xx/Include
 CFLAGS += -I $(STD_PERIPH_LIB)/CMSIS/Include -I $(STD_PERIPH_LIB)/STM32F0xx_StdPeriph_Driver/inc
-CFLAGS += -include $(STD_PERIPH_LIB)/stm32f0xx_conf.h
+CFLAGS += -include $(STD_PERIPH_LIB)/stm32f0xx_conf.h 
 
-SRCS += Device/startup_stm32f0xx.s # add startup file to build
-
-# need if you want to build with -DUSE_CMSIS
-#SRCS += stm32f0_discovery.c
-#SRCS += stm32f0_discovery.c stm32f0xx_it.c
-
-#OBJS = $(SRCS:.c=.o)
+SRCS += stm32/startup_stm32f0xx.s
 
 OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
 ###################################################
@@ -67,7 +41,7 @@ proj: 	$(PROJ_NAME).elf
 
 $(PROJ_NAME).elf: $(SRCS)
 	mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $^ -o $@ -L$(STD_PERIPH_LIB) -lstm32f0 -L$(LDSCRIPT_INC) -Tstm32f0.ld
+	$(CC) $(CFLAGS) $^ -o $@ -L$(STD_PERIPH_LIB) -lstm32f0 -L$(LDSCRIPT_INC) -Tstm32f030k6.ld
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
 	$(OBJDUMP) -St $(PROJ_NAME).elf >$(PROJ_NAME).lst
@@ -75,14 +49,10 @@ $(PROJ_NAME).elf: $(SRCS)
 
 program: $(PROJ_NAME).bin
 	st-flash --reset write ${PROJ_NAME}.bin 0x8000000
-
-program-op: $(PROJ_NAME).bin
-		openocd -f $(OPENOCD_BOARD_DIR)/stm32f0discovery.cfg -f $(OPENOCD_PROC_FILE) -c "stm_flash `pwd`/$(PROJ_NAME).bin" -c shutdown
 	
 clean:
 	find ./ -name '*~' | xargs rm -f
 	rm -f $(BUILDDIR)/*.o
-#	rm -f *.o
 	rm -f $(PROJ_NAME).elf
 	rm -f $(PROJ_NAME).hex
 	rm -f $(PROJ_NAME).bin
