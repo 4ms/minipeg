@@ -3,19 +3,6 @@
 
 rgbLed rgbleds[NUM_RGB_LEDS];
 
-struct RgbColor{
-	uint16_t r;
-	uint16_t g;
-	uint16_t b;
-};
-
-enum Palette {
-	c_OFF,
-	c_WHITE,
-
-	NUM_COLORS
-}
-
 struct RgbColor colors[NUM_COLORS];
 
 void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id)
@@ -51,4 +38,7 @@ void init_palette(void)
 	colors[c_WHITE].g = 1024;
 	colors[c_WHITE].b = 1024;
 
+	colors[c_ORANGE].r = 1024;
+	colors[c_ORANGE].g = 100;
+	colors[c_ORANGE].b = 100;
 }

@@ -1,4 +1,10 @@
+/*
+ * globals.h
+ */
+
 #pragma once
+
+#include <stm32f0xx.h>
 
 #define ADC_DRIFT 1
 #define USER_INPUT_POLL_TIME 400
@@ -41,26 +47,14 @@ enum envelopeStates {
 	TRANSITION = 4
 };
 
-enum envelopeShapes {
-	EXP,
-	EXP25,
-	EXP50,
-	EXP75,
-	LIN,
-	LIN25,
-	LIN50,
-	LIN75,
-	LOG
-};
-
-enum AdcChannels {
+enum AdcChannels
+{
 	POT_DIVMULT,
 	CV_SHAPE,
 	CV_DIVMULT,
 	POT_SHAPE,
 	POT_OFFSET,
 	POT_SCALE,
-
 	NUM_ADCS
 };
 

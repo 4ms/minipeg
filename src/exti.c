@@ -1,3 +1,4 @@
+#include "exti.h"
 #include "dig_inouts.h"
 
 extern volatile uint32_t pingtmr;
@@ -14,7 +15,7 @@ void init_EXTI_inputs(void)
 	NVIC_InitTypeDef   NVIC_InitStructure;
 
 	//Set Priority Grouping mode to 2-bits for priority and 2-bits for sub-priority
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	// NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
@@ -26,8 +27,7 @@ void init_EXTI_inputs(void)
 	EXTI_Init(&EXTI_InitStructure);
 
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI_CLOCK_PING_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
 	NVIC_Init(&NVIC_InitStructure);

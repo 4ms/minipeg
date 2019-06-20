@@ -1,7 +1,11 @@
-#include "envelope.h"
+
+#include "envelope_calcs.h"
 #include "log4096.h"
+#include "globals.h"
 
 extern const uint16_t loga[4096];
+extern char LIMIT_SKEW;
+
 
 //todo: use calibrated break-points code from QCD
 int8_t get_clk_div_nominal(uint8_t adc_val){
@@ -114,25 +118,7 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)
 	}
 }
 
-enum ShapeRegions {
-	RAMPUP_EXP2LIN,
-	RAMPUP2SYM_LIN2EXP,
-	SYM_EXP2LOG,
-	SYM2RAMPDOWN_LOG2LIN,
-	RAMPDOWN_EXP2LIN,
 
-	NUM_SHAPE_REGIONS
-};
-enum PureSkews {
-	RAMPUP = 0,
-	SYM = 127,
-	RAMPDOWN = 255
-};
-enum PureCurves {
-	EXPO = 0,
-	LINEAR = 127,
-	LOG = 255
-};
 #define SHAPE_REGION_SIZE 820 //(4095/NUM_SHAPE_REGIONS) + 1;
 
 // shape: 0..4095 (adc value)

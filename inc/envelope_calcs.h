@@ -1,6 +1,30 @@
+/*
+ * envelope_calcs.h
+ */
 
 #pragma once
+
 #include <stm32f0xx.h>
+
+enum ShapeRegions {
+	RAMPUP_EXP2LIN,
+	RAMPUP2SYM_LIN2EXP,
+	SYM_EXP2LOG,
+	SYM2RAMPDOWN_LOG2LIN,
+	RAMPDOWN_EXP2LIN,
+
+	NUM_SHAPE_REGIONS
+};
+enum PureSkews {
+	RAMPUP = 0,
+	SYM = 127,
+	RAMPDOWN = 255
+};
+enum PureCurves {
+	EXPO = 0,
+	LIN = 127,
+	LOG = 255
+};
 
 int8_t get_clk_div_nominal(uint8_t adc_val);
 uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time);

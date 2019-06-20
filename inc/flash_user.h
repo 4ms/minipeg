@@ -1,6 +1,10 @@
-/*******************
- *   FLASH        *
- *******************/
+/*
+ * flash_user.h
+ */
+
+#pragma once
+
+#include <stm32f0xx.h>
 
 #define FLASH_SET 0b10101010
 #define FLASH_CLEAR 0b00000000

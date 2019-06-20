@@ -1,5 +1,16 @@
+#include "trigout.h"
+#include "globals.h"
+#include "dig_inouts.h"
+
 uint8_t trigout_high=0;
 extern volatile uint32_t trigouttmr;
+
+extern char TRIGOUT_IS_ENDOFRISE;
+extern char TRIGOUT_IS_ENDOFFALL;
+extern char TRIGOUT_IS_HALFRISE;
+extern char TRIGOUT_IS_TAPCLKOUT;
+extern char TRIGOUT_IS_TRIG;
+
 
 //Private:
 void trigout_on(void);

@@ -1,4 +1,9 @@
+/*
+ * leds.h
+ */
+
 #pragma once
+
 #include <stm32f0xx.h>
 
 enum RgbLedList {
@@ -13,6 +18,22 @@ typedef struct rgbLed {
 	uint8_t g_pwm_id;
 	uint8_t b_pwm_id;
 } rgbLed;
+
+struct RgbColor{
+	uint16_t r;
+	uint16_t g;
+	uint16_t b;
+};
+
+enum Palette {
+	c_OFF,
+	c_WHITE,
+	c_ORANGE,
+	
+	NUM_COLORS
+};
+
+
 
 	// PWM_ENVLED,
 	// PWM_EOFLED,
@@ -30,3 +51,5 @@ typedef struct rgbLed {
 
 void init_rgb_leds(void);
 void init_palette(void);
+void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id);
+void set_mono_led(uint8_t led_id, uint16_t brightness);
