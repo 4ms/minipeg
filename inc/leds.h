@@ -53,3 +53,4 @@ void init_rgb_leds(void);
 void init_palette(void);
 void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id);
 void set_mono_led(uint8_t led_id, uint16_t brightness);
+void test_leds(void);

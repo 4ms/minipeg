@@ -5,6 +5,46 @@ rgbLed rgbleds[NUM_RGB_LEDS];
 
 struct RgbColor colors[NUM_COLORS];
 
+void test_leds(void)
+{
+	update_pwm(0, PWM_PINGBUT_R);
+	update_pwm(0, PWM_PINGBUT_G);
+	update_pwm(0, PWM_PINGBUT_B);
+	update_pwm(0, PWM_CYCLEBUT_R);
+	update_pwm(0, PWM_CYCLEBUT_G);
+	update_pwm(0, PWM_CYCLEBUT_B);
+	update_pwm(0, PWM_ENV);
+	update_pwm(0, PWM_ENVLED);
+	update_pwm(0, PWM_5VENV);
+	update_pwm(0, PWM_TRIGOUTLED);
+
+	update_pwm(100, PWM_PINGBUT_R);
+	update_pwm(200, PWM_PINGBUT_R);
+
+	update_pwm(300, PWM_PINGBUT_G);
+	update_pwm(400, PWM_PINGBUT_G);
+
+	update_pwm(500, PWM_PINGBUT_B);
+	update_pwm(600, PWM_PINGBUT_B);
+
+	update_pwm(700, PWM_CYCLEBUT_R);
+	update_pwm(800, PWM_CYCLEBUT_R);
+
+	update_pwm(900, PWM_CYCLEBUT_G);	//controls ENVLED
+	update_pwm(1000, PWM_CYCLEBUT_G);	
+
+	update_pwm(900, PWM_CYCLEBUT_B);	//nothing?
+	update_pwm(1000, PWM_CYCLEBUT_B);
+
+	update_pwm(100, PWM_ENV);			//controls TRIGOUTLED
+	update_pwm(200, PWM_ENVLED);		//nothing?
+	update_pwm(300, PWM_5VENV);			//nothing
+	update_pwm(400, PWM_TRIGOUTLED);	//nothing
+
+	
+}
+
+
 void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id)
 {
 	update_pwm(colors[color_id].r, rgbleds[rgb_led_id].r_pwm_id);

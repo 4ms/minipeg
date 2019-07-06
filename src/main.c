@@ -161,7 +161,9 @@ int main(void)
 	init_EXTI_inputs();
 	init_rgb_leds();
 	init_palette();
-	
+
+	test_leds();
+		
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 	set_mono_led(PWM_TRIGOUTLED, 0);

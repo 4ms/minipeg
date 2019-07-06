@@ -21,67 +21,67 @@ void update_pwm(uint32_t pwmval, uint8_t pwmnum)
 {
 	uint8_t channel;
 
-	pwmval = pwmval >> 2; //12-bit to 10-bit
+	//pwmval = pwmval >> 2; //12-bit to 10-bit
 
 	channel = pwm[pwmnum].timchan;
 
-	if (channel==0)
+	if (channel==1)
 		TIM_SetCompare1(pwm[pwmnum].tim, pwmval);
 
-	else if (channel==1)
+	else if (channel==2)
 		TIM_SetCompare2(pwm[pwmnum].tim, pwmval);
 
-	else if (channel==2)
+	else if (channel==3)
 		TIM_SetCompare3(pwm[pwmnum].tim, pwmval);
 
-	else if (channel==3)
+	else if (channel==4)
 		TIM_SetCompare4(pwm[pwmnum].tim, pwmval);
 }
-
+	
 void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_CYCLEBUT_G].gpio = GPIOB;
 	p[PWM_CYCLEBUT_G].pinnum = 4;
-	p[PWM_CYCLEBUT_G].af = GPIO_AF_2;
+	p[PWM_CYCLEBUT_G].af = GPIO_AF_1;
 	p[PWM_CYCLEBUT_G].tim = TIM3;
 	p[PWM_CYCLEBUT_G].timchan = 1;
 	p[PWM_CYCLEBUT_G].period = 1024;
 
 	p[PWM_ENVLED].gpio = GPIOA;
 	p[PWM_ENVLED].pinnum = 7;
-	p[PWM_ENVLED].af = GPIO_AF_2;
+	p[PWM_ENVLED].af = GPIO_AF_1;
 	p[PWM_ENVLED].tim = TIM3;
 	p[PWM_ENVLED].timchan = 2;
 	p[PWM_ENVLED].period = 1024;
 
 	p[PWM_ENV].gpio = GPIOB;
 	p[PWM_ENV].pinnum = 0;
-	p[PWM_ENV].af = GPIO_AF_2;
+	p[PWM_ENV].af = GPIO_AF_1;
 	p[PWM_ENV].tim = TIM3;
 	p[PWM_ENV].timchan = 3;
 	p[PWM_ENV].period = 1024;
 
 	p[PWM_TRIGOUTLED].gpio = GPIOB;
 	p[PWM_TRIGOUTLED].pinnum = 1;
-	p[PWM_TRIGOUTLED].af = GPIO_AF_2;
+	p[PWM_TRIGOUTLED].af = GPIO_AF_1;
 	p[PWM_TRIGOUTLED].tim = TIM3;
 	p[PWM_TRIGOUTLED].timchan = 4;
 	p[PWM_TRIGOUTLED].period = 1024;
 
-	p[PWM_PINGBUT_R].gpio = GPIOA;
+	p[PWM_PINGBUT_R].gpio = GPIOA; // PWM_PINGBUT_R is actually PWM_CYCLEBUT_G
 	p[PWM_PINGBUT_R].pinnum = 8;
 	p[PWM_PINGBUT_R].af = GPIO_AF_2;
 	p[PWM_PINGBUT_R].tim = TIM1;
 	p[PWM_PINGBUT_R].timchan = 1;
 	p[PWM_PINGBUT_R].period = 1024;
 
-	p[PWM_PINGBUT_G].gpio = GPIOA;
+	p[PWM_PINGBUT_G].gpio = GPIOA; // PWM_PINGBUT_G is actually PWM_CYCLEBUT_R
 	p[PWM_PINGBUT_G].pinnum = 9;
 	p[PWM_PINGBUT_G].af = GPIO_AF_2;
 	p[PWM_PINGBUT_G].tim = TIM1;
 	p[PWM_PINGBUT_G].timchan = 2;
 	p[PWM_PINGBUT_G].period = 1024;
 
-	p[PWM_PINGBUT_B].gpio = GPIOA;
+	p[PWM_PINGBUT_B].gpio = GPIOA; // PWM_PINGBUT_B is actually PWM_PINGBUT_R
 	p[PWM_PINGBUT_B].pinnum = 10;
 	p[PWM_PINGBUT_B].af = GPIO_AF_2;
 	p[PWM_PINGBUT_B].tim = TIM1;
@@ -97,7 +97,7 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 
 	p[PWM_5VENV].gpio = GPIOA;
 	p[PWM_5VENV].pinnum = 6;
-	p[PWM_5VENV].af = GPIO_AF_2;
+	p[PWM_5VENV].af = GPIO_AF_5;
 	p[PWM_5VENV].tim = TIM16;
 	p[PWM_5VENV].timchan = 1;
 	p[PWM_5VENV].period = 1024;
@@ -106,7 +106,7 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_CYCLEBUT_B].pinnum = 7;
 	p[PWM_CYCLEBUT_B].af = GPIO_AF_2;
 	p[PWM_CYCLEBUT_B].tim = TIM17;
-	p[PWM_CYCLEBUT_B].timchan = 4;
+	p[PWM_CYCLEBUT_B].timchan = 1;
 	p[PWM_CYCLEBUT_B].period = 1024;
 }
 
@@ -138,7 +138,7 @@ void init_pwm_tim(struct PWMOutput *p)
 
 	TIM_TimeBaseInit(p->tim, &tim);
 
-	tim_oc.TIM_OCMode = TIM_OCMode_PWM2; //Mode 2 means pin is low until OC value reached
+	tim_oc.TIM_OCMode = TIM_OCMode_PWM1; //Mode 2 means pin is low until OC value reached
 	tim_oc.TIM_OutputState = TIM_OutputState_Enable;
 	tim_oc.TIM_OutputNState = TIM_OutputNState_Enable;
 	tim_oc.TIM_OCPolarity = TIM_OCPolarity_Low;
