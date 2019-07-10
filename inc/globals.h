@@ -4,14 +4,31 @@
 
 #pragma once
 
+#define TRIGDEBUGMODE
+
+
 #include <stm32f0xx.h>
+#include "adc.h"
+#include "cal_detent.h"
+#include "delay.h"
+#include "dig_inouts.h"
+#include "envelope_calcs.h"
+#include "envelope_out.h"
+#include "exti.h"
+#include "flash_user.h"
+#include "leds.h"
+#include "pwm.h"
+#include "trigout.h"
+#include "buttons.h"
+#include "analog_conditioning.h"
 
-#define ADC_DRIFT 1
+
+#define ADC_DRIFT 16
 #define USER_INPUT_POLL_TIME 400
-#define DIV_ADC_HYSTERESIS 1
+#define DIV_ADC_HYSTERESIS 16
 
-#define HOLDTIMECLEAR 4800000 //3000000 is about 1.25s
-#define LIMIT_SKEW_TIME 15000 //12000 is 5ms
+#define HOLDTIMECLEAR 20000 //4800000
+#define LIMIT_SKEW_TIME 50
 #define NUM_ADC_CYCLES_BEFORE_TRANSITION 10 //10 is about 100ms
 
 //SYSTEM_MODE_HOLD_TIME: how long the ping button must be held down to enter System Mode
@@ -37,7 +54,7 @@
 
 //The following are not user modifiable, change at your own risk!
 #define QNT_REPHASES_WHEN_CYCLE_OFF 0
-#define CYCLE_REPHASES_DIV_PING 1 
+#define CYCLE_REPHASES_DIV_PING 1
 
 enum envelopeStates {
 	WAIT = 0,
@@ -47,25 +64,14 @@ enum envelopeStates {
 	TRANSITION = 4
 };
 
-enum AdcChannels
-{
-	POT_DIVMULT,
-	CV_SHAPE,
-	CV_DIVMULT,
-	POT_SHAPE,
-	POT_OFFSET,
-	POT_SCALE,
-	NUM_ADCS
-};
 
-// static inline uint8_t diff(uint8_t a, uint8_t b);
 static inline uint16_t diff(uint16_t a, uint16_t b){
 	if (a>b) return (a-b);
 	else return (b-a);
 }
 
-// uint32_t diff32(uint32_t a, uint32_t b);
 static inline uint32_t diff32(uint32_t a, uint32_t b){
 	if (a>b) return (a-b);
 	else return(b-a);
 }
+

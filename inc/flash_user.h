@@ -16,3 +16,7 @@
 #define HALFRISE_FLASHADDR 19
 #define TRIGOUT_TRIG_FLASHADDR 21
 #define ASYNC_SUSTAIN_FLASHADDR 20
+
+void write_calibration(uint8_t num_bytes, uint8_t *data);
+void read_calibration(uint8_t num_bytes, uint8_t *data);
+uint8_t is_calibrated(void);

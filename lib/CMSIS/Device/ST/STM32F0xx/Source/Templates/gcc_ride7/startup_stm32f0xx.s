@@ -104,7 +104,7 @@ LoopFillZerobss:
 /* Call the clock system intitialization function.*/
     bl  SystemInit
     
-/* Call the application's entry point.*/
+/* Call the applications entry point.*/
   bl main
   
 LoopForever:

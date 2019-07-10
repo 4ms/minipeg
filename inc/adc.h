@@ -6,6 +6,5 @@
 
 #include <stm32f0xx.h>
 
-#define MIN_ADC_CHANGE 10
 
 void init_adc(uint16_t *ADC_Buffer, uint8_t adc_buffer_size);

@@ -1,5 +1,4 @@
-#include "exti.h"
-#include "dig_inouts.h"
+#include "globals.h"
 
 extern volatile uint32_t pingtmr;
 extern volatile uint32_t ping_irq_timestamp;

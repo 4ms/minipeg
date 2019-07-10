@@ -2,37 +2,29 @@
 /*
 todo: 
 Rename t_dacout to segment_phase
-Rename timer_overflowed to elapsed_ticks or ticks_since_envout
 */
 
 #include "stm32f0xx_conf.h"
 #include "globals.h"
-#include "dig_inouts.h"
-#include "pwm.h"
-#include "leds.h"
-#include "adc.h"
-#include "exti.h"
-#include "trigout.h"
-#include "envelope_calcs.h"
-#include "envelope_out.h"
-#include "flash_user.h"
 
 volatile uint32_t tapouttmr;
 volatile uint32_t tapintmr;
 volatile uint32_t pingtmr;
 volatile uint32_t divpingtmr;
 volatile uint32_t trigouttmr;
-volatile uint8_t timer_overflowed=0;
+volatile uint8_t ticks_since_envout=0;
 volatile uint32_t ping_irq_timestamp=0;
 volatile uint32_t trig_irq_timestamp=0;
+
+__IO uint32_t systmr=0;
 
 int8_t clock_divider_amount=1;
 uint8_t didnt_change_divmult=0;
 
 
 uint32_t last_tapin_time=0;
-uint16_t timer_overflowed_running_total=0;
-char use_timer_overflowed=0;
+uint16_t ticks_since_envout_running_total=0; //debug watch variable
+char use_ticks_since_envout=0;
 uint32_t tapout_clk_time=0;
 
 uint32_t clk_time=0;
@@ -57,10 +49,15 @@ char envelope_running=0;
 enum envelopeStates env_state=WAIT;
 uint8_t next_env_state=WAIT;
 
-int32_t accum=0;
-int16_t t_dacout=0;
-int32_t new_accum=0;
-int16_t new_dacout=0;
+uint32_t accum=0;
+uint16_t t_dacout=0;
+uint32_t new_accum=0;
+uint16_t new_dacout=0;
+
+uint16_t adc_dma_buffer[NUM_ADCS];
+
+extern button_t buttons[NUM_BUTTONS];
+extern analog_t analog[NUM_ADCS];
 
 uint8_t cycle_but_on = 0;
 
@@ -78,7 +75,6 @@ char tracking_changedrisefalls=0;
 int32_t transition_inc=0;
 int8_t transition_ctr=0;
 char outta_sync=0;
-uint32_t rise_per_clk=0;
 
 int8_t ping_div_ctr=0;
 char div_ping_led=0;
@@ -90,7 +86,6 @@ uint8_t system_mode_cur=0;
 uint8_t initial_cycle_button_state=0;
 char update_cycle_button_now=0;
 
-uint16_t clock_div = 0;
 uint16_t shape;
 uint8_t skew, curve;
 uint16_t poll_user_input = 0;
@@ -98,19 +93,19 @@ char divmult_changed=0;
 
 
 //Settings
-char TRIG_IS_ASYNC=0;
+char TRIG_IS_ASYNC=1;
+char ASYNC_CAN_SUSTAIN=0;
+
 char NO_FREERUNNING_PING=0;
 char LIMIT_SKEW=0;
-char ROLLOFF_PING=1;
-char ASYNC_CAN_SUSTAIN=1;
+// char ROLLOFF_PING=1;
 
-char TRIGOUT_IS_ENDOFRISE = 1;
-char TRIGOUT_IS_ENDOFFALL = 0;
+char TRIGOUT_IS_ENDOFRISE = 0;
+char TRIGOUT_IS_ENDOFFALL = 1;
 char TRIGOUT_IS_HALFRISE = 0;
 char TRIGOUT_IS_TAPCLKOUT = 0;
 char TRIGOUT_IS_TRIG = 0;
 
-uint16_t adc_buffer[NUM_ADCS];
 
 //main.h
 void read_taptempo(void);
@@ -119,19 +114,19 @@ void read_cycle_button(void);
 void start_envelopes(void);
 void update_tap_clock(void);
 void read_ping_clock(void);
-void start_envelopes(void);
 void update_envelope(void);
 void update_adc_params(uint8_t force_params_update);
 
 
 void SysTick_Handler(void)
 {
+	systmr++;
 	tapouttmr++;
 	tapintmr++;
 	pingtmr++;
 	divpingtmr++;
 	trigouttmr++;
-	timer_overflowed++;
+	ticks_since_envout++;
 }
 
 void init_tmrs(void)
@@ -153,19 +148,24 @@ int main(void)
 
 	init_tmrs();
 	init_dig_inouts();
-	init_adc(adc_buffer, NUM_ADCS);
+	init_adc(adc_dma_buffer, NUM_ADCS);
+	init_analog_conditioning();
 
 	init_pwm();
 	SysTick_Config(SystemCoreClock/10000); //1000 is 1ms ticks, 10000 is 100us ticks, 100000 is 10us ticks
 
 	init_EXTI_inputs();
+	init_buttons();
+
 	init_rgb_leds();
 	init_palette();
 
-	test_leds();
-		
+	//test_leds();
+	//test_rgb_color(adc_buffer[5], adc_buffer[5], adc_buffer[5]);
+
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
+
 	set_mono_led(PWM_TRIGOUTLED, 0);
 	set_mono_led(PWM_ENVLED, 0);
 
@@ -182,12 +182,17 @@ int main(void)
 	sync_to_ping_mode=1;
 	accum=0;
 
+	init_env_calcs();
+
 	while (1)
 	{
+		DEBUGON;
 		read_taptempo();
 		read_trigjacks();
 		read_cycle_button();
 		start_envelopes();
+		DEBUGOFF;
+
 		update_tap_clock();
 		read_ping_clock();
 		update_adc_params(force_params_update);
@@ -201,21 +206,27 @@ int main(void)
 
 }
 
+void calc_rise_fall_incs(void)
+{
+	fall_time=get_fall_time(skew, div_clk_time);
+	rise_time=div_clk_time-fall_time;
+	rise_inc=udiv32(rise_time); //udiv32(rise_time>>5); 
+	fall_inc=udiv32(fall_time);
+}
+
+
 void read_taptempo(void)
 {
 	uint32_t now;
-	static uint8_t tapin_down=0;
-	static uint8_t tapin_up=0;
 
-
-	if (PINGBUT)
+	if (buttons[PING_BUTTON].state == 1)
 	{
-		tapin_down=0;
 		now=tapintmr;
 
-		if (!(tapin_up))
+		if (buttons[PING_BUTTON].edge == 1)
 		{
-			tapin_up=1;
+			buttons[PING_BUTTON].edge = 0;
+
 			using_tap_clock=1;
 
 			if (last_tapin_time && (diff32(last_tapin_time,now)<(last_tapin_time>>1)) ) {
@@ -231,15 +242,12 @@ void read_taptempo(void)
 			tapouttmr = 0;
 
 			div_clk_time=get_clk_div_time(clock_divider_amount,clk_time);
-			fall_time=get_fall_time(skew, div_clk_time);
-			rise_time=div_clk_time-fall_time;
-			rise_inc=udiv32(rise_time>>5);
-			fall_inc=udiv32(fall_time>>5);
+			calc_rise_fall_incs();
 
 			didnt_change_divmult=NUM_ADC_CYCLES_BEFORE_TRANSITION; //force us to do a transition mode as if divmult or skew was changed
 			force_params_update = 1;
-
-		} else {
+		}
+		else {
 			if (now > HOLDTIMECLEAR)
 			{ //button has been down for more than 2 seconds
 				if (using_tap_clock)
@@ -253,27 +261,25 @@ void read_taptempo(void)
 
 					accum=0;
 					using_tap_clock=0;
-					timer_overflowed=1;
+					ticks_since_envout=1;
 				}
 				tapout_clk_time=0;
 				last_tapin_time=0;
 				tapouttmr=0;
 
 				set_rgb_led(LED_PING, c_OFF);
-
 			} else {
 				set_rgb_led(LED_PING, c_WHITE);
 			}
+		}
+	}
 
-		}
+	if (buttons[PING_BUTTON].edge == -1)
+	{
+		set_rgb_led(LED_PING, c_OFF);
+		buttons[PING_BUTTON].edge = 0;
 	}
-	else {
-		tapin_up=0;
-		if (!(tapin_down)) {
-			set_rgb_led(LED_PING, c_OFF);
-			tapin_down=1;
-		}
-	}
+
 }
 
 void read_trigjacks(void)
@@ -315,7 +321,7 @@ void read_trigjacks(void)
 				if (QNT_REPHASES_WHEN_CYCLE_OFF || cycle_but_on || !envelope_running)
 				{
 					ping_div_ctr=clock_divider_amount;
-					if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+					if (rise_time>0x10)  //was 0x1000 do an immediate fall if rise_time is fast
 						outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
 				}
 
@@ -345,7 +351,7 @@ void read_cycle_button(void)
  	// if the CYCLE button was pressed (i.e. calculate where the envelope should be so that it "hits" zero at the
 	// proper divided/multed clock time)
 
-	if (CYCLEBUT) {
+	if (buttons[CYCLE_BUTTON].state) {
 		if (!cycle_down) {
 			cycle_down=1;
 
@@ -360,11 +366,8 @@ void read_cycle_button(void)
 					else
 						elapsed_time=pingtmr;
 
-					div_clk_time=get_clk_div_time(clock_divider_amount,clk_time);
-					fall_time=get_fall_time(skew, div_clk_time);
-					rise_time=div_clk_time-fall_time;
-					rise_inc=udiv32(rise_time>>5);
-					fall_inc=udiv32(fall_time>>5);
+					div_clk_time=get_clk_div_time(clock_divider_amount, clk_time);
+					calc_rise_fall_incs();
 
 					//Start the envelope at whatever point it would be in if it were already running
 
@@ -383,8 +386,9 @@ void read_cycle_button(void)
 
 						if (elapsed_time <= rise_time) {  //Are we on the rise?
 							time_tmp = ((uint64_t)elapsed_time) << 12;
-							accum = time_tmp/rise_time;
-							accum <<= 16;
+							accum = time_tmp/rise_time; // elapsed_time/rise_time is the % of the rise phase already elapsed, and <<12 gives us the 0..4095 dac value
+							accum <<= 19;
+							//FixMe: Why aren't we setting t_dacout here?
 							env_state = RISE;
 							curve_rise = next_curve_rise;
 						
@@ -395,9 +399,10 @@ void read_cycle_button(void)
 						}
 						else {
 							elapsed_time = elapsed_time-rise_time;
-							time_tmp = ((uint64_t)elapsed_time) << 12; //accum = 4096 * elapsed_time/curve_time
+							time_tmp = ((uint64_t)elapsed_time) << 12;
 							accum = 4096 - (time_tmp/fall_time);
-							accum <<= 16;
+							accum <<= 19;
+							//FixMe: Why are we setting t_dacout here?
 							env_state = FALL;
 							curve_fall = next_curve_fall;
 
@@ -462,8 +467,9 @@ void start_envelopes(void)
 
 		if ((!div_ping_led) && (now>div_clk_time)) {
 
-			now=(now-div_clk_time)>>8;
-			divpingtmr=now;
+			// now=(now-div_clk_time)>>8;
+			// divpingtmr=now;
+			divpingtmr = now-div_clk_time;
 
 			set_rgb_led(LED_PING, c_WHITE);
 			div_ping_led=1;
@@ -477,10 +483,8 @@ void start_envelopes(void)
 			if (sync_to_ping_mode) { 
 				if (reset_nextping_flag || cycle_but_on || trigq_down ) {		
 					if (!tracking_changedrisefalls) {
-							reset_now_flag=1;
-							reset_nextping_flag=0;
-							// if ((t_dacout>64) && !outta_sync)
-							// 	temp_u8=0;//do nothing
+						reset_now_flag=1;
+						reset_nextping_flag=0;
 					}
 				}  
 				ping_div_ctr=clock_divider_amount; //make sure it restarts the next ping
@@ -562,10 +566,7 @@ void read_ping_clock(void)
 			}
 		}
 
-		fall_time = get_fall_time(skew, div_clk_time);
-		rise_time = div_clk_time-fall_time;
-		rise_inc = udiv32(rise_time>>5);
-		fall_inc = udiv32(fall_time>>5);
+		calc_rise_fall_incs();
 
 		if (cycle_but_on || trigq_down || reset_nextping_flag || envelope_running) {
 
@@ -612,14 +613,12 @@ void read_ping_clock(void)
 				{
 					using_tap_clock = 1;				
 					clk_time = tapout_clk_time;
+
 					div_clk_time = get_clk_div_time(clock_divider_amount,clk_time);
-					fall_time = get_fall_time(skew, div_clk_time);
-					rise_time = div_clk_time-fall_time;
-					rise_inc = udiv32(rise_time>>5);
-					fall_inc = udiv32(fall_time>>5);
+					calc_rise_fall_incs();
 
 					reset_now_flag = 1;
-					timer_overflowed = 1;
+					ticks_since_envout = 1;
 				}
 				else
 				{
@@ -663,10 +662,10 @@ void update_envelope(void)
 		outta_sync=0;
 	}
 
-	if (timer_overflowed)
+	if (ticks_since_envout)
 	{
-		use_timer_overflowed = timer_overflowed;
-		timer_overflowed = 0;
+		use_ticks_since_envout = ticks_since_envout;
+		ticks_since_envout = 0;
 
 		if (reset_now_flag)
 		{ 	
@@ -675,7 +674,7 @@ void update_envelope(void)
 			if (t_dacout<0x0010)
 				outta_sync=0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
-			if ((!envelope_running || (outta_sync==0) || (div_clk_time<0x8000)))
+			if ((!envelope_running || (outta_sync==0) || (div_clk_time<0x80))) //was div_clk_time<0x8000
 			{
 				envelope_running=1;
 				env_state=RISE;
@@ -688,7 +687,7 @@ void update_envelope(void)
 				env_state=TRANSITION;
 				//envelope_running=1; ///shouldn't we have this ??
 				
-				elapsed_time=0x8000; //0x8000 offset to account for transition period: 64/128 timer overflows (6/13ms)
+				elapsed_time=0x80; //was 0x8000. offset to account for transition period: 64/128 timer overflows (6/13ms)
 				if (elapsed_time>div_clk_time)
 					elapsed_time-=div_clk_time;
 
@@ -696,39 +695,43 @@ void update_envelope(void)
 				{
 					time_tmp=((uint64_t)elapsed_time) << 12;
 					new_dacout = time_tmp/rise_time;
-					new_accum = ((int32_t)new_dacout) << 16;
-					new_dacout=calc_curve(new_dacout, next_curve_rise);
+					new_accum = new_dacout << 19;
+					new_dacout = calc_curve(new_dacout, next_curve_rise);
 					next_env_state=RISE;
 				}
 				else
 				{
 					elapsed_time = elapsed_time-rise_time;
-					time_tmp = ((uint64_t)elapsed_time) << 12; 
-					new_dacout = 4096 - (time_tmp/fall_time);
-					new_accum = ((int32_t)new_dacout) <<16;
+					time_tmp = ((uint64_t)elapsed_time) << 12;
+					new_dacout = time_tmp/fall_time;
+					if (new_dacout < 4096)
+						new_dacout = 4096 - new_dacout;
+					else
+						new_dacout = 0;
+					new_accum = new_dacout << 19;
 					new_dacout = calc_curve(new_dacout,next_curve_fall);
 					next_env_state=FALL;
 				}
 
 				//Todo: just do signed int subtraction?
 				if (new_dacout > t_dacout)
-					transition_inc = ((int32_t)(new_dacout - t_dacout)) << 9;//9
+					transition_inc = (new_dacout - t_dacout) << 9;
 				else {
-					transition_inc = ((int32_t)(t_dacout - new_dacout)) << 9;//9
+					transition_inc = (t_dacout - new_dacout) << 9;
 					transition_inc = -1 * transition_inc;
 				}
 
 				cur_curve=LIN;
-				accum=((int32_t)t_dacout)<<16;
+				accum=t_dacout<<19;
 
-				transition_ctr=128;//128
+				transition_ctr=128;
 			}
 
 			curve_rise=next_curve_rise;
 			curve_fall=next_curve_fall;
 
 			reset_nextping_flag=0;
-			timer_overflowed_running_total=0;
+			ticks_since_envout_running_total=0;
 		}
 
 		if (envelope_running)
@@ -738,13 +741,13 @@ void update_envelope(void)
 			switch (env_state)
 			{
 				case (RISE):
-					timer_overflowed_running_total += use_timer_overflowed;
-					accum += rise_inc*use_timer_overflowed;
-					t_dacout = accum>>16;
+					ticks_since_envout_running_total += use_ticks_since_envout;
+					accum += rise_inc*use_ticks_since_envout;
+					t_dacout = accum>>19;
 
-					if (accum > 0x0FFF0000)
+					if (accum > 0x7FF80000)
 					{
-						accum = 0x0FFF0000; 
+						accum = 0x7FF80000;
 						t_dacout = 0x0FFF;
 						if (triga_down && ASYNC_CAN_SUSTAIN)
 							end_segment_flag = SUSTAIN;
@@ -769,7 +772,7 @@ void update_envelope(void)
 
 					if (triga_down && ASYNC_CAN_SUSTAIN)
 					{
-						accum=0x0FFF0000;
+						accum=0x7FF80000;
 						async_env_changed_shape=1;
 					} else {
 						end_segment_flag=FALL;
@@ -777,11 +780,11 @@ void update_envelope(void)
 				break;
 
 				case (FALL):
-					timer_overflowed_running_total += use_timer_overflowed;
-					accum -= fall_inc*use_timer_overflowed;
-					t_dacout=accum>>16;
+					ticks_since_envout_running_total += use_ticks_since_envout;
+					accum -= fall_inc*use_ticks_since_envout;
+					t_dacout=accum>>19;
 
-					if ((accum<0x00010000) || (accum>0x0FFF0000))
+					if ((accum<0x00080000) || (accum>0x7FF80000))
 					{
 						accum = 0;
 						t_dacout = 0;
@@ -797,22 +800,22 @@ void update_envelope(void)
 				break;
 
 				case (TRANSITION): 
-					timer_overflowed_running_total += use_timer_overflowed;
-					accum += transition_inc*use_timer_overflowed;
-					if (accum<0 || (transition_inc==0)) //trans_inc==0 would technically be an error, so this gives us an out
+					ticks_since_envout_running_total += use_ticks_since_envout;
+					accum += transition_inc*use_ticks_since_envout;
+					if (accum< 0x00080000 || (transition_inc==0)) //trans_inc==0 would technically be an error, so this gives us an out
 					{
 						accum = 0;
 						t_dacout = 0;
-						transition_ctr = use_timer_overflowed;
+						transition_ctr = use_ticks_since_envout;
 					}
-					else if (accum>0x0FFF0000)
+					else if (accum>0x7FF80000)
 					{
-						accum = 0x0FFF0000;
+						accum = 0x7FF80000;
 						t_dacout = 0x0FFF;
-						transition_ctr = use_timer_overflowed;
+						transition_ctr = use_ticks_since_envout;
 					}
 					else
-						t_dacout = accum>>16;
+						t_dacout = accum>>19;
 
 					if (transition_inc>0)
 					{
@@ -825,7 +828,7 @@ void update_envelope(void)
 						eof_off();
 					}
 
-					transition_ctr -= use_timer_overflowed;
+					transition_ctr -= use_ticks_since_envout;
 					if (transition_ctr <= 0)
 					{
 						end_segment_flag = next_env_state;
@@ -904,16 +907,15 @@ void update_envelope(void)
 			eof_on();
 			outta_sync = 0;
 			output_envelope(0);
-			timer_overflowed = 0;
+			ticks_since_envout = 0;
 		}
 	}
 }
 
-
-
 void update_adc_params(uint8_t force_params_update)
 {
-	uint16_t tmp, d;
+	uint16_t d;
+	int16_t total_adc;
 	uint64_t time_tmp = 0;
 	uint8_t temp_u8;
 	uint32_t temp_u32;
@@ -922,37 +924,52 @@ void update_adc_params(uint8_t force_params_update)
 	int8_t t_clock_divider_amount=1;
 	int8_t hys_clock_divider_amount=0;
 	int8_t new_clock_divider_amount=1; //todo: ok as local var?
+	int16_t cv;
+	uint32_t rise_per_clk=0;
+
+	static uint16_t oversample_wait_ctr=0;
+
+	static uint16_t prev_clock_div = 0;
 
 	if (force_params_update || ++poll_user_input>USER_INPUT_POLL_TIME)
 	{
+		// DEBUGON;
 		poll_user_input=0;
 
 		update_risefallincs=0;
 
-		tmp = adc_buffer[CV_SHAPE] + adc_buffer[POT_SHAPE];
-		if (tmp>4095) tmp=4095;
+		cv = 2048 - analog[CV_SHAPE].lpf_val;
+		if (cv>-20 && cv<20) cv = 0;
 		
-		if (diff(tmp, shape)>ADC_DRIFT)
+		total_adc = cv + analog[POT_SHAPE].lpf_val;
+		if (total_adc>4095) total_adc=4095;
+		else if (total_adc<0) total_adc=0;
+		
+		if (diff(total_adc, shape)>ADC_DRIFT)
 		{
-			shape = tmp;
+			shape = total_adc;
 			update_risefallincs = 1;
 			new_clock_divider_amount=clock_divider_amount;
 
 			calc_skew_and_curves(shape, &skew, &next_curve_rise, &next_curve_fall);
 		}
 
-		tmp = (adc_buffer[CV_DIVMULT] + adc_buffer[POT_DIVMULT]) >> 4;
-		if (tmp>255) tmp = 255;
+		cv = 2048 - analog[CV_DIVMULT].lpf_val;
+		if (cv>-20 && cv<20) cv = 0;
 
-		d = diff(tmp, clock_div);
+		total_adc = cv + analog[POT_DIVMULT].lpf_val;
+		if (total_adc>4095) total_adc=4095;
+		else if (total_adc<0) total_adc=0;
+
+		d = diff(total_adc, prev_clock_div);
 
 		if ((env_state==TRANSITION) && envelope_running) {
 			temp_u8 = 0;  //do nothing
 		}
 		else if (d > DIV_ADC_HYSTERESIS)
 		{ 
-			clock_div = tmp;
-			new_clock_divider_amount = get_clk_div_nominal(clock_div);
+			prev_clock_div = total_adc;
+			new_clock_divider_amount = get_clk_div_nominal(prev_clock_div);
 
 			if (clk_time)
 			{
@@ -965,13 +982,13 @@ void update_adc_params(uint8_t force_params_update)
 		}
 		else if (d>0)
 		{ 
-			clock_div = tmp;
-			t_clock_divider_amount = get_clk_div_nominal(clock_div); 
+			prev_clock_div = total_adc;
+			t_clock_divider_amount = get_clk_div_nominal(prev_clock_div); 
 
 			if (t_clock_divider_amount > clock_divider_amount)
 			{
-				if (clock_div <= (0xFF - DIV_ADC_HYSTERESIS)) //Make sure we don't overflow past 0xFF
-					temp_u8 = clock_div + DIV_ADC_HYSTERESIS;
+				if (prev_clock_div <= (0xFF - DIV_ADC_HYSTERESIS)) //Make sure we don't overflow past 0xFF
+					temp_u8 = prev_clock_div + DIV_ADC_HYSTERESIS;
 				else
 					temp_u8 = 0xFF;
 			
@@ -979,8 +996,8 @@ void update_adc_params(uint8_t force_params_update)
 			}
 			else if (t_clock_divider_amount < clock_divider_amount)
 			{
-				if (clock_div > DIV_ADC_HYSTERESIS)
-					temp_u8 = clock_div - DIV_ADC_HYSTERESIS;
+				if (prev_clock_div > DIV_ADC_HYSTERESIS)
+					temp_u8 = prev_clock_div - DIV_ADC_HYSTERESIS;
 				else
 					temp_u8 = 0;
 
@@ -1025,10 +1042,7 @@ void update_adc_params(uint8_t force_params_update)
 				div_clk_time = get_clk_div_time(new_clock_divider_amount, clk_time);
 			}
 
-			fall_time=get_fall_time(skew, div_clk_time);
-			rise_time=div_clk_time-fall_time;
-			rise_inc=udiv32(rise_time>>5);
-			fall_inc=udiv32(fall_time>>5);
+			calc_rise_fall_incs();
 
 			update_risefallincs=0;
 		}
@@ -1112,38 +1126,41 @@ void update_adc_params(uint8_t force_params_update)
 			
 			if (envelope_running)
 			{
-				elapsed_time += (uint32_t)0x00008000; //offset to account for transition period: 128 timer overflows
+				elapsed_time += (uint32_t)0x80; //was 0x8000. offset to account for transition period: 128 timer overflows
 				if (elapsed_time > div_clk_time)
 					elapsed_time -= div_clk_time;
 
 				if (elapsed_time <= rise_time) {  //Are we on the rise?
 					time_tmp = ((uint64_t)elapsed_time) << 12;
 					new_dacout = time_tmp/rise_time;
-					new_accum = ((int32_t)new_dacout) <<16;
+					if (new_dacout > 4095) new_dacout = 4095;
+					new_accum = new_dacout << 19;
 					new_dacout = calc_curve(new_dacout,next_curve_rise);
 					next_env_state = RISE;
 				} else {
 					elapsed_time = elapsed_time - rise_time;
 					time_tmp = ((uint64_t)elapsed_time) << 12; 
-					new_dacout = 4096 - (time_tmp / fall_time);
-					new_accum = ((int32_t)new_dacout) << 16;
+					new_dacout = time_tmp / fall_time;
+					if (new_dacout < 4095) new_dacout = 4095 - new_dacout;
+					else new_dacout = 0;
+					new_accum = new_dacout << 19;
 					new_dacout = calc_curve(new_dacout, next_curve_fall);
 					next_env_state = FALL;
 				}
 
-				accum = ((int32_t)t_dacout)<<16;
+				accum = t_dacout << 19;
 	
 				//Todo: just do signed int subtraction?
 				if (new_dacout > t_dacout)
-					transition_inc = ((int32_t)(new_dacout - t_dacout)) << 9;
+					transition_inc = (new_dacout - t_dacout) << 9;
 				else {
-					transition_inc = ((int32_t)(t_dacout - new_dacout)) << 9;
+					transition_inc = (t_dacout - new_dacout) << 9;
 					transition_inc = -1 * transition_inc;
 				}
 				cur_curve = LIN;
 
 				env_state = TRANSITION;
-				transition_ctr = 128;	
+				transition_ctr = 128;//was 128;	
 
 				outta_sync = 1;
 				ready_to_start_async = 1;	
@@ -1185,5 +1202,17 @@ void update_adc_params(uint8_t force_params_update)
 								
 			}
 		}
+		// DEBUGOFF;
 	}
+	else
+	{
+		if (++oversample_wait_ctr>25)
+		{
+			oversample_wait_ctr=0;
+			// DEBUGON;
+			condition_analog();
+			// DEBUGOFF;
+		}
+	}
+
 }

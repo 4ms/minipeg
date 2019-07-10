@@ -1,5 +1,7 @@
-#include "leds.h"
-#include "pwm.h"
+#include "globals.h"
+
+extern const uint16_t loga[4096];
+
 
 rgbLed rgbleds[NUM_RGB_LEDS];
 
@@ -18,32 +20,29 @@ void test_leds(void)
 	update_pwm(0, PWM_5VENV);
 	update_pwm(0, PWM_TRIGOUTLED);
 
-	update_pwm(100, PWM_PINGBUT_R);
-	update_pwm(200, PWM_PINGBUT_R);
-
-	update_pwm(300, PWM_PINGBUT_G);
-	update_pwm(400, PWM_PINGBUT_G);
-
-	update_pwm(500, PWM_PINGBUT_B);
-	update_pwm(600, PWM_PINGBUT_B);
-
-	update_pwm(700, PWM_CYCLEBUT_R);
-	update_pwm(800, PWM_CYCLEBUT_R);
-
-	update_pwm(900, PWM_CYCLEBUT_G);	//controls ENVLED
-	update_pwm(1000, PWM_CYCLEBUT_G);	
-
-	update_pwm(900, PWM_CYCLEBUT_B);	//nothing?
-	update_pwm(1000, PWM_CYCLEBUT_B);
-
-	update_pwm(100, PWM_ENV);			//controls TRIGOUTLED
-	update_pwm(200, PWM_ENVLED);		//nothing?
-	update_pwm(300, PWM_5VENV);			//nothing
-	update_pwm(400, PWM_TRIGOUTLED);	//nothing
-
-	
+	for (uint8_t j = 0; j < NUM_PWMS; j++)
+	{
+		update_pwm(0, j);
+		update_pwm(1, j);
+		update_pwm(1024, j);
+		update_pwm(1025, j);
+	}
 }
 
+void test_rgb_color(uint16_t r, uint16_t g, uint16_t b)
+{
+	while (1) 
+	{
+		update_pwm(r, PWM_PINGBUT_R);
+		update_pwm(g, PWM_PINGBUT_G);
+		update_pwm(b, PWM_PINGBUT_B);
+
+		update_pwm(r, PWM_CYCLEBUT_R);
+		update_pwm(g, PWM_CYCLEBUT_G);
+		update_pwm(b, PWM_CYCLEBUT_B);
+	}
+
+}
 
 void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id)
 {
@@ -54,6 +53,9 @@ void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id)
 
 void set_mono_led(uint8_t led_id, uint16_t brightness)
 {
+	brightness = (brightness*4);
+	if (brightness > 4095) brightness = 4095;
+	brightness = 4095 - loga[4095-brightness];
 	update_pwm(brightness, led_id);
 }
 
@@ -70,15 +72,27 @@ void init_rgb_leds(void)
 
 void init_palette(void)
 {
-	colors[c_OFF].r = 0;
-	colors[c_OFF].g = 0;
-	colors[c_OFF].b = 0;
+	colors[c_OFF].r = 1025;
+	colors[c_OFF].g = 1025;
+	colors[c_OFF].b = 1025;
 
-	colors[c_WHITE].r = 1024;
-	colors[c_WHITE].g = 1024;
-	colors[c_WHITE].b = 1024;
+	colors[c_WHITE].r = 0;
+	colors[c_WHITE].g = 0;
+	colors[c_WHITE].b = 0;
 
-	colors[c_ORANGE].r = 1024;
-	colors[c_ORANGE].g = 100;
-	colors[c_ORANGE].b = 100;
+	colors[c_ORANGE].r = 30;
+	colors[c_ORANGE].g = 830;
+	colors[c_ORANGE].b = 1025;
+
+	colors[c_RED].r = 0;
+	colors[c_RED].g = 1025;
+	colors[c_RED].b = 1025;
+
+	colors[c_GREEN].r = 1025;
+	colors[c_GREEN].g = 0;
+	colors[c_GREEN].b = 1025;
+
+	colors[c_BLUE].r = 1024;
+	colors[c_BLUE].g = 1025;
+	colors[c_BLUE].b = 0;
 }

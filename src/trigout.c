@@ -1,6 +1,4 @@
-#include "trigout.h"
 #include "globals.h"
-#include "dig_inouts.h"
 
 uint8_t trigout_high=0;
 extern volatile uint32_t trigouttmr;
@@ -20,6 +18,7 @@ void trigout_off(void);
 void trigout_on(void){
 	if (!trigout_high){
 		TRIGOUT_ON;
+		set_mono_led(PWM_TRIGOUTLED, 1023);
 		trigout_high=1;
 		trigouttmr=0;
 	}
@@ -27,6 +26,7 @@ void trigout_on(void){
 void trigout_off(void){
 	if (!TRIGOUT_IS_TRIG && (trigouttmr>TRIGOUT_MIN_GATE_TIME)) {
 		TRIGOUT_OFF;
+		set_mono_led(PWM_TRIGOUTLED, 0);
 		trigouttmr=0;
 	}
 	trigout_high=0;
@@ -35,6 +35,7 @@ void trigout_off(void){
 void handle_trigout_trigfall(void){
 	if (TRIGOUT_IS_TRIG && trigouttmr>TRIGOUT_TRIG_TIME) {
 		TRIGOUT_OFF;
+		set_mono_led(PWM_TRIGOUTLED, 0);
 		trigouttmr=0;
 	}
 }

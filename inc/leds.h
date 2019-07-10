@@ -29,25 +29,12 @@ enum Palette {
 	c_OFF,
 	c_WHITE,
 	c_ORANGE,
+	c_GREEN,
+	c_RED,
+	c_BLUE,
 	
 	NUM_COLORS
 };
-
-
-
-	// PWM_ENVLED,
-	// PWM_EOFLED,
-
-	// PWM_ENV,
-	// PWM_ENVLED,
-	// PWM_5VENV,
-	// PWM_EOFLED,
-	// PWM_CYCLEBUT_R,
-	// PWM_CYCLEBUT_G,
-	// PWM_CYCLEBUT_B,
-	// PWM_PINGBUT_R,
-	// PWM_PINGBUT_G,
-	// PWM_PINGBUT_B,
 
 void init_rgb_leds(void);
 void init_palette(void);

@@ -2,7 +2,7 @@
  * adc.c - adc setup
  */
  
-#include "adc.h"
+#include "globals.h"
 
 void init_adc(uint16_t *ADC_Buffer, uint8_t adc_buffer_size)
 {

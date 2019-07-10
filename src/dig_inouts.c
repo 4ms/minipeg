@@ -2,7 +2,8 @@
  * dig_inouts.c
  */
 
-#include "dig_inouts.h"
+#include "globals.h"
+
 
 void init_dig_inouts(void){
 	GPIO_InitTypeDef gpio;
@@ -33,28 +34,3 @@ void init_dig_inouts(void){
 	gpio.GPIO_Pin = CYCLEJACK_pin;	GPIO_Init(CYCLEJACK_GPIO, &gpio);
 
 }
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-void debounce_inputs(void)
-{
-	static uint16_t State[2] = {0,0,0,0,0,0,0,0,0,0}; // Current debounce status
-
-	if (INF1BUT) t=0xe000; else t=0xe001;
-	State[1]=(State[1]<<1) | t;
-	if (State[1]==0xf000){
-		//handle pin going high
-	}
-}
-
-*/
