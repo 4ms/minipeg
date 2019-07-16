@@ -21,6 +21,7 @@
 #include "trigout.h"
 #include "buttons.h"
 #include "analog_conditioning.h"
+#include "system_mode.h"
 
 
 #define ADC_DRIFT 16
