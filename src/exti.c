@@ -2,11 +2,11 @@
 
 extern volatile uint32_t pingtmr;
 extern volatile uint32_t ping_irq_timestamp;
-extern volatile uint32_t trig_irq_timestamp;
-extern volatile uint8_t reset_nextping_flag;
-extern volatile uint8_t sync_to_ping_mode;
-extern volatile uint8_t trig_jack_down;
 extern volatile uint8_t using_tap_clock;
+// extern volatile uint32_t trig_irq_timestamp;
+// extern volatile uint8_t reset_nextping_flag;
+// extern volatile uint8_t sync_to_ping_mode;
+// extern volatile uint8_t trig_jack_down;
 
 void init_EXTI_inputs(void)
 {
@@ -38,7 +38,7 @@ void EXTI4_15_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_CLOCK_PING_line) != RESET)
 	{
 		if (PINGJACK){
-			ping_irq_timestamp=pingtmr;//(pingtmr << 8) | TCNT0;
+			ping_irq_timestamp=pingtmr;
 			pingtmr=0;
 			using_tap_clock=0;
 		}

@@ -1,7 +1,7 @@
 
 /*
 todo: 
-Rename t_dacout to segment_phase
+Rename envout to segment_phase
 */
 
 #include "stm32f0xx_conf.h"
@@ -50,7 +50,7 @@ enum envelopeStates env_state=WAIT;
 uint8_t next_env_state=WAIT;
 
 uint32_t accum=0;
-uint16_t t_dacout=0;
+uint16_t envout=0;
 uint32_t new_accum=0;
 uint16_t new_dacout=0;
 
@@ -406,11 +406,11 @@ void read_cycle_button(void)
 							time_tmp = ((uint64_t)elapsed_time) << 12;
 							accum = 4096 - (time_tmp/fall_time);
 							accum <<= 19;
-							//FixMe: Why aren't we setting t_dacout here?
+							//FixMe: Why aren't we setting envout here?
 							env_state = FALL;
 							curve_fall = next_curve_fall;
 
-							if (t_dacout < 2048) hr_off();
+							if (envout < 2048) hr_off();
 							else hr_on();
 							eor_on();
 							eof_off();
@@ -649,7 +649,7 @@ void do_reset_envelopes(void)
 
 	reset_now_flag=0;
 
-	if (t_dacout<0x0010)
+	if (envout<0x0010)
 		outta_sync=0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
 	if ((!envelope_running || (outta_sync==0) || (div_clk_time<0x80))) //was div_clk_time<0x8000
@@ -694,16 +694,16 @@ void do_reset_envelopes(void)
 			next_env_state=FALL;
 		}
 
-		//split (new_dacout - t_dacout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-		if (new_dacout > t_dacout)
-			transition_inc = (new_dacout - t_dacout) << 12; //was 9
+		//split (new_dacout - envout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+		if (new_dacout > envout)
+			transition_inc = (new_dacout - envout) << 12; //was 9
 		else {
-			transition_inc = (t_dacout - new_dacout) << 12; //was 9
+			transition_inc = (envout - new_dacout) << 12; //was 9
 			transition_inc = -1 * transition_inc;
 		}
 
 		cur_curve=LIN;
-		accum=t_dacout<<19;
+		accum=envout<<19;
 
 		transition_ctr=128;
 	}
@@ -750,7 +750,7 @@ void update_envelope(void)
 		if (envelope_running)
 		{
 			//PEGv2: this block takes about 15-18us and runs every 100us (10kHz sampling rate)
-			t_dacout=0;
+			envout=0;
 			if (env_state==TRANSITION)
 				DEBUGON;
 			else
@@ -761,12 +761,12 @@ void update_envelope(void)
 				case (RISE):
 					ticks_since_envout_running_total += use_ticks_since_envout;
 					accum += rise_inc*use_ticks_since_envout;
-					t_dacout = accum>>19;
+					envout = accum>>19;
 
 					if (accum > 0x7FF80000)
 					{
 						accum = 0x7FF80000;
-						t_dacout = 0x0FFF;
+						envout = 0x0FFF;
 						if (triga_down && ASYNC_CAN_SUSTAIN)
 							end_segment_flag = SUSTAIN;
 						else
@@ -775,7 +775,7 @@ void update_envelope(void)
 					
 					cur_curve=curve_rise;
 
-					if (t_dacout>=2048) hr_on();
+					if (envout>=2048) hr_on();
 					else hr_off();
 					eor_off();
 					eof_on();
@@ -786,7 +786,7 @@ void update_envelope(void)
 					eof_off();
 					hr_on();
 
-					t_dacout=0x0FFF;
+					envout=0x0FFF;
 
 					if (triga_down && ASYNC_CAN_SUSTAIN)
 					{
@@ -800,18 +800,18 @@ void update_envelope(void)
 				case (FALL):
 					ticks_since_envout_running_total += use_ticks_since_envout;
 					accum -= fall_inc*use_ticks_since_envout;
-					t_dacout=accum>>19;
+					envout=accum>>19;
 
 					if ((accum<0x00080000) || (accum>0x7FF80000))
 					{
 						accum = 0;
-						t_dacout = 0;
+						envout = 0;
 						end_env_flag = 1;
 					}
 
 					eor_on();
 					eof_off();
-					if (t_dacout<2048)	hr_off();
+					if (envout<2048)	hr_off();
 					else hr_on();
 
 					cur_curve=curve_fall;
@@ -823,17 +823,17 @@ void update_envelope(void)
 					if (accum < 0x00080000 || (transition_inc==0)) //trans_inc==0 would technically be an error, so this gives us an out
 					{
 						accum = 0;
-						t_dacout = 0;
+						envout = 0;
 						transition_ctr = use_ticks_since_envout;
 					}
 					else if (accum>0x7FF80000)
 					{
 						accum = 0x7FF80000;
-						t_dacout = 0x0FFF;
+						envout = 0x0FFF;
 						transition_ctr = use_ticks_since_envout;
 					}
 					else
-						t_dacout = accum>>19;
+						envout = accum>>19;
 
 					if (transition_inc>0)
 					{
@@ -866,8 +866,8 @@ void update_envelope(void)
 					break;
 			}
 		
-			t_dacout = calc_curve(t_dacout, cur_curve);
-			output_envelope(t_dacout);
+			envout = calc_curve(envout, cur_curve);
+			output_envelope(envout);
 
 			if (end_segment_flag)
 			{
@@ -1192,13 +1192,13 @@ void update_adc_params(uint8_t force_params_update)
 					next_env_state = FALL;
 				}
 
-				accum = t_dacout << 19;
+				accum = envout << 19;
 	
-				//split (new_dacout - t_dacout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-				if (new_dacout > t_dacout)
-					transition_inc = (new_dacout - t_dacout) << 12;
+				//split (new_dacout - envout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+				if (new_dacout > envout)
+					transition_inc = (new_dacout - envout) << 12;
 				else {
-					transition_inc = (t_dacout - new_dacout) << 12;
+					transition_inc = (envout - new_dacout) << 12;
 					transition_inc = -1 * transition_inc;
 				}
 				cur_curve = LIN;

@@ -6,15 +6,7 @@ extern analog_t analog[NUM_ADCS];
 void output_envelope(uint32_t dacval)
 {
 	int32_t env;
-	
 	uint16_t env5V = dacval >> 2;
-
-	// if (analog[POT_SCALE].lpf_val > 2048)
-	// 	env = (env5V * (analog[POT_SCALE].lpf_val - 2048)) >> 11;
-	// else 
-	// 	env = ((1024-env5V) * (2048 - analog[POT_SCALE].lpf_val)) >> 11;
-
-	// env += (analog[POT_OFFSET].lpf_val-2048);
 
 	//This way, Scale attenuates/inverts around the center of the LFO, 
 	//And offset places the center.
