@@ -16,32 +16,40 @@ void output_envelope(uint32_t dacval)
 
 	// env += (analog[POT_OFFSET].lpf_val-2048);
 
-// DEBUGON;
-	int16_t scale = analog[POT_SCALE].lpf_val - 2048; //-2048..+2047
-	int16_t offset = (analog[POT_OFFSET].lpf_val>>3);
+	//This way, Scale attenuates/inverts around the center of the LFO, 
+	//And offset places the center.
+	//Offset at 100% places the LFO center at 5V
+	//Scale at 100% is 10Vpp wave
+	//But Scale at 0%, Offset at 100% is a steady 5V output (not useful)
+	// int16_t scale = analog[POT_SCALE].lpf_val - 2048; //-2048..+2047
+	// int16_t offset = (analog[POT_OFFSET].lpf_val>>3);
+	// env = dacval - 2048;
+	// env *= scale;
+	// env >>= 14;	
+	// env += offset;
+	// env = 768 - env;
+	// if (env>1024) env=1025;
+	// else if (env<0) env=0;
 
-	env = dacval - 2048;
-	env *= scale;
-
-	// env >>= 11; 	//for +/-10V
-	// env >>= 12; 	//for +/-5V 
-	// env += (analog[POT_OFFSET].lpf_val>>1) - 1023;
-	// env = 2048 - env; //0..4096
-	// env >>= 2; 		//0..1024
-
+	//This way, Scale attenuates/inverts around the base-line,
+	//which is set by Offset.
+	//Offset sets the base line from -10V (CCW) to 0V (center) to +10V (CW)
+	//Scale makes the LFO go up from the base-line (CW) or down below the base-line (CCW)
+	int16_t scale = analog[POT_SCALE].lpf_val - 2048;
+	int16_t offset = analog[POT_OFFSET].lpf_val>>2;
+	env = dacval * scale;
 	env >>= 14;	
 	env += offset;
-	env = 768 - env;
-
+	
+	env = 1024 - env;
 	if (env>1024) env=1025;
 	else if (env<0) env=0;
-// DEBUGOFF;
 
 	update_pwm(env, PWM_ENV);
 	update_pwm(env5V, PWM_5VENV);
 
-//	set_mono_led(PWM_ENVLED, env5V);
-	set_mono_led(PWM_ENVLED, 1025-env);
+	set_mono_led(PWM_ENVLED, env5V);
+	// set_mono_led(PWM_ENVLED, 1025-env);
 }
 
 void test_envout(void)
