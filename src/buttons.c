@@ -9,6 +9,7 @@ void init_buttons(void)
 	{
 		buttons[i].debounce_history = 0xFFFF;
 		buttons[i].state = 0;
+		buttons[i].edge = 0;
 	}
 
 	RCC_APB1PeriphClockCmd(DEBOUNCE_TIM_RCC, ENABLE);
