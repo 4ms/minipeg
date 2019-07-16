@@ -29,7 +29,7 @@
 
 #define HOLDTIMECLEAR 20000 //4800000
 #define LIMIT_SKEW_TIME 50
-#define NUM_ADC_CYCLES_BEFORE_TRANSITION 10 //10 is about 100ms
+#define NUM_ADC_CYCLES_BEFORE_TRANSITION 100 //10 is about 100ms
 
 //SYSTEM_MODE_HOLD_TIME: how long the ping button must be held down to enter System Mode
 //200000 is about 5s
