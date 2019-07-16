@@ -177,8 +177,12 @@ int main(void)
 
 	//read settings from flash
 
-	clk_time=0;
-	div_clk_time=0;
+	clk_time=8000;
+	div_clk_time=8000;
+	cycle_but_on = 1;
+	set_rgb_led(LED_CYCLE, c_ORANGE);
+	envelope_running=1;
+
 	last_tapin_time=0;
 	sync_to_ping_mode=1;
 	accum=0;
@@ -392,11 +396,11 @@ void read_cycle_button(void)
 							time_tmp = ((uint64_t)elapsed_time) << 12;
 							accum = time_tmp/rise_time; // elapsed_time/rise_time is the % of the rise phase already elapsed, and <<12 gives us the 0..4095 dac value
 							accum <<= 19;
-							//FixMe: Why aren't we setting t_dacout here?
+							//FixMe: Why aren't we setting envout here?
 							env_state = RISE;
 							curve_rise = next_curve_rise;
 						
-							if (t_dacout >= 2048) hr_on();
+							if (envout >= 2048) hr_on();
 							else hr_off();
 							eor_off();
 							eof_on();
