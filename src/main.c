@@ -269,8 +269,10 @@ void read_taptempo(void)
 				tapouttmr=0;
 
 				set_rgb_led(LED_PING, c_OFF);
+				div_ping_led=0;//SEG: added
 			} else {
 				set_rgb_led(LED_PING, c_WHITE);
+				div_ping_led=1;//SEG: added
 			}
 		}
 	}
@@ -278,6 +280,7 @@ void read_taptempo(void)
 	if (buttons[PING_BUTTON].edge == -1)
 	{
 		set_rgb_led(LED_PING, c_OFF);
+		div_ping_led=0;//SEG: added
 		buttons[PING_BUTTON].edge = 0;
 	}
 
@@ -494,6 +497,7 @@ void check_reset_envelopes(void)
 
 	} else {
 		set_rgb_led(LED_PING, c_OFF);
+		div_ping_led=0;//SEG: added
 	}
 }
 
@@ -633,6 +637,7 @@ void read_ping_clock(void)
 					env_state = WAIT;
 				}
 				set_rgb_led(LED_PING, c_OFF);
+				div_ping_led=0;//SEG: added
 			}
 		}
 	}
@@ -1145,38 +1150,6 @@ void update_adc_params(uint8_t force_params_update)
 				{
 					ping_div_ctr = calc_divided_ping_div_ctr(env_state);
 
-					// if (env_state==RISE)
-					// {
-					// 	ping_div_ctr=0;
-					// 	if (rise_time>clk_time)
-					// 	{ 
-					// 		rise_per_clk=(rise_inc>>8) * (clk_time>>8);//was rise_inc * (clk_time>>8);
-					// 		if (rise_per_clk<32) rise_per_clk=32;
-					// 		temp_u32=0;
-					// 		temp_u8=0;
-					// 		while ((temp_u32<=0x00007FF8) && (temp_u8<=clock_divider_amount)){ //was temp_u32<0x10000000
-					// 			temp_u32+=rise_per_clk;
-					// 			temp_u8++;
-					// 			if ((accum>>16)>=temp_u32) ping_div_ctr++;
-					// 		}
-					// 	}
-					// } else if (env_state==FALL)
-					// {
-					// 	ping_div_ctr=clock_divider_amount-1;
-					// 	if (fall_time>clk_time) //otherwise leave ping_div_ctr at the last step
-					// 	{
-					// 		rise_per_clk=(fall_inc>>8) * (clk_time>>8);//was fall_inc * (clk_time>>8);
-					// 		if (rise_per_clk<32) rise_per_clk=32;
-					// 		temp_u32=0;
-					// 		temp_u8=0;
-					// 		while ((temp_u32<=0x00007FF8) && (temp_u8<=clock_divider_amount)){
-					// 			temp_u32+=rise_per_clk;
-					// 			temp_u8++;
-					// 			if ((accum>>16)>=temp_u32) ping_div_ctr--;
-					// 		}
-					// 	}
-					// }
-
 					while (elapsed_time >= clk_time)
 						elapsed_time -= clk_time;
 					elapsed_time += (ping_div_ctr*clk_time);
@@ -1201,7 +1174,8 @@ void update_adc_params(uint8_t force_params_update)
 				if (elapsed_time <= rise_time) {  //Are we on the rise?
 					time_tmp = ((uint64_t)elapsed_time) << 12; //12 bits
 					new_dacout = time_tmp/rise_time;
-					if (new_dacout > 4095) new_dacout = 4095;
+					if (new_dacout > 4095)
+						new_dacout = 4095;
 					new_accum = new_dacout << 19;
 					new_dacout = calc_curve(new_dacout,next_curve_rise);
 					next_env_state = RISE;
@@ -1209,8 +1183,10 @@ void update_adc_params(uint8_t force_params_update)
 					elapsed_time = elapsed_time - rise_time;
 					time_tmp = ((uint64_t)elapsed_time) << 12; 
 					new_dacout = time_tmp / fall_time;
-					if (new_dacout < 4095) new_dacout = 4095 - new_dacout;
-					else new_dacout = 0;
+					if (new_dacout < 4095)
+						new_dacout = 4095 - new_dacout;
+					else
+						new_dacout = 0;
 					new_accum = new_dacout << 19;
 					new_dacout = calc_curve(new_dacout, next_curve_fall);
 					next_env_state = FALL;
@@ -1237,38 +1213,6 @@ void update_adc_params(uint8_t force_params_update)
 			if ((clock_divider_amount>1) && envelope_running)
 			{
 				ping_div_ctr = calc_divided_ping_div_ctr(next_env_state);
-
-				// if (next_env_state==RISE)
-				// {
-				// 	ping_div_ctr=0;
-				// 	if (rise_time>clk_time) //otherwise leave ping_div_ctr at zero
-				// 	{ 
-				// 		rise_per_clk=(rise_inc>>8) * (clk_time>>8);
-				// 		if (!rise_per_clk) rise_per_clk=1;
-				// 		temp_u32=0;
-				// 		temp_u8=0;
-				// 		while ((temp_u32<0x10000000) && (temp_u8<=clock_divider_amount)){
-				// 			temp_u32+=rise_per_clk;
-				// 			temp_u8++;
-				// 			if (new_accum>=temp_u32) ping_div_ctr++;
-				// 		}
-				// 	}
-				// } else if (next_env_state==FALL)
-				// {
-				// 	ping_div_ctr=clock_divider_amount-1;
-				// 	if (fall_time>clk_time) //otherwise leave ping_div_ctr at the last step
-				// 	{
-				// 		rise_per_clk=fall_inc * (clk_time>>8);
-				// 		temp_u32=0;
-				// 		temp_u8=0;
-				// 		while ((temp_u32<0x10000000) && (temp_u8<=clock_divider_amount)){
-				// 			temp_u32+=rise_per_clk;
-				// 			temp_u8++;
-				// 			if (new_accum>=temp_u32) ping_div_ctr--;
-				// 		}
-
-				// 	}
-				// }
 			}
 
 		}
