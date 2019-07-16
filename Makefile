@@ -1,9 +1,9 @@
 SRCS  = $(wildcard src/*.c)
 BUILDDIR = build
 PROJ_NAME=$(BUILDDIR)/main
-STD_PERIPH_LIB=lib
+STD_PERIPH_LIB=stm32
 LDSCRIPT_INC=stm32/
-
+STD_PERIPH_SRCS=$(STD_PERIPH_LIB)/std_periph/src
 
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
@@ -18,38 +18,40 @@ CFLAGS += -Wl,--gc-sections -Wl,-Map=$(PROJ_NAME).map
 CFLAGS += --specs=nano.specs
 
 vpath %.c src
-vpath %.a $(STD_PERIPH_LIB)
 
 ROOT=$(shell pwd)
 
 CFLAGS += -I inc -I $(STD_PERIPH_LIB) -I $(STD_PERIPH_LIB)/CMSIS/Device/ST/STM32F0xx/Include
-CFLAGS += -I $(STD_PERIPH_LIB)/CMSIS/Include -I $(STD_PERIPH_LIB)/STM32F0xx_StdPeriph_Driver/inc
+CFLAGS += -I $(STD_PERIPH_LIB)/CMSIS/Include -I $(STD_PERIPH_LIB)/std_periph/inc
 CFLAGS += -include $(STD_PERIPH_LIB)/stm32f0xx_conf.h 
 
 SRCS += stm32/startup_stm32f0xx.s
+SRCS += $(STD_PERIPH_SRCS)/stm32f0xx_adc.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_dma.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_exti.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_flash.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_gpio.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_misc.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_rcc.c  \
+	$(STD_PERIPH_SRCS)/stm32f0xx_syscfg.c \
+	$(STD_PERIPH_SRCS)/stm32f0xx_tim.c
 
 OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
-###################################################
 
-.PHONY: lib proj
+.PHONY: all
 
-all: lib proj
-
-lib:
-	$(MAKE) -C $(STD_PERIPH_LIB)
-
-proj: 	$(PROJ_NAME).elf
+all: $(PROJ_NAME).elf
 
 $(PROJ_NAME).elf: $(SRCS)
 	mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $^ -o $@ -L$(STD_PERIPH_LIB) -lstm32f0 -L$(LDSCRIPT_INC) -Tstm32f030k6.ld
+	$(CC) $(CFLAGS) $^ -o $@ -L$(LDSCRIPT_INC) -Tstm32f030k6.ld
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
 	$(OBJDUMP) -St $(PROJ_NAME).elf >$(PROJ_NAME).lst
 	$(SIZE) $(PROJ_NAME).elf
 
 program: $(PROJ_NAME).bin
-	st-flash --reset write ${PROJ_NAME}.bin 0x8000000
+	st-flash --reset write ${PROJ_NAME}.bin 0x08000000
 	
 clean:
 	find ./ -name '*~' | xargs rm -f
@@ -59,6 +61,3 @@ clean:
 	rm -f $(PROJ_NAME).bin
 	rm -f $(PROJ_NAME).map
 	rm -f $(PROJ_NAME).lst
-
-reallyclean: clean
-	$(MAKE) -C $(STD_PERIPH_LIB) clean
