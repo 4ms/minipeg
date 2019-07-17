@@ -35,7 +35,7 @@ void init_debouncer(void)
 void DEBOUNCE_IRQ(void)
 {
 	uint16_t t;
-	uint8_t pin_read;
+	uint16_t pin_read;
 
 	if (TIM_GetITStatus(DEBOUNCE_TIMx, TIM_IT_Update) != RESET) {
 
@@ -58,12 +58,12 @@ void DEBOUNCE_IRQ(void)
 
 			digin[i].debounce_history=(digin[i].debounce_history<<1) | t;
 
-			if (digin[i].debounce_history==0xff00)
+			if (digin[i].debounce_history==0xFFFE)
 			{
 				digin[i].state = 1;
 				digin[i].edge = 1;
 			}
-			else if (digin[i].debounce_history==0x00ff)
+			else if (digin[i].debounce_history==0x0001)
 			{
 				digin[i].state = 0;
 				digin[i].edge = -1;
