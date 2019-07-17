@@ -19,7 +19,7 @@
 #include "leds.h"
 #include "pwm.h"
 #include "trigout.h"
-#include "buttons.h"
+#include "debounced_digins.h"
 #include "analog_conditioning.h"
 #include "system_mode.h"
 

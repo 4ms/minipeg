@@ -56,15 +56,16 @@ uint16_t new_dacout=0;
 
 uint16_t adc_dma_buffer[NUM_ADCS];
 
-extern button_t buttons[NUM_BUTTONS];
+
+extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
 
 uint8_t cycle_but_on = 0;
 
-volatile uint8_t trig_jack_down=0;
 uint8_t trigq_down=0;
 uint8_t triga_down=0;
 volatile uint8_t using_tap_clock=0;
+uint8_t do_toggle_cycle=0;
 
 uint8_t force_params_update = 0;
 
@@ -105,6 +106,12 @@ char TRIGOUT_IS_ENDOFFALL = 1;
 char TRIGOUT_IS_HALFRISE = 0;
 char TRIGOUT_IS_TAPCLKOUT = 0;
 char TRIGOUT_IS_TRIG = 0;
+
+enum CycleJackBehavior {
+	CYCLE_JACK_RISING_EDGE_TOGGLES,
+	CYCLE_JACK_BOTH_EDGES_TOGGLE
+};
+uint8_t cycle_jack_behavoir = CYCLE_JACK_RISING_EDGE_TOGGLES;
 
 
 //main.h
@@ -156,7 +163,8 @@ int main(void)
 	SysTick_Config(SystemCoreClock/10000); //1000 is 1ms ticks, 10000 is 100us ticks, 100000 is 10us ticks
 
 	init_EXTI_inputs();
-	init_buttons();
+	init_debouncer();
+	// init_trigin_jacks();
 
 	init_rgb_leds();
 	init_palette();
@@ -224,13 +232,13 @@ void read_taptempo(void)
 {
 	uint32_t now;
 
-	if (buttons[PING_BUTTON].state == 1)
+	if (digin[PING_BUTTON].state == 1)
 	{
 		now=tapintmr;
 
-		if (buttons[PING_BUTTON].edge == 1)
+		if (digin[PING_BUTTON].edge == 1)
 		{
-			buttons[PING_BUTTON].edge = 0;
+			digin[PING_BUTTON].edge = 0;
 
 			using_tap_clock=1;
 
@@ -281,166 +289,174 @@ void read_taptempo(void)
 		}
 	}
 
-	if (buttons[PING_BUTTON].edge == -1)
+	if (digin[PING_BUTTON].edge == -1)
 	{
 		set_rgb_led(LED_PING, c_OFF);
 		div_ping_led=0;//SEG: added
-		buttons[PING_BUTTON].edge = 0;
+		digin[PING_BUTTON].edge = 0;
 	}
 
 }
 
 void read_trigjacks(void)
 {
-	//todo: debouncing
-	if (TRIGJACK)
+	if (digin[TRIGGER_JACK].edge==1)
 	{
-		if (!trig_jack_down)
+		digin[TRIGGER_JACK].edge = 0;
+
+		if (TRIG_IS_ASYNC)
 		{
-			trig_jack_down=1;
+			triga_down=1;
+			trigq_down=0;
+			sync_to_ping_mode=0;
 
-			if (TRIG_IS_ASYNC)
+			reset_now_flag=1;
+			ready_to_start_async=0;
+			
+			if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+				outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
+
+			//start each envelope the same time after the divided clock
+			async_phase_diff=divpingtmr;	
+		}
+		else
+		{
+			triga_down=0;
+			trigq_down=1;
+			//Todo: these came from the EXTI ISR, check if its ok
+			sync_to_ping_mode=1;
+			reset_nextping_flag=1;
+
+			// When Cycle is on, a TRIGQ should always re-phase (re-start) a divided-ping env.
+			// When Cycle is off, if and only if QNT_REPHASES_WHEN_CYCLE_OFF is set, then a TRIGQ should rephase 
+			// If the envelope is not running, a TRIGQ should always start the envelope.
+			// ping_div_ctr=clock_divider_amount makes sure that a divided-ping envelope will start from its beginning on the next ping
+			if (QNT_REPHASES_WHEN_CYCLE_OFF || cycle_but_on || !envelope_running)
 			{
-				triga_down=1;
-				trigq_down=0;
-				sync_to_ping_mode=0;
-
-				reset_now_flag=1;
-				ready_to_start_async=0;
-				
-				if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+				ping_div_ctr=clock_divider_amount;
+				if (rise_time>0x10)  //was 0x1000 do an immediate fall if rise_time is fast
 					outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
-
-				//start each envelope the same time after the divided clock
-				async_phase_diff=divpingtmr;	
 			}
-			else
-			{
-				triga_down=0;
-				trigq_down=1;
-				//Todo: these came from the EXTI ISR, check if its ok
-				sync_to_ping_mode=1;
-				reset_nextping_flag=1;
 
-				// When Cycle is on, a TRIGQ should always re-phase (re-start) a divided-ping env.
-				// When Cycle is off, if and only if QNT_REPHASES_WHEN_CYCLE_OFF is set, then a TRIGQ should rephase 
-				// If the envelope is not running, a TRIGQ should always start the envelope.
-				// ping_div_ctr=clock_divider_amount makes sure that a divided-ping envelope will start from its beginning on the next ping
-				if (QNT_REPHASES_WHEN_CYCLE_OFF || cycle_but_on || !envelope_running)
-				{
-					ping_div_ctr=clock_divider_amount;
-					if (rise_time>0x10)  //was 0x1000 do an immediate fall if rise_time is fast
-						outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
-				}
+			tracking_changedrisefalls=0;
 
-				tracking_changedrisefalls=0;
-
-				curve_rise=next_curve_rise;
-				curve_fall=next_curve_fall;
-			}
+			curve_rise=next_curve_rise;
+			curve_fall=next_curve_fall;
 		}
 	}
-	else
+	
+	if (digin[TRIGGER_JACK].edge==-1)
 	{
-		trig_jack_down=0;
+		digin[TRIGGER_JACK].edge=0;
 		triga_down=0;
 		trigq_down=0;
 	}
+
+	if (digin[CYCLE_JACK].edge==1)
+	{
+		digin[CYCLE_JACK].edge=0;
+		do_toggle_cycle=1;
+	}
+
+	if (digin[CYCLE_JACK].edge==-1)
+	{
+		digin[CYCLE_JACK].edge=0;
+
+		if (cycle_jack_behavoir==CYCLE_JACK_BOTH_EDGES_TOGGLE)
+			do_toggle_cycle=1;
+	}
+
 }
 
 void read_cycle_button(void)
 {
-	static uint8_t cycle_down = 0;
 	uint64_t time_tmp=0;
 	uint32_t elapsed_time;
 
-	// Start the envelope mid-way in it's curve (must be calculated)
- 	// Also if we change the divide amount while the envelope is running, we want to do the same calculation as
- 	// if the CYCLE button was pressed (i.e. calculate where the envelope should be so that it "hits" zero at the
-	// proper divided/multed clock time)
+	// Cycle button/jack starts the envelope mid-way in its curve (must be calculated)
 
-	if (buttons[CYCLE_BUTTON].state) {
-		if (!cycle_down) {
-			cycle_down=1;
+	if (digin[CYCLE_BUTTON].edge==1 || do_toggle_cycle)
+	{
+		digin[CYCLE_BUTTON].edge=0;
+		do_toggle_cycle=0;
 
-			if (cycle_but_on==0) {
-				cycle_but_on=1;
-				set_rgb_led(LED_CYCLE, c_ORANGE);
+		if (cycle_but_on==0)
+		{
+			cycle_but_on=1;
+			set_rgb_led(LED_CYCLE, c_ORANGE);
 
-				if (clk_time>0) { //don't start the envelope if we don't have a PING time set yet
+			if (clk_time>0)
+			{
+				if (using_tap_clock)
+					elapsed_time=tapouttmr;
+				else
+					elapsed_time=pingtmr;
 
-					if (using_tap_clock)
-						elapsed_time=tapouttmr;
-					else
-						elapsed_time=pingtmr;
+				div_clk_time=get_clk_div_time(clock_divider_amount, clk_time);
+				calc_rise_fall_incs();
 
-					div_clk_time=get_clk_div_time(clock_divider_amount, clk_time);
-					calc_rise_fall_incs();
+				//Start the envelope at whatever point it would be in if it were already running
 
-					//Start the envelope at whatever point it would be in if it were already running
+				if (!envelope_running && sync_to_ping_mode) {
+					envelope_running=1;
 
-					if (!envelope_running && sync_to_ping_mode) {
-						envelope_running=1;
-
-						if (clock_divider_amount <= 1) {		//if we're multiplying, calculate the elapsed time
-							while (elapsed_time > div_clk_time)		//since the last multiplied clock
-								elapsed_time -= div_clk_time;		
-						} else {									//otherwise, we're dividing the clock
-							while (elapsed_time <= div_clk_time) 	//so we want to get as close to the end of the divided cycle
-								elapsed_time += clk_time;
-							elapsed_time -= clk_time;
-						}
-
-
-						if (elapsed_time <= rise_time) {  //Are we on the rise?
-							time_tmp = ((uint64_t)elapsed_time) << 12;
-							accum = time_tmp/rise_time; // elapsed_time/rise_time is the % of the rise phase already elapsed, and <<12 gives us the 0..4095 dac value
-							accum <<= 19;
-							//FixMe: Why aren't we setting envout here?
-							env_state = RISE;
-							curve_rise = next_curve_rise;
-						
-							if (envout >= 2048) hr_on();
-							else hr_off();
-							eor_off();
-							eof_on();
-						}
-						else {
-							elapsed_time = elapsed_time-rise_time;
-							time_tmp = ((uint64_t)elapsed_time) << 12;
-							accum = 4096 - (time_tmp/fall_time);
-							accum <<= 19;
-							//FixMe: Why aren't we setting envout here?
-							env_state = FALL;
-							curve_fall = next_curve_fall;
-
-							if (envout < 2048) hr_off();
-							else hr_on();
-							eor_on();
-							eof_off();
-						}
-
-						ping_div_ctr=clock_divider_amount;	
-
-					} else if (!envelope_running && !sync_to_ping_mode) {
-						envelope_running=1;
-						reset_now_flag=1;
-						ready_to_start_async=0;
-						async_phase_diff=divpingtmr;
-
-					} else if (envelope_running && CYCLE_REPHASES_DIV_PING) {
-						ping_div_ctr=clock_divider_amount;
+					if (clock_divider_amount <= 1) {		//if we're multiplying, calculate the elapsed time
+						while (elapsed_time > div_clk_time)		//since the last multiplied clock
+							elapsed_time -= div_clk_time;		
+					} else {									//otherwise, we're dividing the clock
+						while (elapsed_time <= div_clk_time) 	//so we want to get as close to the end of the divided cycle
+							elapsed_time += clk_time;
+						elapsed_time -= clk_time;
 					}
 
-				} //if (clk_time>0)
 
-			} else {
-				cycle_but_on = 0;
-				set_rgb_led(LED_CYCLE, c_OFF);
-			}
+					if (elapsed_time <= rise_time) {  //Are we on the rise?
+						time_tmp = ((uint64_t)elapsed_time) << 12;
+						accum = time_tmp/rise_time; // elapsed_time/rise_time is the % of the rise phase already elapsed, and <<12 gives us the 0..4095 dac value
+						accum <<= 19;
+						//FixMe: Why aren't we setting envout here?
+						env_state = RISE;
+						curve_rise = next_curve_rise;
+					
+						if (envout >= 2048) hr_on();
+						else hr_off();
+						eor_off();
+						eof_on();
+					}
+					else {
+						elapsed_time = elapsed_time-rise_time;
+						time_tmp = ((uint64_t)elapsed_time) << 12;
+						accum = 4096 - (time_tmp/fall_time);
+						accum <<= 19;
+						//FixMe: Why aren't we setting envout here?
+						env_state = FALL;
+						curve_fall = next_curve_fall;
+
+						if (envout < 2048) hr_off();
+						else hr_on();
+						eor_on();
+						eof_off();
+					}
+
+					ping_div_ctr=clock_divider_amount;	
+
+				} else if (!envelope_running && !sync_to_ping_mode) {
+					envelope_running=1;
+					reset_now_flag=1;
+					ready_to_start_async=0;
+					async_phase_diff=divpingtmr;
+
+				} else if (envelope_running && CYCLE_REPHASES_DIV_PING) {
+					ping_div_ctr=clock_divider_amount;
+				}
+
+			} //if (clk_time>0)
+
+		} else {
+			cycle_but_on = 0;
+			set_rgb_led(LED_CYCLE, c_OFF);
 		}
-	} else
-		cycle_down = 0;
+	}
 }
 
 void check_reset_envelopes(void)
