@@ -9,15 +9,27 @@
 #include "globals.h"
 
 #define IS_CALIBRATED_ADDR 0x8000000
+#define USER_FLASH_PAGE 0x08007C00
 
-void write_calibration(uint8_t num_bytes, uint8_t *data)
+void write_calibration(uint8_t num_words, uint32_t *data)
 {
+	FLASH_Status status;
+	uint32_t addr = USER_FLASH_PAGE;
 
+	FLASH_Unlock();
+	status = FLASH_ErasePage(addr);
+
+	while (num_words--)
+	{
+		status = FLASH_ProgramWord(addr, *data++);
+	}
+	FLASH_Lock();
 }
 
 void read_calibration(uint8_t num_bytes, uint8_t *data)
 {
 	uint16_t midpt_array[19];
+
 	midpt_array[0] = 68;
 	midpt_array[1] = 262;
 	midpt_array[2] = 509;
