@@ -1,27 +1,65 @@
 #include "globals.h"
 
-extern uint16_t midpt_array[NUM_DIVMULTS];
+extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
+
+//Private:
+uint8_t sanity_check_calibration(void);
+void calibrate_divmult_pot(void);
+uint8_t should_enter_calibration_mode(void);
+
+
+void check_calibration(void)
+{
+	if (!sanity_check_calibration())
+		default_calibration();
+
+	if (should_enter_calibration_mode())
+	{
+		calibrate_divmult_pot();
+		write_settings();
+	}
+}
 
 
 void default_calibration(void)
 {
-	for(uint8_t i=0; i<NUM_DIVMULTS; i++)
-	{
-		midpt_array[i] = (i+1)*(4095/NUM_DIVMULTS);
-	}
+	settings.midpt_array[0] = 68;
+	settings.midpt_array[1] = 262;
+	settings.midpt_array[2] = 509;
+	settings.midpt_array[3] = 743;
+	settings.midpt_array[4] = 973;
+	settings.midpt_array[5] = 1202;
+	settings.midpt_array[6] = 1427;
+	settings.midpt_array[7] = 1657;
+	settings.midpt_array[8] = 1882;
+	settings.midpt_array[9] = 2107;
+	settings.midpt_array[10] = 2341;
+	settings.midpt_array[11] = 2574;
+	settings.midpt_array[12] = 2802;
+	settings.midpt_array[13] = 3026;
+	settings.midpt_array[14] = 3262;
+	settings.midpt_array[15] = 3500;
+	settings.midpt_array[16] = 3734;
+	settings.midpt_array[17] = 3942;
+	settings.midpt_array[18] = 4095;
+
+	// for(uint8_t i=0; i<NUM_DIVMULTS; i++)
+	// {
+	// 	settings.midpt_array[i] = (i+1)*(4095/NUM_DIVMULTS);
+	// }
 }
 
 uint8_t sanity_check_calibration(void)
 {
 	for (uint8_t j = 0; j < (NUM_DIVMULTS-1); j++ ) {
-		if (midpt_array[j+1] <= midpt_array[j])
+		if (settings.midpt_array[j+1] <= settings.midpt_array[j])
 			return(0); //fail
 	}	
 	return(1); //pass
 }
 
-uint8_t check_calibration_mode(void)
+uint8_t should_enter_calibration_mode(void)
 {
 	if ((analog[0].lpf_val < 5) && CYCLEBUT
 		&& (analog[3].lpf_val>4000) && (analog[4].lpf_val>4000) && (analog[5].lpf_val>4000))
@@ -104,8 +142,8 @@ void calibrate_divmult_pot(void)
 
 	//convert the calib_array values to mid-points
 	for(j=0;j<(NUM_DIVMULTS-1);j++){
-		midpt_array[j] = (calib_array[j] + calib_array[j+1]) >> 1;
+		settings.midpt_array[j] = (calib_array[j] + calib_array[j+1]) >> 1;
 	}
-	midpt_array[NUM_DIVMULTS-1] = 4095;
+	settings.midpt_array[NUM_DIVMULTS-1] = 4095;
 
 }

@@ -22,6 +22,8 @@
 #include "debounced_digins.h"
 #include "analog_conditioning.h"
 #include "system_mode.h"
+#include "flash.h"
+
 
 
 #define ADC_DRIFT 16

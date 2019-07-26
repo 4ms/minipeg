@@ -7,6 +7,12 @@ Rename envout to segment_phase
 #include "stm32f0xx_conf.h"
 #include "globals.h"
 
+
+extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
+extern analog_t analog[NUM_ADCS];
+extern struct SystemSettings settings;
+
+
 volatile uint32_t tapouttmr;
 volatile uint32_t tapintmr;
 volatile uint32_t pingtmr;
@@ -57,9 +63,6 @@ uint16_t new_dacout=0;
 uint16_t adc_dma_buffer[NUM_ADCS];
 
 
-extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
-extern analog_t analog[NUM_ADCS];
-
 uint8_t cycle_but_on = 0;
 
 uint8_t trigq_down=0;
@@ -91,28 +94,6 @@ uint16_t shape;
 uint8_t skew, curve;
 uint16_t poll_user_input = 0;
 char divmult_changed=0;
-
-
-//Settings
-char TRIG_IS_ASYNC=1;
-char ASYNC_CAN_SUSTAIN=0;
-
-char NO_FREERUNNING_PING=0;
-char LIMIT_SKEW=0;
-// char ROLLOFF_PING=1;
-
-char TRIGOUT_IS_ENDOFRISE = 0;
-char TRIGOUT_IS_ENDOFFALL = 1;
-char TRIGOUT_IS_HALFRISE = 0;
-char TRIGOUT_IS_TAPCLKOUT = 0;
-char TRIGOUT_IS_TRIG = 0;
-
-enum CycleJackBehavior {
-	CYCLE_JACK_RISING_EDGE_TOGGLES,
-	CYCLE_JACK_BOTH_EDGES_TOGGLE
-};
-uint8_t cycle_jack_behavoir = CYCLE_JACK_RISING_EDGE_TOGGLES;
-
 
 //main.h
 void read_taptempo(void);
@@ -164,7 +145,6 @@ int main(void)
 
 	init_EXTI_inputs();
 	init_debouncer();
-	// init_trigin_jacks();
 
 	init_rgb_leds();
 	init_palette();
@@ -183,19 +163,32 @@ int main(void)
 	hr_off();
 	tapclkout_off();
 
-	//read settings from flash
+	read_settings();
 
-	clk_time=8000;
-	div_clk_time=8000;
-	cycle_but_on = 1;
-	set_rgb_led(LED_CYCLE, c_ORANGE);
-	envelope_running=1;
+	if (settings.start_cycle_on)
+	{
+		cycle_but_on = 1;
+		set_rgb_led(LED_CYCLE, c_ORANGE);
+		envelope_running = 1;
+	}
+	else
+	{
+		cycle_but_on = 0;
+		set_rgb_led(LED_CYCLE, c_OFF);
+		envelope_running = 0;
+	}
+
+	if (settings.start_clk_time)
+	{
+		clk_time = settings.start_clk_time;
+		div_clk_time = settings.start_clk_time;
+	}
 
 	last_tapin_time=0;
 	sync_to_ping_mode=1;
 	accum=0;
 
-	init_env_calcs();
+	check_calibration();
 
 	while (1)
 	{
@@ -304,7 +297,7 @@ void read_trigjacks(void)
 	{
 		digin[TRIGGER_JACK].edge = 0;
 
-		if (TRIG_IS_ASYNC)
+		if (settings.trigin_function==TRIGIN_IS_ASYNC)
 		{
 			triga_down=1;
 			trigq_down=0;
@@ -362,7 +355,7 @@ void read_trigjacks(void)
 	{
 		digin[CYCLE_JACK].edge=0;
 
-		if (cycle_jack_behavoir==CYCLE_JACK_BOTH_EDGES_TOGGLE)
+		if (settings.cycle_jack_behavior==CYCLE_JACK_BOTH_EDGES_TOGGLE)
 			do_toggle_cycle=1;
 	}
 
@@ -628,13 +621,13 @@ void read_ping_clock(void)
 		/*	If we haven't received a ping within 2x expected clock time (that is, clock stopped or slowed to less than half speed)
 			we should stop the ping clock. Or switch to the Tap clock if it's running and we have Tap Clock Output on EOF
 		*/	
-		if (clk_time && NO_FREERUNNING_PING && !using_tap_clock) {
+		if (clk_time && settings.no_free_running_ping && !using_tap_clock) {
 			now = pingtmr;
 			if (now >= (clk_time<<1)) {
 			
 				pingtmr=0;
 
-				if (tapout_clk_time && TRIGOUT_IS_TAPCLKOUT)
+				if (tapout_clk_time && (settings.trigout_function==TRIGOUT_IS_TAPCLKOUT))
 				{
 					using_tap_clock = 1;				
 					clk_time = tapout_clk_time;
@@ -787,7 +780,7 @@ void update_envelope(void)
 					{
 						accum = 0x7FF80000;
 						envout = 0x0FFF;
-						if (triga_down && ASYNC_CAN_SUSTAIN)
+						if (triga_down && settings.async_can_sustain)
 							end_segment_flag = SUSTAIN;
 						else
 							end_segment_flag = FALL;
@@ -808,7 +801,7 @@ void update_envelope(void)
 
 					envout=0x0FFF;
 
-					if (triga_down && ASYNC_CAN_SUSTAIN)
+					if (triga_down && settings.async_can_sustain)
 					{
 						accum=0x7FF80000;
 						async_env_changed_shape=1;

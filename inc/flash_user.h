@@ -6,17 +6,38 @@
 
 #include <stm32f0xx.h>
 
-#define FLASH_SET 0b10101010
-#define FLASH_CLEAR 0b00000000
-#define FLASH_UNPROGRAMMED 0b11111111
+enum CycleJackBehavior {
+	CYCLE_JACK_RISING_EDGE_TOGGLES,
+	CYCLE_JACK_BOTH_EDGES_TOGGLE
+};
+enum TrigOutFunctions {
+	TRIGOUT_IS_ENDOFRISE,
+	TRIGOUT_IS_ENDOFFALL,
+	TRIGOUT_IS_HALFRISE,
+	TRIGOUT_IS_TAPCLKOUT
+};
+enum TrigInFunctions {
+	TRIGIN_IS_ASYNC,
+	TRIGIN_IS_QNT
+};
+#define VALID_SETTINGS 0xC001
 
-#define TAPCLK_FLASHADDR 16
-#define PING_FLASHADDR 17
-#define LIMIT_SKEW_FLASHADDR 18
-#define HALFRISE_FLASHADDR 19
-#define TRIGOUT_TRIG_FLASHADDR 21
-#define ASYNC_SUSTAIN_FLASHADDR 20
+struct SystemSettings {
+	uint16_t				is_valid;
+	uint16_t 				midpt_array[NUM_DIVMULTS];
+	uint8_t 				limit_skew;
+	uint8_t 				async_can_sustain;
+	uint8_t 				no_free_running_ping;
+	uint8_t 				trigout_is_trig;
+	enum TrigInFunctions 	trigin_function;
+	enum TrigOutFunctions 	trigout_function;
+	enum CycleJackBehavior 	cycle_jack_behavior;
 
-void write_calibration(uint8_t num_bytes, uint8_t *data);
-void read_calibration(uint8_t num_bytes, uint8_t *data);
-uint8_t is_calibrated(void);
+	uint32_t				start_clk_time;
+	uint8_t					start_cycle_on;
+};
+
+FLASH_Status write_settings(void);
+uint8_t read_settings(void);
+uint8_t check_settings_valid(void);
+void default_settings(void);

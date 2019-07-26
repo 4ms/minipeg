@@ -1,60 +1,59 @@
-// char EOF_IS_TAPCLKOUT=0;
-// char NO_FREERUNNING_PING=0;
-// char EOR_IS_HALFRISE=0;
-// char EO1_IS_TRIG=0;
-// char EO2_IS_TRIG=0;
-// char LIMIT_SKEW=0;
-// char ROLLOFF_PING=1;
-// char ASYNC_CAN_SUSTAIN=1;
+
 #include "globals.h"
 
-#define IS_CALIBRATED_ADDR 0x8000000
+struct SystemSettings settings;
+
 #define USER_FLASH_PAGE 0x08007C00
 
-void write_calibration(uint8_t num_words, uint32_t *data)
+FLASH_Status write_settings(void)
 {
 	FLASH_Status status;
-	uint32_t addr = USER_FLASH_PAGE;
 
-	FLASH_Unlock();
-	status = FLASH_ErasePage(addr);
+	flash_begin_open_program();
 
-	while (num_words--)
-	{
-		status = FLASH_ProgramWord(addr, *data++);
+	status = flash_open_erase_page(USER_FLASH_PAGE);
+	if (status != FLASH_COMPLETE) {
+		flash_end_open_program();
+		return status;
 	}
-	FLASH_Lock();
+
+	uint32_t sz = sizeof(struct SystemSettings)/2;
+	settings.is_valid = VALID_SETTINGS;
+	status = flash_open_program_halfword_array((uint16_t*)(&settings), USER_FLASH_PAGE, sz);
+
+	flash_end_open_program();
+	return status;
 }
 
-void read_calibration(uint8_t num_bytes, uint8_t *data)
+uint8_t read_settings(void)
 {
-	uint16_t midpt_array[19];
+	uint32_t sz = sizeof(struct SystemSettings)/2;
+	flash_read_halfword_array((uint16_t*)(&settings), USER_FLASH_PAGE, sz);
 
-	midpt_array[0] = 68;
-	midpt_array[1] = 262;
-	midpt_array[2] = 509;
-	midpt_array[3] = 743;
-	midpt_array[4] = 973;
-	midpt_array[5] = 1202;
-	midpt_array[6] = 1427;
-	midpt_array[7] = 1657;
-	midpt_array[8] = 1882;
-	midpt_array[9] = 2107;
-	midpt_array[10] = 2341;
-	midpt_array[11] = 2574;
-	midpt_array[12] = 2802;
-	midpt_array[13] = 3026;
-	midpt_array[14] = 3262;
-	midpt_array[15] = 3500;
-	midpt_array[16] = 3734;
-	midpt_array[17] = 3942;
-	midpt_array[18] = 4095;
+	if (!check_settings_valid())
+	{
+		default_settings();
+		return 0;
+	}
 
-	for (uint8_t i=0;i<num_bytes;i++)
-		data[i] = ((uint8_t *)midpt_array)[i];
-}
-
-uint8_t is_calibrated(void)
-{
 	return 1;
+}
+
+uint8_t check_settings_valid(void)
+{
+	return settings.is_valid==VALID_SETTINGS;
+}
+
+void default_settings(void)
+{
+	default_calibration();
+	settings.limit_skew = 0;
+	settings.async_can_sustain = 0;
+	settings.no_free_running_ping = 0;
+	settings.trigout_is_trig = 0;
+	settings.trigin_function = TRIGIN_IS_ASYNC;
+	settings.trigout_function = TRIGOUT_IS_ENDOFFALL;
+	settings.cycle_jack_behavior = CYCLE_JACK_RISING_EDGE_TOGGLES;
+	settings.start_clk_time = 8000;
+	settings.start_cycle_on = 1;
 }

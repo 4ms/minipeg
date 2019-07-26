@@ -3,7 +3,8 @@
 #include "log4096.h"
 
 extern const uint16_t loga[4096];
-extern char LIMIT_SKEW;
+
+extern struct SystemSettings settings;
 
 const int8_t P_array[NUM_DIVMULTS] = {
 	32, 16, 8, 7, 6, 5, 4, 3, 2,
@@ -11,33 +12,12 @@ const int8_t P_array[NUM_DIVMULTS] = {
 	-2, -3, -4, -5, -6, -7, -8, -12, -16
 };
 
-uint16_t midpt_array[NUM_DIVMULTS];
-
-
-void init_env_calcs(void)
-{
-	if (is_calibrated())
-	{
-		read_calibration(NUM_DIVMULTS*2, (uint8_t *)midpt_array);
-		if (!sanity_check_calibration())
-			default_calibration();
-	} else {
-		default_calibration();
-	}	
-
-	if (check_calibration_mode())
-	{
-		calibrate_divmult_pot();
-		write_calibration(NUM_DIVMULTS*2, (uint8_t *)midpt_array);
-	}
-}
-
 int8_t get_clk_div_nominal(uint16_t adc_val){
 	uint8_t i;
 
 	for (i=0;i<NUM_DIVMULTS;i++)
 	{
-		if (adc_val<=midpt_array[i])
+		if (adc_val<=settings.midpt_array[i])
 			return(P_array[i]);
 	}
 	return(P_array[NUM_DIVMULTS-1]);
@@ -67,7 +47,7 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)
 	else
 		skew_portion = (skew * div_clk_time) >> 8;
 
-	if (!LIMIT_SKEW || (div_clk_time<(LIMIT_SKEW_TIME>>1)) )
+	if (!settings.limit_skew || (div_clk_time<(LIMIT_SKEW_TIME>>1)) )
 	{
 		if (skew==0)
 			return (30);

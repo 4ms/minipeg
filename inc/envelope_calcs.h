@@ -34,4 +34,3 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time);
 int16_t calc_curve(int16_t t_dacout, char cur_curve);
 void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_rise, uint8_t *next_curve_fall);
 
-void init_env_calcs(void);
