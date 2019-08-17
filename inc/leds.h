@@ -6,24 +6,21 @@
 
 #include <stm32f0xx.h>
 
-enum RgbLedList {
+enum RgbLeds {
 	LED_PING,
 	LED_CYCLE,
+	LED_ENV,
+	LED_5VENV,
 
 	NUM_RGB_LEDS
 };
 
-typedef struct rgbLed {
-	uint8_t r_pwm_id;
-	uint8_t g_pwm_id;
-	uint8_t b_pwm_id;
-} rgbLed;
+enum MonoLeds {
+	LED_TRIGOUT,
 
-struct RgbColor{
-	uint16_t r;
-	uint16_t g;
-	uint16_t b;
+	NUM_MONO_LEDS
 };
+
 
 enum Palette {
 	c_OFF,
@@ -32,12 +29,11 @@ enum Palette {
 	c_GREEN,
 	c_RED,
 	c_BLUE,
+	c_CYAN,
 	
 	NUM_COLORS
 };
 
-void init_rgb_leds(void);
-void init_palette(void);
-void set_rgb_led(enum RgbLedList rgb_led_id, enum Palette color_id);
-void set_mono_led(uint8_t led_id, uint16_t brightness);
+void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id);
 void test_leds(void);
+void test_rb_color(uint16_t r, uint16_t b);

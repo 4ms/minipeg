@@ -2,6 +2,7 @@
 
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
+extern uint16_t adc_dma_buffer[NUM_ADCS];
 
 //Private:
 uint8_t sanity_check_calibration(void);
@@ -61,8 +62,8 @@ uint8_t sanity_check_calibration(void)
 
 uint8_t should_enter_calibration_mode(void)
 {
-	if ((analog[0].lpf_val < 5) && CYCLEBUT
-		&& (analog[3].lpf_val>4000) && (analog[4].lpf_val>4000) && (analog[5].lpf_val>4000))
+	if ((adc_dma_buffer[0] < 5) && CYCLEBUT
+		&& (adc_dma_buffer[3]>4000) && (adc_dma_buffer[4]>4000) && (adc_dma_buffer[5]>4000))
 		return 1;
 	else
 		return 0;
@@ -94,13 +95,13 @@ void calibrate_divmult_pot(void)
   
 
 		delay_ticks(stab_delay);
-		read1 = analog[0].lpf_val;
+		read1 = adc_dma_buffer[0];
 		delay_ticks(stab_delay);
-		read2 = analog[0].lpf_val;
+		read2 = adc_dma_buffer[0];
 		delay_ticks(stab_delay);
-		read3 = analog[0].lpf_val;
+		read3 = adc_dma_buffer[0];
 		delay_ticks(stab_delay);
-		read4 = analog[0].lpf_val;
+		read4 = adc_dma_buffer[0];
 
 		read_tot = read1 + read2 + read3 + read4;
 		read_avg = read_tot>>2;	
@@ -108,7 +109,7 @@ void calibrate_divmult_pot(void)
 		calib_array[j] = read_avg;
 
 		if (j<(NUM_DIVMULTS-1)){		
-			set_rgb_led(LED_CYCLE, c_BLUE); //blue = ready for user to change knob
+			set_rgb_led(LED_CYCLE, c_CYAN); //blue = ready for user to change knob
 
 			if (j==0 || j==(NUM_DIVMULTS-2)) diff=80;
 			else diff=160;
@@ -118,19 +119,19 @@ void calibrate_divmult_pot(void)
 			//wait until knob is detected as being moved
 			do {   
 				delay_ticks(stab_delay);
-				read1 = analog[0].lpf_val;
+				read1 = adc_dma_buffer[0];
 				delay_ticks(stab_delay);
-				read2 = analog[0].lpf_val;
+				read2 = adc_dma_buffer[0];
 				delay_ticks(stab_delay);
-				read3 = analog[0].lpf_val;
+				read3 = adc_dma_buffer[0];
 				delay_ticks(stab_delay);
-				read4 = analog[0].lpf_val;
+				read4 = adc_dma_buffer[0];
 
 				read_tot = read1 + read2 + read3 + read4;
 				read_avg = read_tot >> 2;	
 			} while ((read_avg - calib_array[j]) < diff);
 
-			set_rgb_led(LED_CYCLE, c_GREEN); //green = press cycle button
+			set_rgb_led(LED_CYCLE, c_WHITE); //green = press cycle button
 
 			t = 0;
 			while (t<100) {if (CYCLEBUT) t++; else t=0;}

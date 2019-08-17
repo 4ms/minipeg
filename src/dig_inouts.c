@@ -18,6 +18,7 @@ void init_dig_inouts(void){
 	gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
 	gpio.GPIO_Pin = TRIGOUT_pin;	GPIO_Init(TRIGOUT_GPIO, &gpio);
+	gpio.GPIO_Pin = LEDTRIGOUT_pin;	GPIO_Init(LEDTRIGOUT_GPIO, &gpio);
 
 
 	//Configure inputs

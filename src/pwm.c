@@ -34,21 +34,21 @@ void update_pwm(uint32_t pwmval, uint8_t pwmnum) {
 	else if (channel==4)
 		TIM_SetCompare4(pwm[pwmnum].tim, pwmval);
 }
-	
-void populate_pwm_pins(struct PWMOutput p[]) {
-	p[PWM_ENVLED].gpio = GPIOA;
-	p[PWM_ENVLED].pinnum = 7;
-	p[PWM_ENVLED].af = GPIO_AF_1;
-	p[PWM_ENVLED].tim = TIM3;
-	p[PWM_ENVLED].timchan = 2;
-	p[PWM_ENVLED].period = 1024;
 
-	p[PWM_ENV].gpio = GPIOB;
-	p[PWM_ENV].pinnum = 0;
-	p[PWM_ENV].af = GPIO_AF_1;
-	p[PWM_ENV].tim = TIM3;
-	p[PWM_ENV].timchan = 3;
-	p[PWM_ENV].period = 1024;
+void populate_pwm_pins(struct PWMOutput p[]) {
+	p[PWM_5VENVLED_B].gpio = GPIOA;
+	p[PWM_5VENVLED_B].pinnum = 7;
+	p[PWM_5VENVLED_B].af = GPIO_AF_1;
+	p[PWM_5VENVLED_B].tim = TIM3;
+	p[PWM_5VENVLED_B].timchan = 2;
+	p[PWM_5VENVLED_B].period = 1024;
+
+	p[PWM_5VENVLED_R].gpio = GPIOB;
+	p[PWM_5VENVLED_R].pinnum = 0;
+	p[PWM_5VENVLED_R].af = GPIO_AF_1;
+	p[PWM_5VENVLED_R].tim = TIM3;
+	p[PWM_5VENVLED_R].timchan = 3;
+	p[PWM_5VENVLED_R].period = 1024;
 
 	p[PWM_5VENV].gpio = GPIOA;
 	p[PWM_5VENV].pinnum = 6;
@@ -57,48 +57,47 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_5VENV].timchan = 1;
 	p[PWM_5VENV].period = 1024;
 
-	p[PWM_TRIGOUTLED].gpio = GPIOB;
-	p[PWM_TRIGOUTLED].pinnum = 1;
-	p[PWM_TRIGOUTLED].af = GPIO_AF_1;
-	p[PWM_TRIGOUTLED].tim = TIM3;
-	p[PWM_TRIGOUTLED].timchan = 4;
-	p[PWM_TRIGOUTLED].period = 1024;
+	p[PWM_ENV].gpio = GPIOB;
+	p[PWM_ENV].pinnum = 1;
+	p[PWM_ENV].af = GPIO_AF_1;
+	p[PWM_ENV].tim = TIM3;
+	p[PWM_ENV].timchan = 4;
+	p[PWM_ENV].period = 1024;
+
+	p[PWM_ENVLED_B].gpio = GPIOA;
+	p[PWM_ENVLED_B].pinnum = 8;
+	p[PWM_ENVLED_B].af = GPIO_AF_2;
+	p[PWM_ENVLED_B].tim = TIM1;
+	p[PWM_ENVLED_B].timchan = 1;
+	p[PWM_ENVLED_B].period = 1024;
+
+	p[PWM_ENVLED_R].gpio = GPIOA;
+	p[PWM_ENVLED_R].pinnum = 9;
+	p[PWM_ENVLED_R].af = GPIO_AF_2;
+	p[PWM_ENVLED_R].tim = TIM1;
+	p[PWM_ENVLED_R].timchan = 2;
+	p[PWM_ENVLED_R].period = 1024;
+
+	p[PWM_CYCLEBUT_BG].gpio = GPIOA;
+	p[PWM_CYCLEBUT_BG].pinnum = 10;
+	p[PWM_CYCLEBUT_BG].af = GPIO_AF_2;
+	p[PWM_CYCLEBUT_BG].tim = TIM1;
+	p[PWM_CYCLEBUT_BG].timchan = 3;
+	p[PWM_CYCLEBUT_BG].period = 1024;
 
 	p[PWM_CYCLEBUT_R].gpio = GPIOA;
-	p[PWM_CYCLEBUT_R].pinnum = 8;
+	p[PWM_CYCLEBUT_R].pinnum = 11;
 	p[PWM_CYCLEBUT_R].af = GPIO_AF_2;
 	p[PWM_CYCLEBUT_R].tim = TIM1;
-	p[PWM_CYCLEBUT_R].timchan = 1;
+	p[PWM_CYCLEBUT_R].timchan = 4;
 	p[PWM_CYCLEBUT_R].period = 1024;
 
-	p[PWM_CYCLEBUT_G].gpio = GPIOA;
-	p[PWM_CYCLEBUT_G].pinnum = 9;
-	p[PWM_CYCLEBUT_G].af = GPIO_AF_2;
-	p[PWM_CYCLEBUT_G].tim = TIM1;
-	p[PWM_CYCLEBUT_G].timchan = 2;
-	p[PWM_CYCLEBUT_G].period = 1024;
-
-	p[PWM_CYCLEBUT_B].gpio = GPIOA;
-	p[PWM_CYCLEBUT_B].pinnum = 10;
-	p[PWM_CYCLEBUT_B].af = GPIO_AF_2;
-	p[PWM_CYCLEBUT_B].tim = TIM1;
-	p[PWM_CYCLEBUT_B].timchan = 3;
-	p[PWM_CYCLEBUT_B].period = 1024;
-
-
-	p[PWM_PINGBUT_R].gpio = GPIOA;
-	p[PWM_PINGBUT_R].pinnum = 11;
-	p[PWM_PINGBUT_R].af = GPIO_AF_2;
-	p[PWM_PINGBUT_R].tim = TIM1;
-	p[PWM_PINGBUT_R].timchan = 4;
-	p[PWM_PINGBUT_R].period = 1024;
-
-	p[PWM_PINGBUT_G].gpio = GPIOB;
-	p[PWM_PINGBUT_G].pinnum = 4;
-	p[PWM_PINGBUT_G].af = GPIO_AF_1;
-	p[PWM_PINGBUT_G].tim = TIM3;
-	p[PWM_PINGBUT_G].timchan = 1;
-	p[PWM_PINGBUT_G].period = 1024;
+	p[PWM_PINGBUT_RG].gpio = GPIOB;
+	p[PWM_PINGBUT_RG].pinnum = 4;
+	p[PWM_PINGBUT_RG].af = GPIO_AF_1;
+	p[PWM_PINGBUT_RG].tim = TIM3;
+	p[PWM_PINGBUT_RG].timchan = 1;
+	p[PWM_PINGBUT_RG].period = 1024;
 
 	p[PWM_PINGBUT_B].gpio = GPIOB;
 	p[PWM_PINGBUT_B].pinnum = 7;

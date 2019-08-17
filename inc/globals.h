@@ -4,7 +4,7 @@
 
 #pragma once
 
-#define TRIGDEBUGMODE
+// #define TRIGDEBUGMODE
 
 
 #include <stm32f0xx.h>

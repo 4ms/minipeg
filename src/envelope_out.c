@@ -40,8 +40,16 @@ void output_envelope(uint32_t dacval)
 	update_pwm(env, PWM_ENV);
 	update_pwm(env5V, PWM_5VENV);
 
-	set_mono_led(PWM_ENVLED, env5V);
-	// set_mono_led(PWM_ENVLED, 1025-env);
+	//Todo: use red for negative portion
+	if (env<284) {
+		update_pwm(env*3+(1025-284*3), PWM_ENVLED_B);
+		update_pwm(1025, PWM_ENVLED_R);
+	} else {
+		update_pwm(1025, PWM_ENVLED_B);
+		update_pwm((284+1025)-env, PWM_ENVLED_R);
+	}
+	//Todo: use red if 5V is locked
+	update_pwm(env5V, PWM_5VENVLED_B);
 }
 
 void test_envout(void)
@@ -52,7 +60,17 @@ void test_envout(void)
 	{
 		update_pwm(i, PWM_ENV);
 		update_pwm(i, PWM_5VENV);
-		update_pwm(i, PWM_ENVLED);
+		update_pwm(i, PWM_ENVLED_B);
+		update_pwm(i, PWM_5VENVLED_B);
+
+		delay_ticks(1);
+	}
+	for (i=1025; i>0; i--)
+	{
+		update_pwm(i, PWM_ENV);
+		update_pwm(i, PWM_5VENV);
+		update_pwm(i, PWM_ENVLED_R);
+		update_pwm(i, PWM_5VENVLED_R);
 
 		delay_ticks(1);
 	}

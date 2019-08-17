@@ -146,17 +146,15 @@ int main(void)
 	init_EXTI_inputs();
 	init_debouncer();
 
-	init_rgb_leds();
-	init_palette();
-
-	//test_leds();
-	//test_rgb_color(adc_buffer[5], adc_buffer[5], adc_buffer[5]);
+	// test_leds();
+	// while (1) test_rb_color(adc_dma_buffer[5], adc_dma_buffer[4]);
 
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
+	set_rgb_led(LED_ENV, c_OFF);
+	set_rgb_led(LED_5VENV, c_OFF);
 
-	set_mono_led(PWM_TRIGOUTLED, 0);
-	set_mono_led(PWM_ENVLED, 0);
+	LEDTRIGOUT_OFF;
 
 	eor_off();
 	eof_off();
@@ -188,6 +186,7 @@ int main(void)
 	sync_to_ping_mode=1;
 	accum=0;
 
+	delay_ticks(100);
 	check_calibration();
 
 	while (1)

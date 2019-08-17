@@ -9,7 +9,6 @@ void setup_fir_lpf(void);
 
 void init_analog_conditioning(void)
 {
-
 	analog[POT_DIVMULT].polarity = AP_UNIPOLAR;
 	analog[POT_SHAPE].polarity = AP_UNIPOLAR;
 	analog[POT_OFFSET].polarity = AP_UNIPOLAR;
@@ -38,6 +37,9 @@ void setup_fir_lpf(void)
 
 //todo: make this a system calibration
 const int16_t adc_cal_offset[NUM_ADCS] = {0, 48, 48, 0, 0, 0};
+
+//todo: try: new_value += (new_value - old_value) * abs(new_value - old_value) * COEF
+//where COEF might be 0.1
 
 void condition_analog(void)
 {
