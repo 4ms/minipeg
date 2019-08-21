@@ -72,7 +72,7 @@ uint8_t should_enter_calibration_mode(void)
 
 void calibrate_divmult_pot(void)
 {
-	uint16_t stab_delay=30;
+	const uint16_t stab_delay=15;
 	uint16_t calib_array[NUM_DIVMULTS];
 	uint16_t read_tot;
 	uint16_t read_avg;
@@ -94,13 +94,13 @@ void calibrate_divmult_pot(void)
 		set_rgb_led(LED_CYCLE, c_OFF); //off = reading pot 
   
 
-		delay_ticks(stab_delay);
+		delay_ms(stab_delay);
 		read1 = adc_dma_buffer[0];
-		delay_ticks(stab_delay);
+		delay_ms(stab_delay);
 		read2 = adc_dma_buffer[0];
-		delay_ticks(stab_delay);
+		delay_ms(stab_delay);
 		read3 = adc_dma_buffer[0];
-		delay_ticks(stab_delay);
+		delay_ms(stab_delay);
 		read4 = adc_dma_buffer[0];
 
 		read_tot = read1 + read2 + read3 + read4;
@@ -114,17 +114,17 @@ void calibrate_divmult_pot(void)
 			if (j==0 || j==(NUM_DIVMULTS-2)) diff=80;
 			else diff=160;
 
-			delay_ticks(200);
+			delay_ms(20);
 
 			//wait until knob is detected as being moved
 			do {   
-				delay_ticks(stab_delay);
+				delay_ms(stab_delay);
 				read1 = adc_dma_buffer[0];
-				delay_ticks(stab_delay);
+				delay_ms(stab_delay);
 				read2 = adc_dma_buffer[0];
-				delay_ticks(stab_delay);
+				delay_ms(stab_delay);
 				read3 = adc_dma_buffer[0];
-				delay_ticks(stab_delay);
+				delay_ms(stab_delay);
 				read4 = adc_dma_buffer[0];
 
 				read_tot = read1 + read2 + read3 + read4;

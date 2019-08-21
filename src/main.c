@@ -141,9 +141,8 @@ int main(void)
 	init_analog_conditioning();
 
 	init_pwm();
-	SysTick_Config(SystemCoreClock/10000); //1000 is 1ms ticks, 10000 is 100us ticks, 100000 is 10us ticks
+	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 
-	init_EXTI_inputs();
 	init_debouncer();
 
 	// test_leds();
@@ -168,6 +167,7 @@ int main(void)
 		cycle_but_on = 1;
 		set_rgb_led(LED_CYCLE, c_ORANGE);
 		envelope_running = 1;
+		using_tap_clock = 1;
 	}
 	else
 	{
@@ -186,9 +186,9 @@ int main(void)
 	sync_to_ping_mode=1;
 	accum=0;
 
-	delay_ticks(100);
+	delay_ms(50);
 	check_calibration();
-
+	
 	while (1)
 	{
 		// DEBUGON;
@@ -206,7 +206,7 @@ int main(void)
 		handle_trigout_trigfall();
 		update_envelope();
 
-		// handle_system_mode();
+		handle_system_mode();
 	}
 
 }
@@ -548,7 +548,7 @@ void read_ping_clock(void)
 	// Also address starting and sync'ing the envelope to pings
 
 	if (got_tap_clock || ping_irq_timestamp) {
-		if (ping_irq_timestamp && PINGJACK) { //added && PING because it was sometimes false triggering on falling edge of PING 
+		if (ping_irq_timestamp) { // && PINGJACK
 			clk_time=ping_irq_timestamp;
 		}
 		if (!using_tap_clock)
@@ -620,7 +620,7 @@ void read_ping_clock(void)
 		/*	If we haven't received a ping within 2x expected clock time (that is, clock stopped or slowed to less than half speed)
 			we should stop the ping clock. Or switch to the Tap clock if it's running and we have Tap Clock Output on EOF
 		*/	
-		if (clk_time && settings.no_free_running_ping && !using_tap_clock) {
+		if (clk_time && !settings.free_running_ping && !using_tap_clock) {
 			now = pingtmr;
 			if (now >= (clk_time<<1)) {
 			
@@ -763,10 +763,10 @@ void update_envelope(void)
 		{
 			//PEGv2: this block takes about 15-18us and runs every 100us (10kHz sampling rate)
 			envout=0;
-			if (env_state==TRANSITION)
-				DEBUGON;
-			else
-				DEBUGOFF;
+			// if (env_state==TRANSITION)
+			// 	DEBUGON;
+			// else
+			// 	DEBUGOFF;
 
 			switch (env_state)
 			{
@@ -779,7 +779,7 @@ void update_envelope(void)
 					{
 						accum = 0x7FF80000;
 						envout = 0x0FFF;
-						if (triga_down && settings.async_can_sustain)
+						if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 							end_segment_flag = SUSTAIN;
 						else
 							end_segment_flag = FALL;
@@ -800,7 +800,7 @@ void update_envelope(void)
 
 					envout=0x0FFF;
 
-					if (triga_down && settings.async_can_sustain)
+					if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 					{
 						accum=0x7FF80000;
 						async_env_changed_shape=1;

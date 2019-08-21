@@ -14,7 +14,6 @@
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
 #include "envelope_out.h"
-#include "exti.h"
 #include "flash_user.h"
 #include "leds.h"
 #include "pwm.h"
@@ -25,6 +24,7 @@
 #include "flash.h"
 
 
+#define TICKS_PER_MS 20
 
 #define ADC_DRIFT 16
 #define USER_INPUT_POLL_TIME 400
@@ -39,11 +39,7 @@
 //150000 is about 3.75s
 //103000 is about 2.5
 #define SYSTEM_MODE_HOLD_TIME 130000
-#define SYSTEM_MODE_EXIT_TIME 0x00080000
-#define SYSTEM_MODE_CYCLE_FLASH_BRIGHT_ON 15000
-#define SYSTEM_MODE_CYCLE_FLASH_BRIGHT_OFF 25000
-#define SYSTEM_MODE_CYCLE_FLASH_DIM_ON 5000
-#define SYSTEM_MODE_CYCLE_FLASH_DIM_OFF 50000
+#define SYSTEM_MODE_EXIT_TIME 260000
 
 //119 is 13.15ms
 //91 is 10.0ms

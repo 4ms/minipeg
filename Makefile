@@ -11,7 +11,7 @@ OBJDUMP=arm-none-eabi-objdump
 SIZE=arm-none-eabi-size
 
 CFLAGS  = -Wall -g -std=c99 
-CFLAGS += -O3
+CFLAGS += -O0
 CFLAGS += -mlittle-endian -mcpu=cortex-m0  -march=armv6-m -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Wl,--gc-sections -Wl,-Map=$(PROJ_NAME).map
@@ -28,7 +28,6 @@ CFLAGS += -include $(STD_PERIPH_LIB)/stm32f0xx_conf.h
 SRCS += stm32/startup_stm32f0xx.s
 SRCS += $(STD_PERIPH_SRCS)/stm32f0xx_adc.c \
 	$(STD_PERIPH_SRCS)/stm32f0xx_dma.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_exti.c \
 	$(STD_PERIPH_SRCS)/stm32f0xx_flash.c \
 	$(STD_PERIPH_SRCS)/stm32f0xx_gpio.c \
 	$(STD_PERIPH_SRCS)/stm32f0xx_misc.c \

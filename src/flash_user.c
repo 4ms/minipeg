@@ -48,8 +48,7 @@ void default_settings(void)
 {
 	default_calibration();
 	settings.limit_skew = 0;
-	settings.async_can_sustain = 0;
-	settings.no_free_running_ping = 0;
+	settings.free_running_ping = 0;
 	settings.trigout_is_trig = 0;
 	settings.trigin_function = TRIGIN_IS_ASYNC;
 	settings.trigout_function = TRIGOUT_IS_ENDOFFALL;

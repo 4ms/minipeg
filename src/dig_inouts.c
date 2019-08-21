@@ -23,7 +23,7 @@ void init_dig_inouts(void){
 
 	//Configure inputs
 	gpio.GPIO_Mode = GPIO_Mode_IN;
-	gpio.GPIO_Speed = GPIO_Speed_2MHz;
+	gpio.GPIO_Speed = GPIO_Speed_50MHz;
 
 	gpio.GPIO_PuPd = GPIO_PuPd_UP;
 	gpio.GPIO_Pin = PINGBUT_pin;	GPIO_Init(PINGBUT_GPIO, &gpio);

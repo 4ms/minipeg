@@ -8,17 +8,23 @@
 
 enum CycleJackBehavior {
 	CYCLE_JACK_RISING_EDGE_TOGGLES,
-	CYCLE_JACK_BOTH_EDGES_TOGGLE
+	CYCLE_JACK_BOTH_EDGES_TOGGLE,
+	NUM_CYCLEJACK_FUNCTIONS
 };
 enum TrigOutFunctions {
 	TRIGOUT_IS_ENDOFRISE,
 	TRIGOUT_IS_ENDOFFALL,
 	TRIGOUT_IS_HALFRISE,
-	TRIGOUT_IS_TAPCLKOUT
+	TRIGOUT_IS_TAPCLKOUT,
+
+	NUM_TRIGOUT_FUNCTIONS
 };
 enum TrigInFunctions {
 	TRIGIN_IS_ASYNC,
-	TRIGIN_IS_QNT
+	TRIGIN_IS_ASYNC_SUSTAIN,
+	TRIGIN_IS_QNT,
+
+	NUM_TRIGIN_FUNCTIONS
 };
 #define VALID_SETTINGS 0xC001
 
@@ -26,8 +32,7 @@ struct SystemSettings {
 	uint16_t				is_valid;
 	uint16_t 				midpt_array[NUM_DIVMULTS];
 	uint8_t 				limit_skew;
-	uint8_t 				async_can_sustain;
-	uint8_t 				no_free_running_ping;
+	uint8_t 				free_running_ping;
 	uint8_t 				trigout_is_trig;
 	enum TrigInFunctions 	trigin_function;
 	enum TrigOutFunctions 	trigout_function;

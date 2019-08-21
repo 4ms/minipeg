@@ -30,6 +30,9 @@ enum Palette {
 	c_RED,
 	c_BLUE,
 	c_CYAN,
+	c_PURPLE,
+	c_YELLOW,
+	c_DIMBLUE,
 	
 	NUM_COLORS
 };

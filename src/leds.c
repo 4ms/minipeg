@@ -44,6 +44,18 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 				update_pwm(0, PWM_PINGBUT_RG);
 				update_pwm(100, PWM_PINGBUT_B);
 				break;
+			case c_YELLOW:
+				update_pwm(0, PWM_PINGBUT_RG);
+				update_pwm(1024, PWM_PINGBUT_B);
+				break;
+			case c_BLUE:
+				update_pwm(1024, PWM_PINGBUT_RG);
+				update_pwm(0, PWM_PINGBUT_B);
+				break;
+			case c_DIMBLUE:
+				update_pwm(1024, PWM_PINGBUT_RG);
+				update_pwm(850, PWM_PINGBUT_B);
+				break;
 			case c_OFF:
 			default:
 				update_pwm(1025, PWM_PINGBUT_RG);
@@ -80,24 +92,10 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	else if (rgb_led_id==LED_ENV)
 	{
 		switch (color_id) {
-			case c_RED:
-				update_pwm(1024, PWM_5VENVLED_B);
-				update_pwm(0, PWM_5VENVLED_R);
+			case c_PURPLE:
+				update_pwm(0, PWM_ENVLED_B);
+				update_pwm(0, PWM_ENVLED_R);
 				break;
-			case c_BLUE:
-				update_pwm(0, PWM_5VENVLED_B);
-				update_pwm(1024, PWM_5VENVLED_R);
-				break;
-			case c_OFF:
-			default:
-				update_pwm(1025, PWM_5VENVLED_B);
-				update_pwm(1025, PWM_5VENVLED_R);
-				break;
-		}
-	}
-	else if (rgb_led_id==LED_5VENV)
-	{
-		switch (color_id) {
 			case c_RED:
 				update_pwm(1024, PWM_ENVLED_B);
 				update_pwm(0, PWM_ENVLED_R);
@@ -110,6 +108,28 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 			default:
 				update_pwm(1025, PWM_ENVLED_B);
 				update_pwm(1025, PWM_ENVLED_R);
+				break;
+		}
+	}
+	else if (rgb_led_id==LED_5VENV)
+	{
+		switch (color_id) {
+			case c_PURPLE:
+				update_pwm(0, PWM_5VENVLED_B);
+				update_pwm(0, PWM_5VENVLED_R);
+				break;
+			case c_RED:
+				update_pwm(1024, PWM_5VENVLED_B);
+				update_pwm(0, PWM_5VENVLED_R);
+				break;
+			case c_BLUE:
+				update_pwm(0, PWM_5VENVLED_B);
+				update_pwm(1024, PWM_5VENVLED_R);
+				break;
+			case c_OFF:
+			default:
+				update_pwm(1025, PWM_5VENVLED_B);
+				update_pwm(1025, PWM_5VENVLED_R);
 				break;
 		}
 	}

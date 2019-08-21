@@ -11,12 +11,13 @@ enum DebouncedDiginList {
 	CYCLE_BUTTON,
 	TRIGGER_JACK,
 	CYCLE_JACK,
+	PING_JACK,
 
 	NUM_DEBOUNCED_DIGINS
 };
 
 typedef struct DebouncedDigin {
-	uint16_t 	debounce_history;
+	uint16_t 	history;
 	uint8_t 	state;
 	int8_t 		edge;
 } debounced_digin_t;

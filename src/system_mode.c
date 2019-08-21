@@ -1,306 +1,191 @@
 #include "globals.h"
+extern __IO uint32_t systmr;
+extern struct SystemSettings settings;
+extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 
-
-/*
-void read_system_settings(void)
-{
-	temp_u8=eeprom_read_byte((const uint8_t *)(TAPCLK_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		EOF_IS_TAPCLKOUT=1;
-	else
-		EOF_IS_TAPCLKOUT=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(PING_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		NO_FREERUNNING_PING=1;
-	else
-		NO_FREERUNNING_PING=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(HALFRISE_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		EOR_IS_HALFRISE=1;
-	else
-	if (temp_u8==EEPROM_UNPROGRAMMED && BLUE_DETECT) {//a new chip with the blue jumper should default to HALFRISE mode
-		EOR_IS_HALFRISE=1; 
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(HALFRISE_EEPROMADDR),EEPROM_SET);
-		eeprom_busy_wait();
-	}
-	else EOR_IS_HALFRISE=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(EO1_TRIG_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		EO1_IS_TRIG=1;
-	else
-		EO1_IS_TRIG=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(EO2_TRIG_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		EO2_IS_TRIG=1;
-	else
-		EO2_IS_TRIG=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(LIMIT_SKEW_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		LIMIT_SKEW=1;
-	else
-		LIMIT_SKEW=0;
-
-	temp_u8=eeprom_read_byte((const uint8_t *)(ASYNC_SUSTAIN_EEPROMADDR));
-	if (temp_u8==EEPROM_SET)
-		ASYNC_CAN_SUSTAIN=0;
-	else
-		ASYNC_CAN_SUSTAIN=1;
-
-}
-
-
+ 
 void handle_system_mode(void)
 {
-	if (TAPIN)
+	static uint32_t entering_system_mode = 0;
+	uint8_t d;
+	enum SystemModeParams system_mode_cur;
+	// uint8_t update_cycle_button_now;
+
+	if (digin[PING_BUTTON].state)
 		entering_system_mode++;
 	else
 		entering_system_mode=0;
 
-	if (entering_system_mode>SYSTEM_MODE_HOLD_TIME){
-		for(d=0;d<5;d++){
-			EO1_ON;EO2_ON;
-			CYCLE_LED_ON;PINGLEDHIGH;
-			output_dac(0x0800);
-			_delay_ms(100);
-			if (d==4) _delay_ms(500);
+	if (entering_system_mode>SYSTEM_MODE_HOLD_TIME) {
+		for (d=0;d<5;d++) {
+			set_rgb_led(LED_PING, c_WHITE);
+			set_rgb_led(LED_CYCLE, c_WHITE);
+			set_rgb_led(LED_ENV, c_PURPLE);
+			set_rgb_led(LED_5VENV, c_PURPLE);
+			LEDTRIGOUT_ON;
 
-			EO1_OFF;EO2_OFF;
-			CYCLE_LED_OFF;PINGLEDLOW;
-			output_dac(0);
-			_delay_ms(100);
+			delay_ms(100);
+			if (d==4) delay_ms(500);
+
+			set_rgb_led(LED_PING, c_OFF);
+			set_rgb_led(LED_CYCLE, c_OFF);
+			set_rgb_led(LED_ENV, c_OFF);
+			set_rgb_led(LED_5VENV, c_OFF);
+			LEDTRIGOUT_OFF;
+
+			delay_ms(100);
 		}
 
-		while(TAPIN){
+		while(digin[PING_BUTTON].state==1){
+			;
 		}
 
-		_delay_ms(50);
+		delay_ms(50);
 		entering_system_mode=0;
-		initial_cycle_button_state=CYCLE_BUT_RAW;
 
 		// Setup for the EOF mode
-		system_mode_cur=0;
-		EO2_ON;
-		if (EOF_IS_TAPCLKOUT) 	CYCLE_LED_ON;
-		else 					CYCLE_LED_OFF;
+		// here
+		system_mode_cur=SET_TRIGOUT_FUNC;
 		
-		update_cycle_button_now=1;
+		// update_cycle_button_now=1;
 
 		// Loop until we've held down TAPIN more than SYSTEM_MODE_EXIT_TIME cycles
-		while(entering_system_mode<SYSTEM_MODE_EXIT_TIME){
+		while (entering_system_mode<SYSTEM_MODE_EXIT_TIME) {
 
-			if (TAPIN || update_cycle_button_now) {
+			if (digin[PING_BUTTON].state)
 				entering_system_mode++;	
-					
-				if (!tapin_down){
-					flash_cycle_led=0;
-					tapin_down=1;
+			else
+				entering_system_mode = 0;
 
-					initial_cycle_button_state=CYCLE_BUT_RAW;
+			// if (digin[PING_BUTTON].edge==1 || update_cycle_button_now) {
 
-					EO1_OFF;
-					EO2_OFF;
-					PINGLEDLOW;
-					output_dac(0);
-					
-					if (!update_cycle_button_now) system_mode_cur++;
-					else update_cycle_button_now=0;
+				set_rgb_led(LED_PING, c_OFF);
+				set_rgb_led(LED_CYCLE, c_OFF);
+				set_rgb_led(LED_ENV, c_OFF);
+				set_rgb_led(LED_5VENV, c_OFF);
+				LEDTRIGOUT_OFF;
 
-					switch (system_mode_cur){
-				
-						case(5):
-							system_mode_cur=0;
-						case(0):
-							EO2_ON;d=EO2_IS_TRIG;
+				if (digin[PING_BUTTON].edge==1 ) {
+					system_mode_cur++;
+					digin[PING_BUTTON].edge = 0;
+				}
 
-							if (!EOF_IS_TAPCLKOUT && !d) 	CYCLE_LED_OFF;
-							else if (!EOF_IS_TAPCLKOUT && d) flash_cycle_led=1;
-							else if (EOF_IS_TAPCLKOUT && !d)	CYCLE_LED_ON;
-							else flash_cycle_led=2;
-						break;
-
-						case(1):
-							EO1_ON;d=EO1_IS_TRIG;
-
-							if (!EOR_IS_HALFRISE && !d) 	CYCLE_LED_OFF;
-							else if (!EOR_IS_HALFRISE && d) flash_cycle_led=1;
-							else if (EOR_IS_HALFRISE && !d)	CYCLE_LED_ON;
-							else flash_cycle_led=2;
-						break;
-
-						case(2):
-							output_dac(0x0FFF);
-							if (LIMIT_SKEW)	CYCLE_LED_ON;
-							else					CYCLE_LED_OFF;
-						break;
-						
-						case(3):
-							PINGLEDHIGH;
-							if (NO_FREERUNNING_PING) 	CYCLE_LED_ON;
-							else 						CYCLE_LED_OFF;
-						break;
-
-						case(4):
-							EO1_ON;EO2_ON;
-							if (ASYNC_CAN_SUSTAIN) CYCLE_LED_OFF;
-							else	CYCLE_LED_ON;
-						break;
-
-
-					}//switch system_mode_cur
-				}//if tapin_down
-
-			} else { //if TAPIN
-				tapin_down=0;
-				entering_system_mode=0;
-			}		
+				switch (system_mode_cur) {
 			
-			// Flash the cycle button if necessary 
-			if (flash_cycle_led==1){
-				temp_u16++;
-				if (temp_u16<SYSTEM_MODE_CYCLE_FLASH_DIM_ON) CYCLE_LED_ON;
-				else if (temp_u16<SYSTEM_MODE_CYCLE_FLASH_DIM_OFF) CYCLE_LED_OFF;
-				else temp_u16=0;
-			}
-			if (flash_cycle_led==2){
-				temp_u16++;
-				if (temp_u16<SYSTEM_MODE_CYCLE_FLASH_BRIGHT_ON) CYCLE_LED_ON;
-				else if (temp_u16<SYSTEM_MODE_CYCLE_FLASH_BRIGHT_OFF) CYCLE_LED_OFF;
-				else temp_u16=0;
-			}
-
-			// Check to see if we've changed states with the Cycle button...
-			temp_u8=CYCLE_BUT_RAW;
-
-			if(initial_cycle_button_state!=temp_u8){
-				_delay_ms(50); //to de-noise the cycle button
-
-				flash_cycle_led=0;
-				initial_cycle_button_state=temp_u8;
-
-				switch(system_mode_cur){
-					case(0):
-						EO2_IS_TRIG=1-EO2_IS_TRIG;
-						if (!EO2_IS_TRIG) EOF_IS_TAPCLKOUT=1-EOF_IS_TAPCLKOUT;
+					case(NUM_SYSMODE_PARAMS):
+						system_mode_cur=SET_TRIGOUT_FUNC;
+					case(SET_TRIGOUT_FUNC):
+						LEDTRIGOUT_ON;
+						if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
+							set_rgb_led(LED_CYCLE, c_RED);
+						else if (settings.trigout_function == TRIGOUT_IS_ENDOFFALL)
+							set_rgb_led(LED_CYCLE, c_ORANGE);
+						else if (settings.trigout_function == TRIGOUT_IS_HALFRISE)
+							set_rgb_led(LED_CYCLE, c_CYAN);
+						else if (settings.trigout_function == TRIGOUT_IS_TAPCLKOUT)
+							set_rgb_led(LED_CYCLE, c_WHITE);
 					break;
 
-					case(1):
-						EO1_IS_TRIG=1-EO1_IS_TRIG;
-						if (!EO1_IS_TRIG) EOR_IS_HALFRISE=1-EOR_IS_HALFRISE;
+					case(SET_TRIGOUT_IS_TRIG):
+						if (settings.trigout_is_trig) {
+							set_rgb_led(LED_CYCLE, c_WHITE);
+							if (systmr & 0x0F00) LEDTRIGOUT_OFF;
+							else LEDTRIGOUT_ON;
+						} else {
+							set_rgb_led(LED_CYCLE, c_ORANGE);
+							if (systmr & 0x1000) LEDTRIGOUT_OFF;
+							else LEDTRIGOUT_ON;
+						}
 					break;
 
-					case(2):
-						LIMIT_SKEW=1-LIMIT_SKEW;
+					case(SET_LIMIT_SKEW):
+						set_rgb_led(LED_ENV, c_BLUE);
+						if (settings.limit_skew)
+							set_rgb_led(LED_CYCLE, c_WHITE);
+						else
+							set_rgb_led(LED_CYCLE, c_ORANGE);
 					break;
-
-					case(3):
-						NO_FREERUNNING_PING=1-NO_FREERUNNING_PING;
-					break;
-
 					
-					case(4):
-						ASYNC_CAN_SUSTAIN=1-ASYNC_CAN_SUSTAIN;
+					case(SET_FREE_RUNNING_PING):
+						if (settings.free_running_ping) {
+							set_rgb_led(LED_PING, (systmr & 0x1000) ? c_WHITE : c_DIMBLUE);
+							set_rgb_led(LED_CYCLE, c_ORANGE);
+						} else {
+							set_rgb_led(LED_PING, c_DIMBLUE);
+							set_rgb_led(LED_CYCLE, c_WHITE);
+						}
+					break;
+
+					case(SET_TRIGIN_FUNCTION):
+						LEDTRIGOUT_ON;
+						set_rgb_led(LED_ENV, c_RED);
+						if (settings.trigin_function == TRIGIN_IS_QNT)
+							set_rgb_led(LED_CYCLE, c_CYAN);
+						else if (settings.trigin_function == TRIGIN_IS_ASYNC)
+							set_rgb_led(LED_CYCLE, c_ORANGE);
+						else if (settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN)
+							set_rgb_led(LED_CYCLE, c_RED);
+					break;
+
+					case(SET_CYCLEJACK_FUNCTION):
+						if (settings.cycle_jack_behavior==CYCLE_JACK_RISING_EDGE_TOGGLES)
+							set_rgb_led(LED_CYCLE, (systmr & 0x1000) ? c_RED : c_CYAN);
+						else
+							set_rgb_led(LED_CYCLE, (systmr & 0x2000) ? c_ORANGE : c_OFF);
 					break;
 				}
-				update_cycle_button_now=1;							
+			// }		
+
+			if (digin[CYCLE_BUTTON].edge==1) {
+				digin[CYCLE_BUTTON].edge = 0;
+				delay_ms(50); //to de-noise the cycle button
+
+
+				switch(system_mode_cur) {
+					case(SET_TRIGOUT_FUNC):
+						if (++settings.trigout_function == NUM_TRIGOUT_FUNCTIONS)
+							settings.trigout_function = 0;
+						break;
+
+					case(SET_TRIGOUT_IS_TRIG):
+						settings.trigout_is_trig = settings.trigout_is_trig ? 0 : 1;
+						break;
+
+					case(SET_LIMIT_SKEW):
+						settings.limit_skew = settings.limit_skew ? 0 : 1;
+						break;
+
+					case(SET_FREE_RUNNING_PING):
+						settings.free_running_ping = settings.free_running_ping ? 0 : 1;
+						break;
+					
+					case(SET_TRIGIN_FUNCTION):
+						if (++settings.trigin_function == NUM_TRIGIN_FUNCTIONS)
+							settings.trigin_function = 0;
+						break;
+
+					case(SET_CYCLEJACK_FUNCTION):
+						if (++settings.cycle_jack_behavior == NUM_CYCLEJACK_FUNCTIONS)
+							settings.cycle_jack_behavior = 0;
+						break;
+
+					default:
+						break;
+
+				}
+				// update_cycle_button_now=1;							
 
 
 			}
 			
 		} //while
 		
-
-		// write_eeprom_setting(NO_FREERUNNING_PING, PING_EEPROMADDR);
-		// write_eeprom_setting(EOR_IS_HALFRISE, HALFRISE_EEPROMADDR);
-		// write_eeprom_setting(EOF_IS_TAPCLKOUT, TAPCLK_EEPROMADDR);
-		// write_eeprom_setting(EO2_IS_TRIG, EO2_TRIG_EEPROMADDR);
-		// write_eeprom_setting(EO1_IS_TRIG, EO1_TRIG_EEPROMADDR);
-
-
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-		if (EOF_IS_TAPCLKOUT) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(TAPCLK_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-		if (NO_FREERUNNING_PING) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(PING_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-		if (EOR_IS_HALFRISE) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(HALFRISE_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-
-	 	if (LIMIT_SKEW) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(LIMIT_SKEW_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-	 	if (EO1_IS_TRIG) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(EO1_TRIG_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-	 	if (EO2_IS_TRIG) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(EO2_TRIG_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-			EO1_OFF;EO2_OFF;CYCLE_LED_OFF;PINGLEDLOW;output_dac(0);
-			_delay_ms(50);
-			EO1_ON;EO2_ON;CYCLE_LED_ON;PINGLEDHIGH;output_dac(0x0800);
-			_delay_ms(50);
-
-	 	if (!ASYNC_CAN_SUSTAIN) temp_u8=EEPROM_SET;else temp_u8=EEPROM_CLEAR;
-		eeprom_busy_wait();
-		eeprom_write_byte ((uint8_t *)(ASYNC_SUSTAIN_EEPROMADDR),temp_u8);
-		eeprom_busy_wait();
-
-		eof_on();
-		eor_off();
-		hr_off();
-		tapclkout_off();
-		if (CYCLE_BUT) CYCLE_LED_ON;
-		else CYCLE_LED_OFF;
-
+		write_settings();
 		entering_system_mode=0;
-		cycle_down=0;
-	}
+		
+		while(digin[PING_BUTTON].state==1){
+			;
+		}
 
+	}
 }
-*/
