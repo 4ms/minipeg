@@ -1,6 +1,6 @@
 #include "globals.h"
 
-// extern const uint16_t loga[4096];
+extern const uint16_t loga[4096];
 
 
 void test_leds(void)
@@ -33,6 +33,15 @@ void test_rb_color(uint16_t r, uint16_t b)
 	update_pwm(r, PWM_CYCLEBUT_R);
 	update_pwm(b, PWM_CYCLEBUT_BG);
 
+}
+
+void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num)
+{
+	brightness<<=2;
+	if (brightness>4095) brightness=4095;
+	brightness = loga[4095-brightness] >> 2;
+
+	update_pwm(brightness, pwm_led_num);
 }
 
 void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)

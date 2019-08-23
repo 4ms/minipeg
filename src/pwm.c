@@ -17,7 +17,7 @@ struct PWMOutput pwm[NUM_PWMS];
 void init_pwm_out_pin(struct PWMOutput *p);
 void populate_pwm_pins(struct PWMOutput *p);
 
-void update_pwm(uint32_t pwmval, uint8_t pwmnum) {
+void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 	uint8_t channel;
 
 	channel = pwm[pwmnum].timchan;
