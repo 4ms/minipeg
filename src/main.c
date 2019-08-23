@@ -296,7 +296,7 @@ void read_trigjacks(void)
 	{
 		digin[TRIGGER_JACK].edge = 0;
 
-		if (settings.trigin_function==TRIGIN_IS_ASYNC)
+		if (settings.trigin_function==TRIGIN_IS_ASYNC || settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 		{
 			triga_down=1;
 			trigq_down=0;
@@ -367,14 +367,14 @@ void read_cycle_button(void)
 
 	// Cycle button/jack starts the envelope mid-way in its curve (must be calculated)
 
-	if (digin[CYCLE_BUTTON].edge==1 || do_toggle_cycle)
+	if (digin[CYCLE_BUTTON].edge == -1 || do_toggle_cycle)
 	{
-		digin[CYCLE_BUTTON].edge=0;
-		do_toggle_cycle=0;
+		digin[CYCLE_BUTTON].edge = 0;
+		do_toggle_cycle = 0;
 
-		if (cycle_but_on==0)
+		if (cycle_but_on == 0)
 		{
-			cycle_but_on=1;
+			cycle_but_on = 1;
 			set_rgb_led(LED_CYCLE, c_ORANGE);
 
 			if (clk_time>0)
@@ -936,7 +936,13 @@ void update_envelope(void)
 			hr_off();
 			eof_on();
 			outta_sync = 0;
+			
 			output_envelope(0);
+			//Todo: offset if holding down CYCLE while turning Offset:
+			//if (cycle_offset_combo)
+			//	output_offset();
+			//else
+			//	output_envelope(0);
 			ticks_since_envout = 0;
 		}
 	}
@@ -1014,7 +1020,7 @@ void update_adc_params(uint8_t force_params_update)
 
 		cv = 2048 - analog[CV_SHAPE].lpf_val;
 		if (cv>-20 && cv<20) cv = 0;
-		
+
 		total_adc = cv + analog[POT_SHAPE].lpf_val;
 		if (total_adc>4095) total_adc=4095;
 		else if (total_adc<0) total_adc=0;
