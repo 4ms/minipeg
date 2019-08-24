@@ -95,6 +95,8 @@ uint8_t skew, curve;
 int16_t offset=0;
 int16_t scale=0;
 int16_t shift=512;
+uint8_t adjusting_shift_mode=0;
+int16_t cycle_latched_offset;
 
 uint16_t poll_user_input = 0;
 char divmult_changed=0;
@@ -369,7 +371,16 @@ void read_cycle_button(void)
 	uint64_t time_tmp=0;
 	uint32_t elapsed_time;
 
-	// Cycle button/jack starts the envelope mid-way in its curve (must be calculated)
+	if (digin[CYCLE_BUTTON].edge == 1) {
+		cycle_latched_offset = analog[POT_OFFSET].lpf_val;
+		digin[CYCLE_BUTTON].edge = 0;
+	}
+
+	// Releasing cycle button in adjusting shift mode does not toggle cycle
+	if ((digin[CYCLE_BUTTON].edge == -1) && adjusting_shift_mode) {
+		adjusting_shift_mode = 0;
+		digin[CYCLE_BUTTON].edge = 0;
+	}
 
 	if (digin[CYCLE_BUTTON].edge == -1 || do_toggle_cycle)
 	{
@@ -1039,6 +1050,12 @@ void update_adc_params(uint8_t force_params_update)
 		else
 			tmp = 0;
 
+		if (digin[CYCLE_BUTTON].state && (diff(cycle_latched_offset, analog[POT_OFFSET].lpf_val) > 40))
+			adjusting_shift_mode = 1;
+
+		if (adjusting_shift_mode) 
+			shift = 512 + (tmp>>2);
+		else 
 			offset = tmp;
 
 

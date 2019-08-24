@@ -2,7 +2,7 @@
 extern __IO uint32_t systmr;
 extern struct SystemSettings settings;
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
-
+extern uint8_t adjusting_shift_mode;
  
 void handle_system_mode(void)
 {
@@ -13,6 +13,9 @@ void handle_system_mode(void)
 
 	if (digin[CYCLE_BUTTON].state == 0)
 		cycle_held_time = systmr;
+
+	if (adjusting_shift_mode)
+		return;
 
 	if ((systmr - cycle_held_time) <= (3000*TICKS_PER_MS)) 
 		return;
