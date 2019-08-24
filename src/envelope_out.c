@@ -1,20 +1,18 @@
 #include "globals.h"
 
 extern analog_t analog[NUM_ADCS];
+extern int16_t scale, offset, shift;
 
 void output_envelope(uint32_t dacval)
 {
 	int32_t env;
 	uint16_t env5V = dacval >> 2;
 
-	int16_t scale = analog[POT_SCALE].lpf_val - 2048;
-	int16_t offset = 4095 - analog[POT_OFFSET].lpf_val; //4095 to 0
-
 	env = (int16_t)dacval;
-	env -= offset; //-2048 to +2048
+	env -= (offset+2047); //-2048 to +2048
 	env *= scale;
 	env >>= 14;		
-	env = 512 - env ;
+	env = shift - env;
 
 	if (env>1024) env=1025;
 	else if (env<0) env=0;

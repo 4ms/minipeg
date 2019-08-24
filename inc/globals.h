@@ -55,6 +55,15 @@
 #define QNT_REPHASES_WHEN_CYCLE_OFF 0
 #define CYCLE_REPHASES_DIV_PING 1
 
+#define SCALE_PLATEAU_WIDTH 100
+#define SCALE_PLATEAU_LOW (2048 - (SCALE_PLATEAU_WIDTH/2))
+#define SCALE_PLATEAU_HIGH	(2048 + (SCALE_PLATEAU_WIDTH/2))
+
+#define OFFSET_PLATEAU_WIDTH 100
+#define OFFSET_PLATEAU_LOW (2048 - (OFFSET_PLATEAU_WIDTH/2))
+#define OFFSET_PLATEAU_HIGH	(2048 + (OFFSET_PLATEAU_WIDTH/2))
+
+
 enum envelopeStates {
 	WAIT = 0,
 	RISE = 1,
@@ -62,7 +71,6 @@ enum envelopeStates {
 	FALL = 3,
 	TRANSITION = 4
 };
-
 
 static inline uint16_t diff(uint16_t a, uint16_t b){
 	if (a>b) return (a-b);

@@ -92,6 +92,10 @@ char update_cycle_button_now=0;
 
 uint16_t shape;
 uint8_t skew, curve;
+int16_t offset=0;
+int16_t scale=0;
+int16_t shift=512;
+
 uint16_t poll_user_input = 0;
 char divmult_changed=0;
 
@@ -379,6 +383,8 @@ void read_cycle_button(void)
 
 			if (clk_time>0)
 			{
+				// Cycle button/jack starts the envelope mid-way in its curve (must be calculated)	
+
 				if (using_tap_clock)
 					elapsed_time=tapouttmr;
 				else
@@ -1018,6 +1024,24 @@ void update_adc_params(uint8_t force_params_update)
 
 		update_risefallincs=0;
 
+		if (analog[POT_SCALE].lpf_val > SCALE_PLATEAU_HIGH)
+			scale = analog[POT_SCALE].lpf_val - SCALE_PLATEAU_HIGH;
+		else if (analog[POT_SCALE].lpf_val < SCALE_PLATEAU_LOW) 
+			scale = analog[POT_SCALE].lpf_val - SCALE_PLATEAU_LOW;
+		else
+			scale = 0;
+
+		int16_t tmp;
+		if (analog[POT_OFFSET].lpf_val > OFFSET_PLATEAU_HIGH)
+			tmp = OFFSET_PLATEAU_HIGH - analog[POT_OFFSET].lpf_val;
+		else if (analog[POT_OFFSET].lpf_val < OFFSET_PLATEAU_LOW) 
+			tmp = OFFSET_PLATEAU_LOW - analog[POT_OFFSET].lpf_val;
+		else
+			tmp = 0;
+
+			offset = tmp;
+
+
 		cv = 2048 - analog[CV_SHAPE].lpf_val;
 		if (cv>-20 && cv<20) cv = 0;
 
@@ -1243,6 +1267,7 @@ void update_adc_params(uint8_t force_params_update)
 			oversample_wait_ctr=0;
 			// DEBUGON;
 			condition_analog();
+
 			// DEBUGOFF;
 		}
 	}
