@@ -69,6 +69,11 @@ uint8_t should_enter_calibration_mode(void)
 		return 0;
 }
 
+//Todo: calibrate center detents of Scale and Offset (use red/blue of ENV and 5VENV LEDs). Also Shape center detent (use Ping color)
+void calibrate_center_detents(void)
+{
+
+}
 
 void calibrate_divmult_pot(void)
 {

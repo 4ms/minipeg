@@ -11,7 +11,7 @@ OBJDUMP=arm-none-eabi-objdump
 SIZE=arm-none-eabi-size
 
 CFLAGS  = -Wall -g -std=c99 
-CFLAGS += -O0
+CFLAGS += -O3
 CFLAGS += -mlittle-endian -mcpu=cortex-m0  -march=armv6-m -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Wl,--gc-sections -Wl,-Map=$(PROJ_NAME).map
