@@ -73,7 +73,7 @@ void handle_system_mode(void)
 				else if (settings.trigout_function == TRIGOUT_IS_ENDOFFALL)
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 				else if (settings.trigout_function == TRIGOUT_IS_HALFRISE)
-					set_rgb_led(LED_CYCLE, c_CYAN);
+					set_rgb_led(LED_CYCLE, c_GREEN);
 				else if (settings.trigout_function == TRIGOUT_IS_TAPCLKOUT)
 					set_rgb_led(LED_CYCLE, c_WHITE);
 
@@ -126,7 +126,7 @@ void handle_system_mode(void)
 				LEDTRIGOUT_ON;
 				set_rgb_led(LED_ENV, c_RED);
 				if (settings.trigin_function == TRIGIN_IS_QNT)
-					set_rgb_led(LED_CYCLE, c_CYAN);
+					set_rgb_led(LED_CYCLE, c_GREEN);
 				else if (settings.trigin_function == TRIGIN_IS_ASYNC)
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 				else if (settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN)
@@ -138,7 +138,7 @@ void handle_system_mode(void)
 
 			case(SET_CYCLEJACK_FUNCTION):
 				if (settings.cycle_jack_behavior == CYCLE_JACK_RISING_EDGE_TOGGLES)
-					set_rgb_led(LED_CYCLE, (systmr & 0x1000) ? c_RED : c_CYAN);
+					set_rgb_led(LED_CYCLE, (systmr & 0x1000) ? c_RED : c_GREEN);
 				else
 					set_rgb_led(LED_CYCLE, (systmr & 0x2000) ? c_ORANGE : c_OFF);
 
@@ -157,7 +157,7 @@ void handle_system_mode(void)
 			switch(system_mode_cur)
 			{
 				case(SET_TRIGOUT_FUNC):
-					if (++settings.trigout_function == NUM_TRIGOUT_FUNCTIONS)
+					if (++settings.trigout_function >= NUM_TRIGOUT_FUNCTIONS)
 						settings.trigout_function = 0;
 					break;
 
@@ -174,12 +174,12 @@ void handle_system_mode(void)
 					break;
 				
 				case(SET_TRIGIN_FUNCTION):
-					if (++settings.trigin_function == NUM_TRIGIN_FUNCTIONS)
+					if (++settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
 						settings.trigin_function = 0;
 					break;
 
 				case(SET_CYCLEJACK_FUNCTION):
-					if (++settings.cycle_jack_behavior == NUM_CYCLEJACK_FUNCTIONS)
+					if (++settings.cycle_jack_behavior >= NUM_CYCLEJACK_FUNCTIONS)
 						settings.cycle_jack_behavior = 0;
 					break;
 				default:

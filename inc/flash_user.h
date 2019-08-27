@@ -26,11 +26,24 @@ enum TrigInFunctions {
 
 	NUM_TRIGIN_FUNCTIONS
 };
+
+#define FIRST_CD_POT 3
+
+enum CenterDetentPots{
+	DET_SCALE,
+	DET_OFFSET,
+	DET_SHAPE,
+
+	NUM_CENTER_DETENT_POTS
+};
+
 #define VALID_SETTINGS 0xC001
 
 struct SystemSettings {
 	uint16_t				is_valid;
 	uint16_t 				midpt_array[NUM_DIVMULTS];
+	uint16_t				center_detent_offset[NUM_CENTER_DETENT_POTS];
+	
 	uint8_t 				limit_skew;
 	uint8_t 				free_running_ping;
 	uint8_t 				trigout_is_trig;

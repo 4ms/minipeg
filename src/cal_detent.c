@@ -5,19 +5,32 @@ extern analog_t analog[NUM_ADCS];
 extern uint16_t adc_dma_buffer[NUM_ADCS];
 
 //Private:
+enum CalRequests{
+	CAL_REQUEST_NONE,
+	CAL_REQUEST_ALL,
+	CAL_REQUEST_CENTER_DET
+};
+
 uint8_t sanity_check_calibration(void);
 void calibrate_divmult_pot(void);
-uint8_t should_enter_calibration_mode(void);
-
+enum CalRequests should_enter_calibration_mode(void);
+void calibrate_center_detents(void);
 
 void check_calibration(void)
 {
 	if (!sanity_check_calibration())
-		default_calibration();
-
-	if (should_enter_calibration_mode())
 	{
-		calibrate_divmult_pot();
+		default_settings();
+		write_settings();
+	}
+
+	enum CalRequests c = should_enter_calibration_mode();
+	if (c != CAL_REQUEST_NONE)
+	{
+		if (c==CAL_REQUEST_ALL)
+			calibrate_divmult_pot();
+
+		calibrate_center_detents();
 		write_settings();
 	}
 }
@@ -45,34 +58,122 @@ void default_calibration(void)
 	settings.midpt_array[17] = 3942;
 	settings.midpt_array[18] = 4095;
 
-	// for(uint8_t i=0; i<NUM_DIVMULTS; i++)
-	// {
-	// 	settings.midpt_array[i] = (i+1)*(4095/NUM_DIVMULTS);
-	// }
+	settings.center_detent_offset[DET_SCALE] = 0;
+	settings.center_detent_offset[DET_OFFSET] = 0;
+	settings.center_detent_offset[DET_SHAPE] = 0;
+
 }
 
 uint8_t sanity_check_calibration(void)
 {
-	for (uint8_t j = 0; j < (NUM_DIVMULTS-1); j++ ) {
+	uint8_t j;
+
+	for (j = 0; j < (NUM_DIVMULTS-1); j++ ) {
 		if (settings.midpt_array[j+1] <= settings.midpt_array[j])
-			return(0); //fail
+			return 0; //fail
 	}	
-	return(1); //pass
+	for (j = 0; j < NUM_CENTER_DETENT_POTS; j++ ) {
+		if ((settings.center_detent_offset[j] < -1000) || (settings.center_detent_offset[j] > 1000))
+			return 0;
+	}
+
+	if (settings.limit_skew>1)
+		return 0;
+	if (settings.free_running_ping>1)
+		return 0;
+	if (settings.trigout_is_trig>1)
+		return 0;
+	if (settings.trigin_function>=NUM_TRIGIN_FUNCTIONS)
+		return 0;
+	if (settings.trigout_function>=NUM_TRIGOUT_FUNCTIONS)
+		return 0;
+	if (settings.cycle_jack_behavior>=NUM_CYCLEJACK_FUNCTIONS)
+		return 0;
+	if ((settings.start_clk_time>0x8000000) || (settings.start_clk_time<100)) 
+		return 0;
+	if (settings.start_cycle_on>1)
+		return 0;
+
+	return 1; //pass
 }
 
-uint8_t should_enter_calibration_mode(void)
+enum CalRequests should_enter_calibration_mode(void)
 {
-	if ((adc_dma_buffer[0] < 5) && CYCLEBUT
-		&& (adc_dma_buffer[3]>4000) && (adc_dma_buffer[4]>4000) && (adc_dma_buffer[5]>4000))
-		return 1;
-	else
-		return 0;
+	if (CYCLEBUT 
+		&& (adc_dma_buffer[POT_SCALE]>1800) && (adc_dma_buffer[POT_SCALE]<2200)
+		&& (adc_dma_buffer[POT_OFFSET]>1800) && (adc_dma_buffer[POT_OFFSET]<2200)
+		&& (adc_dma_buffer[POT_SHAPE]>1800) && (adc_dma_buffer[POT_SHAPE]<2200)
+		)
+	{
+		if (adc_dma_buffer[POT_DIVMULT] < 5)
+			return CAL_REQUEST_ALL;
+
+		if (adc_dma_buffer[POT_DIVMULT] > 4000) 
+			return CAL_REQUEST_CENTER_DET;
+	}
+
+	return CAL_REQUEST_NONE;
 }
 
 //Todo: calibrate center detents of Scale and Offset (use red/blue of ENV and 5VENV LEDs). Also Shape center detent (use Ping color)
 void calibrate_center_detents(void)
 {
+	const uint16_t stab_delay=15;
+	enum CenterDetentPots cur = DET_SCALE;
+	uint16_t read_tot;
+	uint16_t read_avg;
+	uint16_t read1, read2, read3, read4;
+	int16_t t;
+	enum Palette color;
 
+
+	set_rgb_led(LED_PING, c_OFF);
+	set_rgb_led(LED_CYCLE, c_OFF);
+
+	while (PINGBUT) {;}
+	while (CYCLEBUT) {;}
+
+	while (cur<NUM_CENTER_DETENT_POTS)
+	{
+		delay_ms(stab_delay);
+		read1 = adc_dma_buffer[FIRST_CD_POT+cur];
+		delay_ms(stab_delay);
+		read2 = adc_dma_buffer[FIRST_CD_POT+cur];
+		delay_ms(stab_delay);
+		read3 = adc_dma_buffer[FIRST_CD_POT+cur];
+		delay_ms(stab_delay);
+		read4 = adc_dma_buffer[FIRST_CD_POT+cur];
+		read_tot = read1 + read2 + read3 + read4;
+		read_avg = read_tot>>2;	
+
+		t = read_avg + settings.center_detent_offset[cur];
+		if (t > 2152 || t < 1957)		color = c_RED; 		//red: out of range
+		else if (t > 2102 || t < 2007)	color = c_ORANGE; 	//orange: warning, close to edge
+		else if (t > 2068 || t < 2028)	color = c_YELLOW;	//yellow: ok: more than 20 from center
+		else 							color = c_GREEN; 	//green: within 20 of center 
+
+		set_rgb_led(LED_CYCLE, color);
+
+	 	if (CYCLEBUT)
+	 	{
+			settings.center_detent_offset[cur] = 2048 - read_avg;
+			t = 0;
+			while (t<100) {if (CYCLEBUT) t++; else t=0;}
+			t = 0;
+			while (t<100) {if (!CYCLEBUT) t++; else t=0;}
+		}
+
+		if (PINGBUT)
+	 	{
+			t = 0;
+			while (t<100) {if (PINGBUT) t++; else t=0;}
+			t = 0;
+			while (t<100) {if (!PINGBUT) t++; else t=0;}
+
+			cur++;
+		}
+
+	}
 }
 
 void calibrate_divmult_pot(void)
@@ -114,7 +215,7 @@ void calibrate_divmult_pot(void)
 		calib_array[j] = read_avg;
 
 		if (j<(NUM_DIVMULTS-1)){		
-			set_rgb_led(LED_CYCLE, c_CYAN); //blue = ready for user to change knob
+			set_rgb_led(LED_CYCLE, c_GREEN); //blue = ready for user to change knob
 
 			if (j==0 || j==(NUM_DIVMULTS-2)) diff=80;
 			else diff=160;

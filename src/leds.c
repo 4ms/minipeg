@@ -75,15 +75,19 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	else if (rgb_led_id==LED_CYCLE)
 	{
 		switch (color_id) {
-			case c_ORANGE:
-				update_pwm(30, PWM_CYCLEBUT_R);
-				update_pwm(830, PWM_CYCLEBUT_BG);
-				break;
 			case c_RED:
 				update_pwm(0, PWM_CYCLEBUT_R);
 				update_pwm(1025, PWM_CYCLEBUT_BG);
 				break;
-			case c_CYAN:
+			case c_ORANGE:
+				update_pwm(30, PWM_CYCLEBUT_R);
+				update_pwm(830, PWM_CYCLEBUT_BG);
+				break;
+			case c_YELLOW:
+				update_pwm(300, PWM_CYCLEBUT_R);
+				update_pwm(530, PWM_CYCLEBUT_BG);
+				break;
+			case c_GREEN:
 				update_pwm(1025, PWM_CYCLEBUT_R);
 				update_pwm(0, PWM_CYCLEBUT_BG);
 				break;

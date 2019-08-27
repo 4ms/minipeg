@@ -1010,6 +1010,15 @@ int8_t calc_divided_ping_div_ctr(uint8_t envstate)
 	return pdc;
 }
 
+int16_t plateau(int16_t val, const uint16_t low, const uint16_t high){
+	if (val > high) 
+		return val - high;
+	else if (val < low) 
+		return val - low;
+	else 
+		return 0;
+}
+
 void update_adc_params(uint8_t force_params_update)
 {
 	uint16_t d;
@@ -1035,20 +1044,11 @@ void update_adc_params(uint8_t force_params_update)
 
 		update_risefallincs=0;
 
-		if (analog[POT_SCALE].lpf_val > SCALE_PLATEAU_HIGH)
-			scale = analog[POT_SCALE].lpf_val - SCALE_PLATEAU_HIGH;
-		else if (analog[POT_SCALE].lpf_val < SCALE_PLATEAU_LOW) 
-			scale = analog[POT_SCALE].lpf_val - SCALE_PLATEAU_LOW;
-		else
-			scale = 0;
+		total_adc = analog[POT_SCALE].lpf_val + settings.center_detent_offset[DET_SCALE];
+		scale = plateau(total_adc, SCALE_PLATEAU_LOW, SCALE_PLATEAU_HIGH);
 
-		int16_t tmp;
-		if (analog[POT_OFFSET].lpf_val > OFFSET_PLATEAU_HIGH)
-			tmp = OFFSET_PLATEAU_HIGH - analog[POT_OFFSET].lpf_val;
-		else if (analog[POT_OFFSET].lpf_val < OFFSET_PLATEAU_LOW) 
-			tmp = OFFSET_PLATEAU_LOW - analog[POT_OFFSET].lpf_val;
-		else
-			tmp = 0;
+		total_adc = analog[POT_OFFSET].lpf_val + settings.center_detent_offset[DET_OFFSET];
+		int16_t tmp = plateau(total_adc, OFFSET_PLATEAU_LOW, OFFSET_PLATEAU_HIGH);
 
 		if (digin[CYCLE_BUTTON].state && (diff(cycle_latched_offset, analog[POT_OFFSET].lpf_val) > 40))
 			adjusting_shift_mode = 1;
@@ -1058,11 +1058,11 @@ void update_adc_params(uint8_t force_params_update)
 		else 
 			offset = tmp;
 
-
+		//Todo: plateau the CV
 		cv = 2048 - analog[CV_SHAPE].lpf_val;
 		if (cv>-20 && cv<20) cv = 0;
 
-		total_adc = cv + analog[POT_SHAPE].lpf_val;
+		total_adc = cv + analog[POT_SHAPE].lpf_val + settings.center_detent_offset[DET_SHAPE];
 		if (total_adc>4095) total_adc=4095;
 		else if (total_adc<0) total_adc=0;
 		
