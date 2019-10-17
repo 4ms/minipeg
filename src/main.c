@@ -60,9 +60,6 @@ uint16_t envout=0;
 uint32_t new_accum=0;
 uint16_t new_dacout=0;
 
-uint16_t adc_dma_buffer[NUM_ADCS];
-
-
 uint8_t cycle_but_on = 0;
 
 uint8_t trigq_down=0;
@@ -140,10 +137,11 @@ uint32_t udiv32(uint32_t n27)
 
 int main(void)
 {
+	HAL_Init();
+	SystemClock_Config();
 
 	init_tmrs();
 	init_dig_inouts();
-	init_adc(adc_dma_buffer, NUM_ADCS);
 	init_analog_conditioning();
 
 	init_pwm();

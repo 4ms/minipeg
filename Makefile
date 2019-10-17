@@ -1,62 +1,119 @@
-SRCS  = $(wildcard src/*.c)
-BUILDDIR = build
-PROJ_NAME=$(BUILDDIR)/main
-STD_PERIPH_LIB=stm32
-LDSCRIPT_INC=stm32/
-STD_PERIPH_SRCS=$(STD_PERIPH_LIB)/std_periph/src
+# Makefile by Dan Green <danngreen1@gmail.com>
+#
 
-CC=arm-none-eabi-gcc
-OBJCOPY=arm-none-eabi-objcopy
-OBJDUMP=arm-none-eabi-objdump
-SIZE=arm-none-eabi-size
+BINARYNAME 		= main
 
-CFLAGS  = -Wall -g -std=c99 
-CFLAGS += -O3
-CFLAGS += -mlittle-endian -mcpu=cortex-m0  -march=armv6-m -mthumb
-CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -Wl,--gc-sections -Wl,-Map=$(PROJ_NAME).map
-CFLAGS += --specs=nano.specs
+STARTUP 		= startup_stm32g070xx.s
+SYSTEM 			= system_stm32g0xx.c
+LOADFILE 		= STM32G070RBTx_FLASH.ld
 
-vpath %.c src
+DEVICE 			= stm32/device
+CORE 			= stm32/CMSIS
+PERIPH 			= stm32/HAL
 
-ROOT=$(shell pwd)
+BUILDDIR 		= build
 
-CFLAGS += -I inc -I $(STD_PERIPH_LIB) -I $(STD_PERIPH_LIB)/CMSIS/Device/ST/STM32F0xx/Include
-CFLAGS += -I $(STD_PERIPH_LIB)/CMSIS/Include -I $(STD_PERIPH_LIB)/std_periph/inc
-CFLAGS += -include $(STD_PERIPH_LIB)/stm32f0xx_conf.h 
+SOURCES  += $(wildcard $(PERIPH)/Src/*.c)
+SOURCES  += $(DEVICE)/Source/Temaplates/gcc/$(STARTUP)
+SOURCES  += $(DEVICE)/Source/Templates/$(SYSTEM)
+SOURCES  += $(wildcard src/*.c)
+# SOURCES  += $(wildcard src/*.cc)
 
-SRCS += stm32/startup_stm32f0xx.s
-SRCS += $(STD_PERIPH_SRCS)/stm32f0xx_adc.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_dma.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_flash.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_gpio.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_misc.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_rcc.c  \
-	$(STD_PERIPH_SRCS)/stm32f0xx_syscfg.c \
-	$(STD_PERIPH_SRCS)/stm32f0xx_tim.c
+OBJECTS   = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SOURCES))))
 
-OBJS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SRCS))))
+INCLUDES += -I$(DEVICE)/Include \
+			-I$(CORE)/Include \
+			-I$(PERIPH)/Inc \
+			-I src \
 
-.PHONY: all
+ELF 	= $(BUILDDIR)/$(BINARYNAME).elf
+HEX 	= $(BUILDDIR)/$(BINARYNAME).hex
+BIN 	= $(BUILDDIR)/$(BINARYNAME).bin
 
-all: $(PROJ_NAME).elf
+ARCH 	= arm-none-eabi
+CC 		= $(ARCH)-gcc
+LD 		= $(ARCH)-gcc
+AS 		= $(ARCH)-as
+OBJCPY 	= $(ARCH)-objcopy
+OBJDMP 	= $(ARCH)-objdump
+GDB 	= $(ARCH)-gdb
+SZ 		= $(ARCH)-size
 
-$(PROJ_NAME).elf: $(SRCS)
-	mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $^ -o $@ -L$(LDSCRIPT_INC) -Tstm32f030k6.ld
-	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
-	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
-	$(OBJDUMP) -St $(PROJ_NAME).elf >$(PROJ_NAME).lst
-	$(SIZE) $(PROJ_NAME).elf
+SZOPTS 	= -d
 
-program: $(PROJ_NAME).bin
-	st-flash --reset write ${PROJ_NAME}.bin 0x08000000
-	
+CPU = -mcpu=cortex-m0plus
+MCU = $(CPU) -mthumb  
+
+# ARCH_CFLAGS = -DARM_MATH_CM7 -D'__FPU_PRESENT=1' -DUSE_HAL_DRIVER -DSTM32F730xx
+ARCH_CFLAGS = -DSTM32G070xx -DUSE_HAL_DRIVER
+
+OPTFLAG = -O3
+
+CFLAGS = -g2 -fno-common \
+	$(ARCH_CFLAGS) $(MCU) \
+	-I. $(INCLUDES) \
+	-fdata-sections -ffunction-sections \
+	-specs=nano.specs \
+
+CXXFLAGS=$(CFLAGS) \
+	-std=c++17 \
+	-fno-rtti \
+	-fno-exceptions \
+	-ffreestanding \
+	-Werror=return-type \
+	-Wdouble-promotion \
+	-Wno-register \
+
+
+AFLAGS = $(MCU)
+#	-x assembler-with-cpp
+
+
+LDSCRIPT = $(DEVICE)/$(LOADFILE)
+
+LFLAGS =  -Wl,-Map,build/main.map,--cref \
+	-Wl,--gc-sections \
+	$(MCU) -specs=nano.specs  -T $(LDSCRIPT)
+
+
+#-----------------------------------
+# Uncomment to compile unoptimized:
+
+# build/src/main.o: OPTFLAG = -O0
+$(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+
+all: Makefile $(BIN) $(HEX)
+
+$(BIN): $(ELF)
+	$(OBJCPY) -O binary $< $@
+	$(OBJDMP) -x --syms $< > $(addsuffix .dmp, $(basename $<))
+	ls -l $@ $<
+
+
+$(HEX): $(ELF)
+	$(OBJCPY) --output-target=ihex $< $@
+	$(SZ) $(SZOPTS) $(ELF)
+
+$(ELF): $(OBJECTS) 
+	$(LD) $(LFLAGS) -o $@ $(OBJECTS)
+
+
+$(BUILDDIR)/%.o: %.c $(wildcard src/*.h) $(wildcard src/drivers/*.h)
+	mkdir -p $(dir $@)
+	$(CC) -c $(OPTFLAG) $(CFLAGS) $< -o $@
+
+$(BUILDDIR)/%.o: %.cc $(wildcard src/*.h) $(wildcard src/drivers/*.h)
+	mkdir -p $(dir $@)
+	$(CC) -c $(OPTFLAG) $(CXXFLAGS) $< -o $@
+
+
+$(BUILDDIR)/%.o: %.s
+	mkdir -p $(dir $@)
+	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(BUILDDIR)/, $(addsuffix .lst, $(basename $<)))
+
+
+flash: $(BIN)
+	st-flash write $(BIN) 0x8000000
+
 clean:
-	find ./ -name '*~' | xargs rm -f
-	rm -f $(BUILDDIR)/*.o
-	rm -f $(PROJ_NAME).elf
-	rm -f $(PROJ_NAME).hex
-	rm -f $(PROJ_NAME).bin
-	rm -f $(PROJ_NAME).map
-	rm -f $(PROJ_NAME).lst
+	rm -rf build
