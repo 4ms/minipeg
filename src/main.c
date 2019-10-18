@@ -4,7 +4,7 @@ todo:
 Rename envout to segment_phase
 */
 
-#include "stm32f0xx_conf.h"
+#include <stm32g0xx.h>
 #include "globals.h"
 
 
@@ -157,8 +157,7 @@ int main(void)
 	set_rgb_led(LED_ENV, c_OFF);
 	set_rgb_led(LED_5VENV, c_OFF);
 
-	LEDTRIGOUT_OFF;
-
+	set_led_brightness(4095, PWM_EOF_LED);
 	eor_off();
 	eof_off();
 	hr_off();
