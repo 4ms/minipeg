@@ -9,6 +9,8 @@ void init_mock_flash(void) {
 }
 
 uint32_t read_mock_flash(uint32_t i) {
+	printf("Reading %#08x from Addr %i\n", mockFLASH[i/4], i);
+
 	return mockFLASH[i/4];
 }
 
@@ -18,6 +20,9 @@ HAL_StatusTypeDef  HAL_FLASH_Program(uint32_t TypeProgram, uint32_t Address, uin
 
 	if (Address & 0b11)
 		return HAL_ERROR;
+
+	printf("Writing %#08x to Addr %i\n", (uint32_t)Data, Address);
+	printf("....... %#08x to Addr %i\n", (uint32_t)(Data >> 32U), Address+4);
 
 	mockFLASH[Address/4] = (uint32_t)Data;
 	mockFLASH[Address/4 + 1] = (uint32_t)(Data >> 32U);

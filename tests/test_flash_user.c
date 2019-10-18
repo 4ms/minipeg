@@ -41,20 +41,6 @@ void testFlashWrites(void)
 	for (int i=0;i<64;i++) ta[i] = i;
 
 	TEST_ASSERT_EQUAL_INT(HAL_OK, flash_open_program_doubleword_array((uint64_t *)ta, 0, 64/8));
-	for(int i=0; i<(64/8); i++) {
-		uint32_t w = ta[i*4 + 3];
-		w <<= 8;
-		w |= ta[i*4 + 2];
-		w <<= 8;
-		w |= ta[i*4 + 1];
-		w <<= 8;
-		w |= ta[i*4];
-		TEST_ASSERT_EQUAL_HEX(w, read_mock_flash(i*4));
-	}
-
-	for (int i=0;i<64;i++) ta[i] = i+2;
-
-	TEST_ASSERT_EQUAL_INT(HAL_OK, flash_open_program_word_array((uint32_t *)ta, 4, 64/4));
 	for(int i=0; i<(64/4); i++) {
 		uint32_t w = ta[i*4 + 3];
 		w <<= 8;
@@ -66,5 +52,17 @@ void testFlashWrites(void)
 		TEST_ASSERT_EQUAL_HEX(w, read_mock_flash(i*4));
 	}
 
-
+	uint32_t base_addr = 4;
+	for (int i=0;i<64;i++) ta[i] = i+2;
+	TEST_ASSERT_EQUAL_INT(HAL_OK, flash_open_program_word_array((uint32_t *)ta, base_addr, 64/4));
+	for(int i=0; i<(64/4); i++) {
+		uint32_t w = ta[i*4 + 3];
+		w <<= 8;
+		w |= ta[i*4 + 2];
+		w <<= 8;
+		w |= ta[i*4 + 1];
+		w <<= 8;
+		w |= ta[i*4];
+		TEST_ASSERT_EQUAL_HEX(w, read_mock_flash((i*4)+base_addr));
+	}
 }
