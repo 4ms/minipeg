@@ -27,6 +27,7 @@ enum PwmOutputs {
 
 	NUM_PWMS
 };
+//non-PWM:
 //PINGBUT_G_EN
 //CYCLE_BUT_B
 
