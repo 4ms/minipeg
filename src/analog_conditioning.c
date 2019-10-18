@@ -9,7 +9,7 @@ void setup_fir_lpf(void);
 
 void init_analog_conditioning(void)
 {
-	builtinAdcSetup adc1_setup;
+	builtinAdcSetup adc1_setup[NUM_ADCS];
 
 	adc1_setup[CV_SHAPE].gpio 				= GPIOA;
 	adc1_setup[CV_SHAPE].pin 				= GPIO_PIN_0;
@@ -41,7 +41,7 @@ void init_analog_conditioning(void)
 	adc1_setup[POT_DIVMULT].channel 		= ADC_CHANNEL_10;
 	adc1_setup[POT_DIVMULT].sample_time 	= ADC_SAMPLINGTIME_COMMON_1;
 
-	ADC_Init(adc_buffer, num_channels, adc1_setup);
+	ADC_Init(adc_dma_buffer, NUM_ADCS, adc1_setup);
 
 	analog[POT_DIVMULT].polarity = AP_UNIPOLAR;
 	analog[POT_SHAPE].polarity = AP_UNIPOLAR;
