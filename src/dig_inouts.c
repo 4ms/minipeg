@@ -15,20 +15,30 @@ void init_dig_inouts(void){
 	gpio.Speed = GPIO_SPEED_FREQ_LOW;
 	gpio.Pull = GPIO_NOPULL;
 
-	gpio.Pin = TRIGOUT_pin;		HAL_GPIO_Init(TRIGOUT_GPIO, &gpio);
-	gpio.Pin = LEDTRIGOUT_pin;	HAL_GPIO_Init(LEDTRIGOUT_GPIO, &gpio);
+	gpio.Pin = TRIGOUT_pin;		
+	HAL_GPIO_Init(TRIGOUT_GPIO, &gpio);
+
+	gpio.Pin = LED_PING_BUT_G_pin;
+	HAL_GPIO_Init(LED_PING_BUT_G_GPIO, &gpio);
+	gpio.Pin = LED_CYCLE_BUT_B_pin;		
+	HAL_GPIO_Init(LED_CYCLE_BUT_B_GPIO, &gpio);
 
 	//Configure inputs with pullup
 	gpio.Mode = GPIO_MODE_INPUT;
 	gpio.Pull = GPIO_PULLUP;
 
-	gpio.Pin = PINGBUT_pin;		HAL_GPIO_Init(PINGBUT_GPIO, &gpio);
-	gpio.Pin = CYCLEBUT_pin;	HAL_GPIO_Init(CYCLEBUT_GPIO, &gpio);
+	gpio.Pin = PINGBUT_pin;		
+	HAL_GPIO_Init(PINGBUT_GPIO, &gpio);
+	gpio.Pin = CYCLEBUT_pin;	
+	HAL_GPIO_Init(CYCLEBUT_GPIO, &gpio);
 
 	//Configure inputs with pulldown
 	gpio.Pull = GPIO_PULLDOWN;
 
-	gpio.Pin = TRIGJACK_pin;	HAL_GPIO_Init(TRIGJACK_GPIO, &gpio);
-	gpio.Pin = PINGJACK_pin;	HAL_GPIO_Init(PINGJACK_GPIO, &gpio);
-	gpio.Pin = CYCLEJACK_pin;	HAL_GPIO_Init(CYCLEJACK_GPIO, &gpio);
+	gpio.Pin = TRIGJACK_pin;	
+	HAL_GPIO_Init(TRIGJACK_GPIO, &gpio);
+	gpio.Pin = PINGJACK_pin;	
+	HAL_GPIO_Init(PINGJACK_GPIO, &gpio);
+	gpio.Pin = CYCLEJACK_pin;	
+	HAL_GPIO_Init(CYCLEJACK_GPIO, &gpio);
 }
