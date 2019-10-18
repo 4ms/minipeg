@@ -5,21 +5,21 @@ struct SystemSettings settings;
 
 #define USER_FLASH_PAGE 0x08007C00
 
-FLASH_Status write_settings(void)
+HAL_StatusTypeDef write_settings(void)
 {
-	FLASH_Status status;
+	HAL_StatusTypeDef status;
 
 	flash_begin_open_program();
 
 	status = flash_open_erase_page(USER_FLASH_PAGE);
-	if (status != FLASH_COMPLETE) {
+	if (status != HAL_OK) {
 		flash_end_open_program();
 		return status;
 	}
 
 	uint32_t sz = sizeof(struct SystemSettings)/2;
 	settings.is_valid = VALID_SETTINGS;
-	status = flash_open_program_halfword_array((uint16_t*)(&settings), USER_FLASH_PAGE, sz);
+	status = flash_open_program_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
 
 	flash_end_open_program();
 	return status;
@@ -28,7 +28,7 @@ FLASH_Status write_settings(void)
 uint8_t read_settings(void)
 {
 	uint32_t sz = sizeof(struct SystemSettings)/2;
-	flash_read_halfword_array((uint16_t*)(&settings), USER_FLASH_PAGE, sz);
+	flash_read_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
 
 	if (!check_settings_valid())
 	{

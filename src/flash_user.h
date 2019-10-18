@@ -55,7 +55,7 @@ struct SystemSettings {
 	uint8_t					start_cycle_on;
 };
 
-FLASH_Status write_settings(void);
+HAL_StatusTypeDef write_settings(void);
 uint8_t read_settings(void);
 uint8_t check_settings_valid(void);
 void default_settings(void);
