@@ -14,7 +14,7 @@ PERIPH 			= stm32/HAL
 BUILDDIR 		= build
 
 SOURCES  += $(wildcard $(PERIPH)/Src/*.c)
-SOURCES  += $(DEVICE)/Source/Temaplates/gcc/$(STARTUP)
+SOURCES  += $(DEVICE)/Source/Templates/gcc/$(STARTUP)
 SOURCES  += $(DEVICE)/Source/Templates/$(SYSTEM)
 SOURCES  += $(wildcard src/*.c)
 # SOURCES  += $(wildcard src/*.cc)
@@ -89,14 +89,12 @@ $(BIN): $(ELF)
 	$(OBJDMP) -x --syms $< > $(addsuffix .dmp, $(basename $<))
 	ls -l $@ $<
 
-
 $(HEX): $(ELF)
 	$(OBJCPY) --output-target=ihex $< $@
 	$(SZ) $(SZOPTS) $(ELF)
 
 $(ELF): $(OBJECTS) 
 	$(LD) $(LFLAGS) -o $@ $(OBJECTS)
-
 
 $(BUILDDIR)/%.o: %.c $(wildcard src/*.h) $(wildcard src/drivers/*.h)
 	mkdir -p $(dir $@)
@@ -106,14 +104,64 @@ $(BUILDDIR)/%.o: %.cc $(wildcard src/*.h) $(wildcard src/drivers/*.h)
 	mkdir -p $(dir $@)
 	$(CC) -c $(OPTFLAG) $(CXXFLAGS) $< -o $@
 
-
 $(BUILDDIR)/%.o: %.s
 	mkdir -p $(dir $@)
 	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(BUILDDIR)/, $(addsuffix .lst, $(basename $<)))
-
 
 flash: $(BIN)
 	st-flash write $(BIN) 0x8000000
 
 clean:
 	rm -rf build
+
+
+TESTFW_DIR = ../Unity/src
+TEST_DIR = tests
+TEST_BUILD_DIR_NAME = build
+TEST_BUILD_DIR = $(TEST_DIR)/$(TEST_BUILD_DIR_NAME)
+
+TESTFW_SRC = unity.c
+
+TEST_SOURCES =  test_flash_user.c \
+				tests_main.c \
+				mock_flash.c \
+
+
+TESTEE_DIR = src
+TESTEE_SOURCES = flash.c
+
+TESTFW_OBJ = $(TEST_BUILD_DIR)/$(addsuffix .o, $(basename $(TESTFW_SRC)))
+
+TEST_OBJECTS = $(TESTFW_OBJ) \
+				$(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TEST_SOURCES))))
+
+TESTEE_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TESTEE_SOURCES))))
+
+
+TEST_INC =  -I $(TESTFW_DIR) \
+			-I $(TEST_DIR) \
+			-I stm32/device/Include \
+			-I stm32/CMSIS/Include \
+
+TEST_CFLAGS = -DSTM32G070xx
+
+
+$(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
+	mkdir -p $(TEST_BUILD_DIR)
+	gcc $(TEST_INC) -c $< -o $@
+
+$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.c $(TESTFW_OBJ)
+	mkdir -p $(TEST_BUILD_DIR)
+	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
+
+$(TESTEE_OBJECTS): $(TESTEE_DIR)/$(TESTEE_SOURCES)
+	mkdir -p $(TEST_BUILD_DIR)
+	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
+
+
+# TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(SOURCES))))
+
+test: $(TEST_OBJECTS) $(TESTEE_OBJECTS)
+	gcc -o $(TEST_BUILD_DIR)/do_test $(TEST_OBJECTS) $(TESTEE_OBJECTS)
+	$(TEST_BUILD_DIR)/do_test
+
