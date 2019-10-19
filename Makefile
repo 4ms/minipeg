@@ -122,13 +122,14 @@ TEST_BUILD_DIR = $(TEST_DIR)/$(TEST_BUILD_DIR_NAME)
 
 TESTFW_SRC = unity.c
 
-TEST_SOURCES =  test_flash_user.c \
+TEST_SOURCES =  \
 				tests_main.c \
-				mock_flash.c \
+				test_flash_user.c \
+				mocks/mock_flash.c \
 
 
 TESTEE_DIR = src
-TESTEE_SOURCES = flash.c
+TESTEE_SOURCES = flash.c \
 
 TESTFW_OBJ = $(TEST_BUILD_DIR)/$(addsuffix .o, $(basename $(TESTFW_SRC)))
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
-/*Unity Framework*/
-#include<setjmp.h>
+#include <setjmp.h>
 #include "unity.h"
+
 /*Test functions*/
 #include "test_flash_user.h"
 
@@ -16,9 +16,8 @@ void runTest(UnityTestFunction test)
 int main()
 {
 	
-	printf("\n\nTests: \n");
+	printf("\n\nRunning Tests: \n");
 	
-	/**/
 	UnityBegin("test_flash_user.c");
 	RUN_TEST(testFlashWrites);
 	
