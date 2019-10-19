@@ -148,15 +148,15 @@ TEST_CFLAGS = -DSTM32G070xx
 
 
 $(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
-	mkdir -p $(TEST_BUILD_DIR)
+	mkdir -p $(dir $@)
 	gcc $(TEST_INC) -c $< -o $@
 
 $(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.c $(TESTFW_OBJ)
-	mkdir -p $(TEST_BUILD_DIR)
+	mkdir -p $(dir $@)
 	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
 
 $(TESTEE_OBJECTS): $(TESTEE_DIR)/$(TESTEE_SOURCES)
-	mkdir -p $(TEST_BUILD_DIR)
+	mkdir -p $(dir $@)
 	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
 
 
