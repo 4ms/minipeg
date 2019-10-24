@@ -115,7 +115,6 @@ enum CalRequests should_enter_calibration_mode(void)
 	return CAL_REQUEST_NONE;
 }
 
-//Todo: calibrate center detents of Scale and Offset (use red/blue of ENV and 5VENV LEDs). Also Shape center detent (use Ping color)
 void calibrate_center_detents(void)
 {
 	const uint16_t stab_delay=15;
@@ -127,6 +126,22 @@ void calibrate_center_detents(void)
 	enum Palette color;
 
 
+	set_rgb_led(LED_PING, c_OFF);
+	set_rgb_led(LED_CYCLE, c_OFF);
+
+	while (PINGBUT) {;}
+	while (CYCLEBUT) {;}
+
+	delay_ms(100);
+	set_rgb_led(LED_PING, c_WHITE);
+	set_rgb_led(LED_CYCLE, c_WHITE);
+	delay_ms(100);
+	set_rgb_led(LED_PING, c_OFF);
+	set_rgb_led(LED_CYCLE, c_OFF);
+	delay_ms(100);
+	set_rgb_led(LED_PING, c_WHITE);
+	set_rgb_led(LED_CYCLE, c_WHITE);
+	delay_ms(100);
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
