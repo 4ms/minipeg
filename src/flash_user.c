@@ -3,7 +3,7 @@
 
 struct SystemSettings settings;
 
-#define USER_FLASH_PAGE 0x08007C00
+#define USER_FLASH_PAGE 0x0801F800
 
 HAL_StatusTypeDef write_settings(void)
 {
@@ -17,7 +17,7 @@ HAL_StatusTypeDef write_settings(void)
 		return status;
 	}
 
-	uint32_t sz = sizeof(struct SystemSettings)/2;
+	uint32_t sz = sizeof(struct SystemSettings);
 	settings.is_valid = VALID_SETTINGS;
 	status = flash_open_program_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
 
@@ -27,7 +27,7 @@ HAL_StatusTypeDef write_settings(void)
 
 uint8_t read_settings(void)
 {
-	uint32_t sz = sizeof(struct SystemSettings)/2;
+	uint32_t sz = sizeof(struct SystemSettings);
 	flash_read_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
 
 	if (!check_settings_valid())

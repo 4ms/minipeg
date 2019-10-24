@@ -27,16 +27,6 @@ enum TrigInFunctions {
 	NUM_TRIGIN_FUNCTIONS
 };
 
-#define FIRST_CD_POT 3
-
-enum CenterDetentPots{
-	DET_SCALE,
-	DET_OFFSET,
-	DET_SHAPE,
-
-	NUM_CENTER_DETENT_POTS
-};
-
 #define VALID_SETTINGS 0xC001
 
 struct SystemSettings {
