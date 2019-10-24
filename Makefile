@@ -49,7 +49,7 @@ ARCH_CFLAGS = -DSTM32G070xx -DUSE_HAL_DRIVER
 
 OPTFLAG = -O3
 
-CFLAGS = -g2 -fno-common \
+CFLAGS = -g3 -fno-common \
 	$(ARCH_CFLAGS) $(MCU) \
 	-I. $(INCLUDES) \
 	-fdata-sections -ffunction-sections \
