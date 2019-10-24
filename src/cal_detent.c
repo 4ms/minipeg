@@ -8,13 +8,15 @@ extern uint16_t adc_dma_buffer[NUM_ADCS];
 enum CalRequests{
 	CAL_REQUEST_NONE,
 	CAL_REQUEST_ALL,
-	CAL_REQUEST_CENTER_DET
+	CAL_REQUEST_CENTER_DET,
+	CAL_REQUEST_LEDS
 };
 
 uint8_t sanity_check_calibration(void);
 void calibrate_divmult_pot(void);
 enum CalRequests should_enter_calibration_mode(void);
 void calibrate_center_detents(void);
+void calibrate_led_colors(void);
 
 void check_calibration(void)
 {
@@ -27,10 +29,15 @@ void check_calibration(void)
 	enum CalRequests c = should_enter_calibration_mode();
 	if (c != CAL_REQUEST_NONE)
 	{
-		if (c==CAL_REQUEST_ALL)
+		if (c==CAL_REQUEST_ALL) 
 			calibrate_divmult_pot();
 
-		calibrate_center_detents();
+		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_LEDS)
+			calibrate_led_colors();
+
+		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_CENTER_DET)
+			calibrate_center_detents();
+
 		write_settings();
 	}
 }
@@ -62,6 +69,10 @@ void default_calibration(void)
 	settings.center_detent_offset[DET_OFFSET] = 0;
 	settings.center_detent_offset[DET_SHAPE] = 0;
 
+	settings.ping_cal_r = 2048;
+	settings.ping_cal_b = 2048;
+	settings.cycle_cal_r = 2048;
+	settings.cycle_cal_g = 2048;
 }
 
 uint8_t sanity_check_calibration(void)
@@ -94,6 +105,15 @@ uint8_t sanity_check_calibration(void)
 	if (settings.start_cycle_on>1)
 		return 0;
 
+	if (settings.ping_cal_r < 100 ||  settings.ping_cal_r > 4000) 
+		return 0;
+	if (settings.ping_cal_b < 100 ||  settings.ping_cal_b > 4000) 
+		return 0;
+	if (settings.cycle_cal_r < 100 ||  settings.cycle_cal_r > 4000) 
+		return 0;
+	if (settings.cycle_cal_g < 100 ||  settings.cycle_cal_g > 4000) 
+		return 0;
+
 	return 1; //pass
 }
 
@@ -108,7 +128,10 @@ enum CalRequests should_enter_calibration_mode(void)
 		if (adc_dma_buffer[POT_DIVMULT] < 5)
 			return CAL_REQUEST_ALL;
 
-		if (adc_dma_buffer[POT_DIVMULT] > 4000) 
+		else if ((adc_dma_buffer[POT_DIVMULT]>1800) && (adc_dma_buffer[POT_DIVMULT]<2200))
+			return CAL_REQUEST_LEDS;
+
+		else if (adc_dma_buffer[POT_DIVMULT] > 4000) 
 			return CAL_REQUEST_CENTER_DET;
 	}
 
@@ -267,5 +290,33 @@ void calibrate_divmult_pot(void)
 		settings.midpt_array[j] = (calib_array[j] + calib_array[j+1]) >> 1;
 	}
 	settings.midpt_array[NUM_DIVMULTS-1] = 4095;
+}
 
+
+void calibrate_led_colors(void) {
+
+    while (!PINGBUT) {
+    	if (CYCLEBUT) {
+    		LED_PING_BUT_G_OFF;
+    		LED_CYCLE_BUT_B_OFF;
+    	} else {
+		    LED_PING_BUT_G_ON;
+		    LED_CYCLE_BUT_B_ON;
+    	}
+        update_pwm(adc_dma_buffer[4]/4, PWM_PINGBUT_R);
+        update_pwm(adc_dma_buffer[5]/4, PWM_PINGBUT_B);
+
+        update_pwm(adc_dma_buffer[2]/4, PWM_CYCLEBUT_R);
+        update_pwm(adc_dma_buffer[3]/4, PWM_CYCLEBUT_G);
+    }
+
+    settings.ping_cal_r = adc_dma_buffer[4];
+    settings.ping_cal_b = adc_dma_buffer[5];
+
+    settings.cycle_cal_r = adc_dma_buffer[2];
+    settings.cycle_cal_g = adc_dma_buffer[3];
+    
+    while(PINGBUT) {;}
+
+    all_lights_off();
 }

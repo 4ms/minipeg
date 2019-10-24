@@ -53,6 +53,9 @@ struct SystemSettings {
 
 	uint32_t				start_clk_time;
 	uint8_t					start_cycle_on;
+
+	uint16_t 				ping_cal_r, ping_cal_b, cycle_cal_r, cycle_cal_g;
+
 };
 
 HAL_StatusTypeDef write_settings(void);
