@@ -40,5 +40,4 @@ enum Palette {
 
 void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num);
 void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id);
-void test_leds(void);
-void test_rb_color(uint16_t r, uint16_t b);
+void all_lights_off(void);

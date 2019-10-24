@@ -6,7 +6,7 @@ Rename envout to segment_phase
 
 #include <stm32g0xx.h>
 #include "globals.h"
-
+#include "hardware_tests.h"
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
@@ -149,15 +149,11 @@ int main(void)
 
 	init_debouncer();
 
-	// test_leds();
-	// while (1) test_rb_color(adc_dma_buffer[5], adc_dma_buffer[4]);
+	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
+	//test_hardware();
+	
+	all_lights_off();
 
-	set_rgb_led(LED_PING, c_OFF);
-	set_rgb_led(LED_CYCLE, c_OFF);
-	set_rgb_led(LED_ENV, c_OFF);
-	set_rgb_led(LED_5VENV, c_OFF);
-
-	set_led_brightness(4095, PWM_EOF_LED);
 	eor_off();
 	eof_off();
 	hr_off();

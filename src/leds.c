@@ -2,68 +2,9 @@
 
 extern const uint16_t loga[4096];
 
-
-void test_leds(void)
-{
-	update_pwm(1025, PWM_PINGBUT_R);
-	update_pwm(1025, PWM_PINGBUT_B);
-	LED_PING_BUT_G_OFF;
-	LED_PING_BUT_G_ON;
-
-	update_pwm(256, PWM_PINGBUT_R);
-	update_pwm(512, PWM_PINGBUT_B);
-	LED_PING_BUT_G_OFF;
-	LED_PING_BUT_G_ON;
-
-	update_pwm(0, PWM_PINGBUT_R);
-	update_pwm(0, PWM_PINGBUT_B);
-	LED_PING_BUT_G_OFF;
-	LED_PING_BUT_G_ON;
-
-	update_pwm(1025, PWM_CYCLEBUT_R);
-	update_pwm(1025, PWM_CYCLEBUT_G);
-	LED_CYCLE_BUT_B_OFF;
-	LED_CYCLE_BUT_B_ON;
-
-	update_pwm(512, PWM_CYCLEBUT_R);
-	update_pwm(512, PWM_CYCLEBUT_G);
-	LED_CYCLE_BUT_B_OFF;
-	LED_CYCLE_BUT_B_ON;
-
-	update_pwm(0, PWM_CYCLEBUT_R);
-	update_pwm(0, PWM_CYCLEBUT_G);
-	LED_CYCLE_BUT_B_OFF;
-	LED_CYCLE_BUT_B_ON;
-
-	update_pwm(1025, PWM_ENV);
-	update_pwm(1025, PWM_ENVLED_B);
-	update_pwm(1025, PWM_ENVLED_R);
-	update_pwm(1025, PWM_5VENV);
-	update_pwm(1025, PWM_5VENVLED_B);
-	update_pwm(1025, PWM_5VENVLED_R);
-
-	for (uint8_t j = 0; j < NUM_PWMS; j++)
-	{
-		update_pwm(0, j);
-		update_pwm(1, j);
-		update_pwm(1024, j);
-		update_pwm(1025, j);
-	}
-}
-
-void test_rb_color(uint16_t r, uint16_t b)
-{
-	update_pwm(r, PWM_PINGBUT_R);
-	update_pwm(b, PWM_PINGBUT_B);
-	LED_PING_BUT_G_ON;
-
-	update_pwm(r, PWM_CYCLEBUT_R);
-	update_pwm(b, PWM_CYCLEBUT_G);
-	LED_CYCLE_BUT_B_ON;
-}
-
 void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num)
 {
+	//Todo shift/sat
 	brightness<<=2;
 	if (brightness>4095) brightness=4095;
 	brightness = loga[4095-brightness] >> 2;
@@ -79,23 +20,33 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 			case c_WHITE:
 				update_pwm(0, PWM_PINGBUT_R);
 				update_pwm(100, PWM_PINGBUT_B);
+				LED_PING_BUT_G_ON;
 				break;
 			case c_YELLOW:
 				update_pwm(0, PWM_PINGBUT_R);
 				update_pwm(1024, PWM_PINGBUT_B);
+				LED_PING_BUT_G_ON;
+				break;
+			case c_RED:
+				update_pwm(0, PWM_PINGBUT_R);
+				update_pwm(1024, PWM_PINGBUT_B);
+				LED_PING_BUT_G_OFF;
 				break;
 			case c_BLUE:
 				update_pwm(1024, PWM_PINGBUT_R);
 				update_pwm(0, PWM_PINGBUT_B);
+				LED_PING_BUT_G_OFF;
 				break;
 			case c_DIMBLUE:
 				update_pwm(1024, PWM_PINGBUT_R);
 				update_pwm(850, PWM_PINGBUT_B);
+				LED_PING_BUT_G_OFF;
 				break;
 			case c_OFF:
 			default:
 				update_pwm(1025, PWM_PINGBUT_R);
 				update_pwm(1025, PWM_PINGBUT_B);
+				LED_PING_BUT_G_OFF;
 				break;
 		}
 	} 
@@ -105,27 +56,33 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 			case c_RED:
 				update_pwm(0, PWM_CYCLEBUT_R);
 				update_pwm(1025, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_ORANGE:
 				update_pwm(30, PWM_CYCLEBUT_R);
 				update_pwm(830, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_YELLOW:
 				update_pwm(300, PWM_CYCLEBUT_R);
 				update_pwm(530, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_GREEN:
 				update_pwm(1025, PWM_CYCLEBUT_R);
 				update_pwm(0, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_WHITE:
 				update_pwm(0, PWM_CYCLEBUT_R);
 				update_pwm(0, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_ON;
 				break;
 			case c_OFF:
 			default:
 				update_pwm(1025, PWM_CYCLEBUT_R);
 				update_pwm(1025, PWM_CYCLEBUT_G);
+				LED_CYCLE_BUT_B_OFF;
 				break;
 		}
 	}
@@ -176,3 +133,20 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 
 }
 
+void all_lights_off(void) {
+    update_pwm(0, PWM_CYCLEBUT_R);
+    update_pwm(0, PWM_CYCLEBUT_G);
+    LED_CYCLE_BUT_B_OFF;
+
+    update_pwm(0, PWM_PINGBUT_R);
+    update_pwm(0, PWM_PINGBUT_B);
+    LED_PING_BUT_G_OFF;
+
+    update_pwm(0, PWM_ENVLED_B);
+    update_pwm(0, PWM_ENVLED_R);
+
+    update_pwm(0, PWM_5VENVLED_B);
+    update_pwm(0, PWM_5VENVLED_R);
+
+    set_led_brightness(0, PWM_EOF_LED);
+}
