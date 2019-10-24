@@ -8,4 +8,3 @@
 
 void output_envelope(uint32_t dacval);
 void output_offset(void);
-void test_envout(void);

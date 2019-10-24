@@ -49,28 +49,3 @@ void output_offset(void)
 
 	set_led_brightness(0, PWM_5VENVLED_B);
 }
-
-void test_envout(void)
-{
-	uint16_t i;
-
-	for (i=0; i<1025; i++)
-	{
-		update_pwm(i, PWM_ENV);
-		update_pwm(i, PWM_5VENV);
-		update_pwm(i, PWM_ENVLED_B);
-		update_pwm(i, PWM_5VENVLED_B);
-
-		delay_ticks(1);
-	}
-	for (i=1025; i>0; i--)
-	{
-		update_pwm(i, PWM_ENV);
-		update_pwm(i, PWM_5VENV);
-		update_pwm(i, PWM_ENVLED_R);
-		update_pwm(i, PWM_5VENVLED_R);
-
-		delay_ticks(1);
-	}
-
-}
