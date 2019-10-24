@@ -45,7 +45,7 @@ void test_hardware(void) {
     while (!PINGBUT) {
         update_pwm(PINGJACK ? 1024 : 0, PWM_PINGBUT_R);
         update_pwm(CYCLEJACK_READ ? 1024 : 0, PWM_CYCLEBUT_R);
-        set_led_brightness(TRIGJACK_READ ? 1024 : 0, PWM_EOF_LED);
+        set_inverted_led(TRIGJACK_READ ? 1024 : 0, PWM_EOF_LED);
 
         adcval = adc_dma_buffer[CV_SHAPE] / 4;
         update_pwm(adcval, PWM_ENVLED_R);

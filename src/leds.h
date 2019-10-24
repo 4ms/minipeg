@@ -38,6 +38,7 @@ enum Palette {
 	NUM_COLORS
 };
 
+void set_inverted_led(uint16_t brightness, enum PwmOutputs pwm_led_num);
 void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num);
 void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id);
 void all_lights_off(void);
