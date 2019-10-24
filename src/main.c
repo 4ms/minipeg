@@ -1054,7 +1054,7 @@ void update_adc_params(uint8_t force_params_update)
 			adjusting_shift_mode = 1;
 
 		if (adjusting_shift_mode) 
-			shift = 512 + (tmp>>2);
+			shift = 512 - (tmp>>2);
 		else 
 			offset = tmp;
 

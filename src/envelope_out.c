@@ -9,7 +9,7 @@ void output_envelope(uint32_t dacval)
 	uint16_t env5V = dacval >> 2;
 
 	env = (int16_t)dacval;
-	env -= (offset+2047); //-2048 to +2048
+	env += offset - 2048;
 	env *= scale;
 	env >>= 14;		
 	env = shift - env;
