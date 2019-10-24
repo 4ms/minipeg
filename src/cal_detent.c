@@ -12,6 +12,7 @@ enum CalRequests{
 	CAL_REQUEST_LEDS
 };
 
+
 uint8_t sanity_check_calibration(void);
 void calibrate_divmult_pot(void);
 enum CalRequests should_enter_calibration_mode(void);
@@ -32,11 +33,11 @@ void check_calibration(void)
 		if (c==CAL_REQUEST_ALL) 
 			calibrate_divmult_pot();
 
-		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_LEDS)
-			calibrate_led_colors();
-
 		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_CENTER_DET)
 			calibrate_center_detents();
+
+		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_LEDS)
+			calibrate_led_colors();
 
 		write_settings();
 	}
@@ -125,7 +126,7 @@ enum CalRequests should_enter_calibration_mode(void)
 		&& (adc_dma_buffer[POT_SHAPE]>1800) && (adc_dma_buffer[POT_SHAPE]<2200)
 		)
 	{
-		if (adc_dma_buffer[POT_DIVMULT] < 5)
+		if (adc_dma_buffer[POT_DIVMULT] < 70)
 			return CAL_REQUEST_ALL;
 
 		else if ((adc_dma_buffer[POT_DIVMULT]>1800) && (adc_dma_buffer[POT_DIVMULT]<2200))
@@ -239,13 +240,13 @@ void calibrate_divmult_pot(void)
   
 
 		delay_ms(stab_delay);
-		read1 = adc_dma_buffer[0];
+		read1 = adc_dma_buffer[POT_DIVMULT];
 		delay_ms(stab_delay);
-		read2 = adc_dma_buffer[0];
+		read2 = adc_dma_buffer[POT_DIVMULT];
 		delay_ms(stab_delay);
-		read3 = adc_dma_buffer[0];
+		read3 = adc_dma_buffer[POT_DIVMULT];
 		delay_ms(stab_delay);
-		read4 = adc_dma_buffer[0];
+		read4 = adc_dma_buffer[POT_DIVMULT];
 
 		read_tot = read1 + read2 + read3 + read4;
 		read_avg = read_tot>>2;	
@@ -263,13 +264,13 @@ void calibrate_divmult_pot(void)
 			//wait until knob is detected as being moved
 			do {   
 				delay_ms(stab_delay);
-				read1 = adc_dma_buffer[0];
+				read1 = adc_dma_buffer[POT_DIVMULT];
 				delay_ms(stab_delay);
-				read2 = adc_dma_buffer[0];
+				read2 = adc_dma_buffer[POT_DIVMULT];
 				delay_ms(stab_delay);
-				read3 = adc_dma_buffer[0];
+				read3 = adc_dma_buffer[POT_DIVMULT];
 				delay_ms(stab_delay);
-				read4 = adc_dma_buffer[0];
+				read4 = adc_dma_buffer[POT_DIVMULT];
 
 				read_tot = read1 + read2 + read3 + read4;
 				read_avg = read_tot >> 2;	
