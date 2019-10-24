@@ -9,12 +9,12 @@
 
 enum AdcChannels
 {
-	POT_DIVMULT,
 	CV_SHAPE,
 	CV_DIVMULT,
 	POT_SCALE,
 	POT_OFFSET,
 	POT_SHAPE,
+	POT_DIVMULT,
 
 	NUM_ADCS
 };

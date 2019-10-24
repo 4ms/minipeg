@@ -39,6 +39,8 @@ void ADC_Init(uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_
     GPIO_InitTypeDef        gpio;
     uint8_t i;
 
+    HAL_StatusTypeDef err;
+
     __HAL_RCC_DMA1_CLK_ENABLE();
 
     //Set GPIO pins to analog
@@ -54,38 +56,39 @@ void ADC_Init(uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_
     hadc.Instance                       = ADC1;
     hadc.Init.ClockPrescaler            = ADC_CLOCK_SYNC_PCLK_DIV2;
     hadc.Init.Resolution                = ADC_RESOLUTION_12B;
-    hadc.Init.ScanConvMode              = ENABLE;
+    hadc.Init.ScanConvMode              = ADC_SCAN_SEQ_FIXED;
     hadc.Init.ContinuousConvMode        = ENABLE;
     hadc.Init.DiscontinuousConvMode     = DISABLE;
     hadc.Init.ExternalTrigConvEdge      = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc.Init.ExternalTrigConv          = ADC_SOFTWARE_START;//ADC_EXTERNALTRIGCONV_T1_CC1;  //Todo: why did T1_CC1 work on F7?
+
+    hadc.Init.ExternalTrigConv          = ADC_SOFTWARE_START;
+
     hadc.Init.DataAlign                 = ADC_DATAALIGN_RIGHT;
     hadc.Init.NbrOfConversion           = num_channels;
-    hadc.Init.DMAContinuousRequests     = ENABLE;//DISABLE;
+    hadc.Init.DMAContinuousRequests     = ENABLE;
     hadc.Init.EOCSelection              = ADC_EOC_SEQ_CONV;//ADC_EOC_SINGLE_CONV;
 
     hadc.Init.LowPowerAutoWait          = DISABLE;
     hadc.Init.LowPowerAutoPowerOff      = DISABLE;
-    hadc.Init.Overrun                   = ADC_OVR_DATA_PRESERVED; //Todo: what is this?
     hadc.Init.SamplingTimeCommon1       = ADC_SAMPLETIME_160CYCLES_5;
-    hadc.Init.SamplingTimeCommon2       = ADC_SAMPLETIME_79CYCLES_5;
-    hadc.Init.OversamplingMode          = DISABLE;  //Todo: what is this?
-    hadc.Init.TriggerFrequencyMode      = ADC_TRIGGER_FREQ_HIGH; 
+    hadc.Init.SamplingTimeCommon2       = ADC_SAMPLETIME_160CYCLES_5;
 
-    HAL_ADC_Init(&hadc);
+    hadc.Init.OversamplingMode          = DISABLE;  //Todo: try this
+    hadc.Init.Overrun                   = ADC_OVR_DATA_PRESERVED;
+
+    hadc.Init.TriggerFrequencyMode      = ADC_TRIGGER_FREQ_LOW; 
+
+    err = HAL_ADC_Init(&hadc);
 
     for (i=0; i<num_channels; i++)
     {
         sConfig.Channel         = adc_setup[i].channel;
-        sConfig.Rank            = ADC_REGULAR_RANK_1 + i;
+        sConfig.Rank            = ADC_RANK_CHANNEL_NUMBER;//ADC_REGULAR_RANK_1 + i;
         sConfig.SamplingTime    = adc_setup[i].sample_time;
-        HAL_ADC_ConfigChannel(&hadc, &sConfig);
+        err = HAL_ADC_ConfigChannel(&hadc, &sConfig);
     }
 
-    //__HAL_ADC_DISABLE_IT(&hadc1, (ADC_IT_EOC | ADC_IT_OVR));
-
-    HAL_ADC_Start(&hadc);
-    HAL_ADC_Start_DMA(&hadc, (uint32_t *)adc_buffer, num_channels);
+    err = HAL_ADC_Start_DMA(&hadc, (uint32_t *)adc_buffer, num_channels);
 }
 
 void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
@@ -107,4 +110,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
         __HAL_LINKDMA(&hadc, DMA_Handle, hdma_adc);
     }
+}
+
+void DMA1_Channel1_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_adc);
 }
