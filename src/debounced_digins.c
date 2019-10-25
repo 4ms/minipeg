@@ -9,6 +9,9 @@ TIM_HandleTypeDef debounce_tim;
 
 void init_debouncer(void)
 {
+    HAL_StatusTypeDef err;
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
     for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
     {
         digin[i].history = 0xFFFF;
@@ -22,13 +25,19 @@ void init_debouncer(void)
     debounce_tim.Init.CounterMode = TIM_COUNTERMODE_UP;
     debounce_tim.Init.Period = 5000;
     debounce_tim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    HAL_TIM_Base_Init(&debounce_tim);
+    err = HAL_TIM_Base_Init(&debounce_tim);
+
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    err = HAL_TIMEx_MasterConfigSynchronization(&debounce_tim, &sMasterConfig);
 
     HAL_NVIC_SetPriority(DEBOUNCE_IRQn, 1, 0); //was 1
     HAL_NVIC_EnableIRQ(DEBOUNCE_IRQn);
+
+    HAL_TIM_Base_Start_IT(&debounce_tim);
 }
 
-void DEBOUNCE_IRQ(void)
+void DEBOUNCE_IRQHandler(void)
 {
     uint16_t t;
     uint16_t pin_read;
@@ -77,5 +86,6 @@ void DEBOUNCE_IRQ(void)
             }
 
         }
+
     }
 }
