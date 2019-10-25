@@ -10,10 +10,13 @@
 enum RgbLeds {
 	LED_PING,
 	LED_CYCLE,
+	NUM_RGB_LEDS
+};
+
+enum DualLeds {
 	LED_ENV,
 	LED_5VENV,
-
-	NUM_RGB_LEDS
+	NUM_DUAL_LEDS
 };
 
 enum MonoLeds {
