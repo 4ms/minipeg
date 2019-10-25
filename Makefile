@@ -80,7 +80,15 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # Uncomment to compile unoptimized:
 
 # build/src/main.o: OPTFLAG = -O0
-$(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+# build/src/adc.o: OPTFLAG = -O0
+# build/src/hardware_tests.o: OPTFLAG = -O0
+# build/src/leds.o: OPTFLAG = -O0
+# build/src/pwm.o: OPTFLAG = -O0
+# build/src/debounced_digins.o: OPTFLAG = -O0
+# build/src/flash_user.o: OPTFLAG = -O0
+# build/src/flash.o: OPTFLAG = -O0
+# build/src/envelope_out.o: OPTFLAG = -O0
+# $(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
 
 all: Makefile $(BIN) $(HEX)
 
