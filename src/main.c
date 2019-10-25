@@ -139,27 +139,29 @@ int main(void)
 {
 	HAL_Init();
 	SystemClock_Config();
+	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 
 	init_tmrs();
 	init_dig_inouts();
-	init_analog_conditioning();
-
-	init_pwm();
-	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
-
-	init_debouncer();
-
-	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
-	//test_hardware();
-	
-	all_lights_off();
-
 	eor_off();
 	eof_off();
 	hr_off();
 	tapclkout_off();
 
-	read_settings();
+	init_analog_conditioning();
+
+	init_pwm();
+	all_lights_off();
+
+	init_debouncer();
+
+	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
+
+	if (!read_settings()) {
+		test_hardware();
+		write_settings();
+	}
+
 
 	if (settings.start_cycle_on)
 	{
