@@ -20,7 +20,7 @@ void set_inverted_led(uint16_t brightness, enum PwmOutputs pwm_led_num)
 	//Todo shift w/sat
 	brightness<<=2;
 	if (brightness>4095) brightness=4095;
-	brightness = loga[4095-brightness] >> 2;
+	brightness = loga[4095-brightness];
 
 	update_pwm(brightness, pwm_led_num);
 }
@@ -34,28 +34,28 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	{
 		switch (color_id) {
 			case c_WHITE:
-				update_pwm(1024, PWM_PINGBUT_R);
-				update_pwm(924, PWM_PINGBUT_B);
+				update_pwm(4095, PWM_PINGBUT_R);
+				update_pwm(3700, PWM_PINGBUT_B);
 				LED_PING_BUT_G_ON;
 				break;
 			case c_YELLOW:
-				update_pwm(1024, PWM_PINGBUT_R);
+				update_pwm(4095, PWM_PINGBUT_R);
 				update_pwm(0, PWM_PINGBUT_B);
 				LED_PING_BUT_G_ON;
 				break;
 			case c_RED:
-				update_pwm(1024, PWM_PINGBUT_R);
+				update_pwm(4095, PWM_PINGBUT_R);
 				update_pwm(0, PWM_PINGBUT_B);
 				LED_PING_BUT_G_OFF;
 				break;
 			case c_BLUE:
 				update_pwm(0, PWM_PINGBUT_R);
-				update_pwm(1024, PWM_PINGBUT_B);
+				update_pwm(4095, PWM_PINGBUT_B);
 				LED_PING_BUT_G_OFF;
 				break;
 			case c_DIMBLUE:
 				update_pwm(0, PWM_PINGBUT_R);
-				update_pwm(174, PWM_PINGBUT_B);
+				update_pwm(700, PWM_PINGBUT_B);
 				LED_PING_BUT_G_OFF;
 				break;
 			case c_OFF:
@@ -70,28 +70,28 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	{
 		switch (color_id) {
 			case c_RED:
-				update_pwm(1024, PWM_CYCLEBUT_R);
+				update_pwm(4095, PWM_CYCLEBUT_R);
 				update_pwm(0, PWM_CYCLEBUT_G);
 				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_ORANGE:
-				update_pwm(1024, PWM_CYCLEBUT_R);
-				update_pwm(150, PWM_CYCLEBUT_G);
+				update_pwm(4095, PWM_CYCLEBUT_R);
+				update_pwm(600, PWM_CYCLEBUT_G);
 				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_YELLOW:
-				update_pwm(900, PWM_CYCLEBUT_R);
-				update_pwm(600, PWM_CYCLEBUT_G);
+				update_pwm(3600, PWM_CYCLEBUT_R);
+				update_pwm(2400, PWM_CYCLEBUT_G);
 				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_GREEN:
 				update_pwm(0, PWM_CYCLEBUT_R);
-				update_pwm(1024, PWM_CYCLEBUT_G);
+				update_pwm(4095, PWM_CYCLEBUT_G);
 				LED_CYCLE_BUT_B_OFF;
 				break;
 			case c_WHITE:
-				update_pwm(1024, PWM_CYCLEBUT_R);
-				update_pwm(1024, PWM_CYCLEBUT_G);
+				update_pwm(4095, PWM_CYCLEBUT_R);
+				update_pwm(4095, PWM_CYCLEBUT_G);
 				LED_CYCLE_BUT_B_ON;
 				break;
 			case c_OFF:
@@ -106,15 +106,15 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	{
 		switch (color_id) {
 			case c_PURPLE:
-				update_pwm(1024, PWM_ENVLED_B);
-				update_pwm(1024, PWM_ENVLED_R);
+				update_pwm(4095, PWM_ENVLED_B);
+				update_pwm(4095, PWM_ENVLED_R);
 				break;
 			case c_RED:
 				update_pwm(0, PWM_ENVLED_B);
-				update_pwm(1024, PWM_ENVLED_R);
+				update_pwm(4095, PWM_ENVLED_R);
 				break;
 			case c_BLUE:
-				update_pwm(1024, PWM_ENVLED_B);
+				update_pwm(4095, PWM_ENVLED_B);
 				update_pwm(0, PWM_ENVLED_R);
 				break;
 			case c_OFF:
@@ -128,15 +128,15 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	{
 		switch (color_id) {
 			case c_PURPLE:
-				update_pwm(1024, PWM_5VENVLED_B);
-				update_pwm(1024, PWM_5VENVLED_R);
+				update_pwm(4095, PWM_5VENVLED_B);
+				update_pwm(4095, PWM_5VENVLED_R);
 				break;
 			case c_RED:
 				update_pwm(0, PWM_5VENVLED_B);
-				update_pwm(1024, PWM_5VENVLED_R);
+				update_pwm(4095, PWM_5VENVLED_R);
 				break;
 			case c_BLUE:
-				update_pwm(1024, PWM_5VENVLED_B);
+				update_pwm(4095, PWM_5VENVLED_B);
 				update_pwm(0, PWM_5VENVLED_R);
 				break;
 			case c_OFF:

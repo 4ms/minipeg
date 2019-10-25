@@ -91,7 +91,7 @@ uint16_t shape;
 uint8_t skew, curve;
 int16_t offset=0;
 int16_t scale=0;
-int16_t shift=512;
+int16_t shift=2048;
 uint8_t adjusting_shift_mode=0;
 int16_t cycle_latched_offset;
 
@@ -1049,7 +1049,7 @@ void update_adc_params(uint8_t force_params_update)
 			adjusting_shift_mode = 1;
 
 		if (adjusting_shift_mode) 
-			shift = 512 + (tmp/4);
+			shift = 2048 + tmp;
 		else 
 			offset = tmp;
 

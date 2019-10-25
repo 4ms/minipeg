@@ -304,11 +304,11 @@ void calibrate_led_colors(void) {
 		    LED_PING_BUT_G_ON;
 		    LED_CYCLE_BUT_B_ON;
     	}
-        update_pwm(adc_dma_buffer[4]/4, PWM_PINGBUT_R);
-        update_pwm(adc_dma_buffer[5]/4, PWM_PINGBUT_B);
+        update_pwm(adc_dma_buffer[5], PWM_PINGBUT_R);
+        update_pwm(adc_dma_buffer[4], PWM_PINGBUT_B);
 
-        update_pwm(adc_dma_buffer[2]/4, PWM_CYCLEBUT_R);
-        update_pwm(adc_dma_buffer[3]/4, PWM_CYCLEBUT_G);
+        update_pwm(adc_dma_buffer[2], PWM_CYCLEBUT_R);
+        update_pwm(adc_dma_buffer[3], PWM_CYCLEBUT_G);
     }
 
     settings.ping_cal_r = adc_dma_buffer[4];
