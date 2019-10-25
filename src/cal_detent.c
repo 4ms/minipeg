@@ -106,13 +106,13 @@ uint8_t sanity_check_calibration(void)
 	if (settings.start_cycle_on>1)
 		return 0;
 
-	if (settings.ping_cal_r < 100 ||  settings.ping_cal_r > 4000) 
+	if (settings.ping_cal_r < 1 ||  settings.ping_cal_r > 4096) 
 		return 0;
-	if (settings.ping_cal_b < 100 ||  settings.ping_cal_b > 4000) 
+	if (settings.ping_cal_b < 1 ||  settings.ping_cal_b > 4096) 
 		return 0;
-	if (settings.cycle_cal_r < 100 ||  settings.cycle_cal_r > 4000) 
+	if (settings.cycle_cal_r < 1 ||  settings.cycle_cal_r > 4096) 
 		return 0;
-	if (settings.cycle_cal_g < 100 ||  settings.cycle_cal_g > 4000) 
+	if (settings.cycle_cal_g < 1 ||  settings.cycle_cal_g > 4096) 
 		return 0;
 
 	return 1; //pass
@@ -304,11 +304,12 @@ void calibrate_led_colors(void) {
 		    LED_PING_BUT_G_ON;
 		    LED_CYCLE_BUT_B_ON;
     	}
-        update_pwm(adc_dma_buffer[5], PWM_PINGBUT_R);
-        update_pwm(adc_dma_buffer[4], PWM_PINGBUT_B);
 
-        update_pwm(adc_dma_buffer[2], PWM_CYCLEBUT_R);
-        update_pwm(adc_dma_buffer[3], PWM_CYCLEBUT_G);
+        update_pwm(adjust_hue(2048, adc_dma_buffer[5]), PWM_PINGBUT_R);
+        update_pwm(adjust_hue(2048, adc_dma_buffer[4]), PWM_PINGBUT_B);
+
+        update_pwm(adjust_hue(2048, adc_dma_buffer[2]), PWM_CYCLEBUT_R);
+        update_pwm(adjust_hue(2048, adc_dma_buffer[3]), PWM_CYCLEBUT_G);
     }
 
     settings.ping_cal_r = adc_dma_buffer[4];

@@ -13,7 +13,7 @@ void trigout_off(void);
 void trigout_on(void){
 	if (!trigout_high){
 		TRIGOUT_ON;
-		set_inverted_led(1024, PWM_EOF_LED);
+		set_inverted_led(kMaxBrightness, PWM_EOF_LED);
 		trigout_high=1;
 		trigouttmr=0;
 	}

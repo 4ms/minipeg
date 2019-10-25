@@ -2,7 +2,7 @@
  * log4096.h
  */
 
-const uint16_t loga[4096]={
+const uint16_t log4096[4096]={
 0,
 0,
 341,

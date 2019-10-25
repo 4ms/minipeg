@@ -2,6 +2,7 @@
 /*
 todo: 
 Rename envout to segment_phase
+Lock +5V (or can adjust it?)
 */
 
 #include <stm32g0xx.h>
@@ -130,10 +131,7 @@ void init_tmrs(void)
 	trigouttmr=0;
 }
 
-uint32_t udiv32(uint32_t n27)
-{
-	return (uint32_t)(1<<31) / n27;
-}
+uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
 
 int main(void)
 {
@@ -157,11 +155,16 @@ int main(void)
 
 	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
 
-	if (!read_settings()) {
+	if (!read_settings()) 
+	{
 		test_hardware();
 		write_settings();
 	}
 
+	delay_ms(50);
+	adjust_palette();
+	check_calibration();
+	adjust_palette();
 
 	if (settings.start_cycle_on)
 	{
@@ -187,17 +190,12 @@ int main(void)
 	sync_to_ping_mode=1;
 	accum=0;
 
-	delay_ms(50);
-	check_calibration();
-	
 	while (1)
 	{
-		// DEBUGON;
 		read_taptempo();
 		read_trigjacks();
 		read_cycle_button();
 		check_reset_envelopes();
-		// DEBUGOFF;
 
 		update_tap_clock();
 		read_ping_clock();
