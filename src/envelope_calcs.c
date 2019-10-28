@@ -165,7 +165,7 @@ void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_ris
 }
 
 //phase: 0..4095
-//curve_amt: 0..255 amount of curve (0=100% expo, 127/128=linear=phase 255=100% log)
+//cur_curve: 0..255, curve to use: 0=expo, 127/128=linear, 255=log (interpolates)
 //returns: 0..4095 dac value
 int16_t calc_curve(int16_t phase, char cur_curve)
 {

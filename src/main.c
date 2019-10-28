@@ -18,7 +18,7 @@ volatile uint32_t tapintmr;
 volatile uint32_t pingtmr;
 volatile uint32_t divpingtmr;
 volatile uint32_t trigouttmr;
-volatile uint8_t ticks_since_envout=0;
+volatile uint32_t ticks_since_envout=0;
 volatile uint32_t ping_irq_timestamp=0;
 volatile uint32_t trig_irq_timestamp=0;
 
@@ -129,7 +129,7 @@ void init_tmrs(void)
 	trigouttmr=0;
 }
 
-uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
+inline uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
 
 int main(void)
 {
@@ -212,7 +212,7 @@ void calc_rise_fall_incs(void)
 {
 	fall_time=get_fall_time(skew, div_clk_time);
 	rise_time=div_clk_time-fall_time;
-	rise_inc=udiv32(rise_time); //udiv32(rise_time>>5); 
+	rise_inc=udiv32(rise_time);
 	fall_inc=udiv32(fall_time);
 }
 
@@ -666,7 +666,7 @@ void read_ping_clock(void)
 void do_reset_envelopes(void)
 {
 	uint32_t elapsed_time;
-	uint16_t new_dacout;
+	uint16_t segphase_endpoint;
 
 	reset_now_flag=0;
 
@@ -694,32 +694,32 @@ void do_reset_envelopes(void)
 		if (elapsed_time <= rise_time)  //Does our transition length exceed the rise time?
 		{
 			//time_tmp=((uint64_t)elapsed_time) << 12; //0x80000 = 524288
-			//new_dacout = time_tmp/rise_time;
-			new_dacout = (elapsed_time<<12)/rise_time;
-			new_accum = new_dacout << 19;
-			new_dacout = calc_curve(new_dacout, next_curve_rise);
+			//segphase_endpoint = time_tmp/rise_time;
+			segphase_endpoint = (elapsed_time<<12)/rise_time;
+			accum_endpoint = segphase_endpoint << 19;
+			segphase_endpoint = calc_curve(segphase_endpoint, next_curve_rise);
 			next_env_state=RISE;
 		}
 		else
 		{
 			elapsed_time = elapsed_time-rise_time;
 			// time_tmp = ((uint64_t)elapsed_time) << 12;
-			// new_dacout = time_tmp/fall_time;
-			new_dacout = (elapsed_time<<12)/fall_time;
-			if (new_dacout < 4096)
-				new_dacout = 4096 - new_dacout;
+			// segphase_endpoint = time_tmp/fall_time;
+			segphase_endpoint = (elapsed_time<<12)/fall_time;
+			if (segphase_endpoint < 4096)
+				segphase_endpoint = 4096 - segphase_endpoint;
 			else
-				new_dacout = 0;
-			new_accum = new_dacout << 19;
-			new_dacout = calc_curve(new_dacout,next_curve_fall);
+				segphase_endpoint = 0;
+			accum_endpoint = segphase_endpoint << 19;
+			segphase_endpoint = calc_curve(segphase_endpoint,next_curve_fall);
 			next_env_state=FALL;
 		}
 
-		//split (new_dacout - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-		if (new_dacout > segphase)
-			transition_inc = (new_dacout - segphase) << 12; //was 9
+		//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+		if (segphase_endpoint > segphase)
+			transition_inc = (segphase_endpoint - segphase) << 12; //was 9
 		else {
-			transition_inc = (segphase - new_dacout) << 12; //was 9
+			transition_inc = (segphase - segphase_endpoint) << 12; //was 9
 			transition_inc = -1 * transition_inc;
 		}
 
@@ -871,7 +871,7 @@ void update_envelope(void)
 					if (transition_ctr <= 0)
 					{
 						end_segment_flag = next_env_state;
-						accum = new_accum;
+						accum = accum_endpoint;
 
 						//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
 						if (outta_sync) //2 means we got to transistion from reset_now_flag
@@ -1023,7 +1023,7 @@ void update_adc_params(uint8_t force_params_update)
 	int8_t t_clock_divider_amount=1;
 	int8_t hys_clock_divider_amount=0;
 	int16_t cv;
-	uint32_t new_dacout;
+	uint32_t segphase_endpoint;
 	// uint32_t rise_per_clk=0;
 
 	static uint16_t oversample_wait_ctr=0;
@@ -1225,32 +1225,32 @@ void update_adc_params(uint8_t force_params_update)
 
 				if (elapsed_time <= rise_time) {  //Are we on the rise?
 					time_tmp = ((uint64_t)elapsed_time) << 12; //12 bits
-					new_dacout = time_tmp/rise_time;
-					if (new_dacout > 4095)
-						new_dacout = 4095;
-					new_accum = new_dacout << 19;
-					new_dacout = calc_curve(new_dacout,next_curve_rise);
+					segphase_endpoint = time_tmp/rise_time;
+					if (segphase_endpoint > 4095)
+						segphase_endpoint = 4095;
+					accum_endpoint = segphase_endpoint << 19;
+					segphase_endpoint = calc_curve(segphase_endpoint,next_curve_rise);
 					next_env_state = RISE;
 				} else {
 					elapsed_time = elapsed_time - rise_time;
 					time_tmp = ((uint64_t)elapsed_time) << 12; 
-					new_dacout = time_tmp / fall_time;
-					if (new_dacout < 4095)
-						new_dacout = 4095 - new_dacout;
+					segphase_endpoint = time_tmp / fall_time;
+					if (segphase_endpoint < 4095)
+						segphase_endpoint = 4095 - segphase_endpoint;
 					else
-						new_dacout = 0;
-					new_accum = new_dacout << 19;
-					new_dacout = calc_curve(new_dacout, next_curve_fall);
+						segphase_endpoint = 0;
+					accum_endpoint = segphase_endpoint << 19;
+					segphase_endpoint = calc_curve(segphase_endpoint, next_curve_fall);
 					next_env_state = FALL;
 				}
 
 				accum = segphase << 19;
 	
-				//split (new_dacout - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-				if (new_dacout > segphase)
-					transition_inc = (new_dacout - segphase) << 12;
+				//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+				if (segphase_endpoint > segphase)
+					transition_inc = (segphase_endpoint - segphase) << 12;
 				else {
-					transition_inc = (segphase - new_dacout) << 12;
+					transition_inc = (segphase - segphase_endpoint) << 12;
 					transition_inc = -1 * transition_inc;
 				}
 				cur_curve = LIN;
