@@ -57,7 +57,7 @@ uint8_t next_env_state=WAIT;
 
 uint32_t accum=0;
 uint16_t segphase=0;
-uint32_t new_accum=0;
+uint32_t accum_endpoint=0;
 
 uint8_t cycle_but_on = 0;
 
@@ -104,6 +104,7 @@ void read_cycle_button(void);
 void check_reset_envelopes(void);
 void update_tap_clock(void);
 void read_ping_clock(void);
+void start_transition(uint32_t elapsed_time);
 void do_reset_envelopes(void);
 void update_envelope(void);
 void update_adc_params(uint8_t force_params_update);
@@ -302,7 +303,7 @@ void read_trigjacks(void)
 			reset_now_flag=1;
 			ready_to_start_async=0;
 			
-			if (rise_time>0x1000)  //do an immediate fall if rise_time is fast
+			if (rise_time>0x1000)  //FixMe: should this be 0x10 ?? //do an immediate fall if rise_time is fast
 				outta_sync=1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
 
 			//start each envelope the same time after the divided clock
@@ -663,10 +664,58 @@ void read_ping_clock(void)
 	}
 }
 
+void start_transition(uint32_t elapsed_time)
+{
+	uint64_t time_tmp;
+	uint16_t segphase_endpoint;
+
+	if (elapsed_time > div_clk_time)
+		elapsed_time -= div_clk_time;
+
+	if (elapsed_time <= rise_time) { //We're rising
+		time_tmp = ((uint64_t)elapsed_time) << 12; //12 bits
+		segphase_endpoint = time_tmp/rise_time;
+		if (segphase_endpoint > 4095)
+			segphase_endpoint = 4095;
+		accum_endpoint = segphase_endpoint << 19;
+		segphase_endpoint = calc_curve(segphase_endpoint,next_curve_rise);
+		next_env_state = RISE;
+	} else {
+		elapsed_time = elapsed_time - rise_time;
+		time_tmp = ((uint64_t)elapsed_time) << 12; 
+		segphase_endpoint = time_tmp / fall_time;
+		if (segphase_endpoint >= 4095)
+		{
+			segphase_endpoint = 0;
+			accum_endpoint = 0;
+		}
+		else
+		{
+			segphase_endpoint = 4095 - segphase_endpoint;
+			accum_endpoint = segphase_endpoint << 19;
+			segphase_endpoint = calc_curve(segphase_endpoint, next_curve_fall);
+		}
+		next_env_state = FALL;
+	}
+
+	//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+	if (segphase_endpoint > segphase)
+		transition_inc = (segphase_endpoint - segphase) << 12; //was 9
+	else {
+		transition_inc = (segphase - segphase_endpoint) << 12; //was 9
+		transition_inc = -1 * transition_inc;
+	}
+
+	cur_curve=LIN;
+	accum=segphase<<19;
+
+	env_state=TRANSITION;
+	transition_ctr=128;
+}
+
 void do_reset_envelopes(void)
 {
 	uint32_t elapsed_time;
-	uint16_t segphase_endpoint;
 
 	reset_now_flag=0;
 
@@ -683,50 +732,9 @@ void do_reset_envelopes(void)
 	}
 	else
 	{
-		if (outta_sync==1) outta_sync=2;
-		env_state=TRANSITION;
-		//envelope_running=1; ///shouldn't we have this ??
-		
+		if (outta_sync==1) outta_sync=2;		
 		elapsed_time=128; //was 0x8000. offset to account for transition period: 64/128 timer overflows (6/13ms)
-		if (elapsed_time>div_clk_time)
-			elapsed_time-=div_clk_time;
-
-		if (elapsed_time <= rise_time)  //Does our transition length exceed the rise time?
-		{
-			//time_tmp=((uint64_t)elapsed_time) << 12; //0x80000 = 524288
-			//segphase_endpoint = time_tmp/rise_time;
-			segphase_endpoint = (elapsed_time<<12)/rise_time;
-			accum_endpoint = segphase_endpoint << 19;
-			segphase_endpoint = calc_curve(segphase_endpoint, next_curve_rise);
-			next_env_state=RISE;
-		}
-		else
-		{
-			elapsed_time = elapsed_time-rise_time;
-			// time_tmp = ((uint64_t)elapsed_time) << 12;
-			// segphase_endpoint = time_tmp/fall_time;
-			segphase_endpoint = (elapsed_time<<12)/fall_time;
-			if (segphase_endpoint < 4096)
-				segphase_endpoint = 4096 - segphase_endpoint;
-			else
-				segphase_endpoint = 0;
-			accum_endpoint = segphase_endpoint << 19;
-			segphase_endpoint = calc_curve(segphase_endpoint,next_curve_fall);
-			next_env_state=FALL;
-		}
-
-		//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-		if (segphase_endpoint > segphase)
-			transition_inc = (segphase_endpoint - segphase) << 12; //was 9
-		else {
-			transition_inc = (segphase - segphase_endpoint) << 12; //was 9
-			transition_inc = -1 * transition_inc;
-		}
-
-		cur_curve=LIN;
-		accum=segphase<<19;
-
-		transition_ctr=128;
+		start_transition(elapsed_time);
 	}
 
 	curve_rise=next_curve_rise;
@@ -1023,7 +1031,6 @@ void update_adc_params(uint8_t force_params_update)
 	int8_t t_clock_divider_amount=1;
 	int8_t hys_clock_divider_amount=0;
 	int16_t cv;
-	uint32_t segphase_endpoint;
 	// uint32_t rise_per_clk=0;
 
 	static uint16_t oversample_wait_ctr=0;
@@ -1219,45 +1226,8 @@ void update_adc_params(uint8_t force_params_update)
 			
 			if (envelope_running)
 			{
-				elapsed_time += (uint32_t)0x80; //was 0x8000. offset to account for transition period: 128 timer overflows
-				if (elapsed_time > div_clk_time)
-					elapsed_time -= div_clk_time;
-
-				if (elapsed_time <= rise_time) {  //Are we on the rise?
-					time_tmp = ((uint64_t)elapsed_time) << 12; //12 bits
-					segphase_endpoint = time_tmp/rise_time;
-					if (segphase_endpoint > 4095)
-						segphase_endpoint = 4095;
-					accum_endpoint = segphase_endpoint << 19;
-					segphase_endpoint = calc_curve(segphase_endpoint,next_curve_rise);
-					next_env_state = RISE;
-				} else {
-					elapsed_time = elapsed_time - rise_time;
-					time_tmp = ((uint64_t)elapsed_time) << 12; 
-					segphase_endpoint = time_tmp / fall_time;
-					if (segphase_endpoint < 4095)
-						segphase_endpoint = 4095 - segphase_endpoint;
-					else
-						segphase_endpoint = 0;
-					accum_endpoint = segphase_endpoint << 19;
-					segphase_endpoint = calc_curve(segphase_endpoint, next_curve_fall);
-					next_env_state = FALL;
-				}
-
-				accum = segphase << 19;
-	
-				//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-				if (segphase_endpoint > segphase)
-					transition_inc = (segphase_endpoint - segphase) << 12;
-				else {
-					transition_inc = (segphase - segphase_endpoint) << 12;
-					transition_inc = -1 * transition_inc;
-				}
-				cur_curve = LIN;
-
-				env_state = TRANSITION;
-				transition_ctr = 128;
-
+				elapsed_time += 128; //was 0x8000. offset to account for transition period: 128 timer overflows
+				start_transition(elapsed_time);
 				outta_sync = 1;
 				ready_to_start_async = 1;	
 			}
