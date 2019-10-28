@@ -2,7 +2,7 @@
 #include "globals.h"
 #include "log4096.h"
 
-extern const uint16_t loga[4096];
+extern const uint16_t log4096[4096];
 
 extern struct SystemSettings settings;
 
@@ -175,12 +175,12 @@ int16_t calc_curve(int16_t phase, char cur_curve)
 		return phase;
 
 	else if (cur_curve<127) {
-		uint16_t t_inv_loga=4095-loga[4095-phase];
+		uint16_t t_inv_loga=4095-log4096[4095-phase];
 		return (phase*cur_curve + t_inv_loga*(127-cur_curve)) >> 7;
 	}
 
 	else { //cur_curve>128
-		uint16_t t_loga=loga[phase];
+		uint16_t t_loga=log4096[phase];
 		cur_curve-=128;
 		return (phase*(127-cur_curve) + t_loga*cur_curve) >> 7;
 	}

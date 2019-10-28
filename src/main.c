@@ -1,12 +1,12 @@
 
 /*
 todo: 
-Rename envout to segment_phase
+Lock +5V (or can adjust it?)
 */
 
-#include "stm32f0xx_conf.h"
+#include <stm32g0xx.h>
 #include "globals.h"
-
+#include "hardware_tests.h"
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
@@ -56,12 +56,8 @@ enum envelopeStates env_state=WAIT;
 uint8_t next_env_state=WAIT;
 
 uint32_t accum=0;
-uint16_t envout=0;
+uint16_t segphase=0;
 uint32_t new_accum=0;
-uint16_t new_dacout=0;
-
-uint16_t adc_dma_buffer[NUM_ADCS];
-
 
 uint8_t cycle_but_on = 0;
 
@@ -94,7 +90,7 @@ uint16_t shape;
 uint8_t skew, curve;
 int16_t offset=0;
 int16_t scale=0;
-int16_t shift=512;
+int16_t shift=2048;
 uint8_t adjusting_shift_mode=0;
 int16_t cycle_latched_offset;
 
@@ -133,40 +129,40 @@ void init_tmrs(void)
 	trigouttmr=0;
 }
 
-uint32_t udiv32(uint32_t n27)
-{
-	return (uint32_t)(1<<31) / n27;
-}
+uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
 
 int main(void)
 {
+	HAL_Init();
+	SystemClock_Config();
+	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 
 	init_tmrs();
 	init_dig_inouts();
-	init_adc(adc_dma_buffer, NUM_ADCS);
-	init_analog_conditioning();
-
-	init_pwm();
-	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
-
-	init_debouncer();
-
-	// test_leds();
-	// while (1) test_rb_color(adc_dma_buffer[5], adc_dma_buffer[4]);
-
-	set_rgb_led(LED_PING, c_OFF);
-	set_rgb_led(LED_CYCLE, c_OFF);
-	set_rgb_led(LED_ENV, c_OFF);
-	set_rgb_led(LED_5VENV, c_OFF);
-
-	LEDTRIGOUT_OFF;
-
 	eor_off();
 	eof_off();
 	hr_off();
 	tapclkout_off();
 
-	read_settings();
+	init_analog_conditioning();
+
+	init_pwm();
+	all_lights_off();
+
+	init_debouncer();
+
+	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
+
+	if (!read_settings()) 
+	{
+		test_hardware();
+		write_settings();
+	}
+
+	delay_ms(50);
+	adjust_palette();
+	check_calibration();
+	adjust_palette();
 
 	if (settings.start_cycle_on)
 	{
@@ -192,17 +188,12 @@ int main(void)
 	sync_to_ping_mode=1;
 	accum=0;
 
-	delay_ms(50);
-	check_calibration();
-	
 	while (1)
 	{
-		// DEBUGON;
 		read_taptempo();
 		read_trigjacks();
 		read_cycle_button();
 		check_reset_envelopes();
-		// DEBUGOFF;
 
 		update_tap_clock();
 		read_ping_clock();
@@ -423,11 +414,11 @@ void read_cycle_button(void)
 						time_tmp = ((uint64_t)elapsed_time) << 12;
 						accum = time_tmp/rise_time; // elapsed_time/rise_time is the % of the rise phase already elapsed, and <<12 gives us the 0..4095 dac value
 						accum <<= 19;
-						//FixMe: Why aren't we setting envout here?
+						//FixMe: Why aren't we setting segphase here?
 						env_state = RISE;
 						curve_rise = next_curve_rise;
 					
-						if (envout >= 2048) hr_on();
+						if (segphase >= 2048) hr_on();
 						else hr_off();
 						eor_off();
 						eof_on();
@@ -437,11 +428,11 @@ void read_cycle_button(void)
 						time_tmp = ((uint64_t)elapsed_time) << 12;
 						accum = 4096 - (time_tmp/fall_time);
 						accum <<= 19;
-						//FixMe: Why aren't we setting envout here?
+						//FixMe: Why aren't we setting segphase here?
 						env_state = FALL;
 						curve_fall = next_curve_fall;
 
-						if (envout < 2048) hr_off();
+						if (segphase < 2048) hr_off();
 						else hr_on();
 						eor_on();
 						eof_off();
@@ -675,10 +666,11 @@ void read_ping_clock(void)
 void do_reset_envelopes(void)
 {
 	uint32_t elapsed_time;
+	uint16_t new_dacout;
 
 	reset_now_flag=0;
 
-	if (envout<0x0010)
+	if (segphase<0x0010)
 		outta_sync=0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
 	if ((!envelope_running || (outta_sync==0) || (div_clk_time<0x80))) //was div_clk_time<0x8000
@@ -723,16 +715,16 @@ void do_reset_envelopes(void)
 			next_env_state=FALL;
 		}
 
-		//split (new_dacout - envout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-		if (new_dacout > envout)
-			transition_inc = (new_dacout - envout) << 12; //was 9
+		//split (new_dacout - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+		if (new_dacout > segphase)
+			transition_inc = (new_dacout - segphase) << 12; //was 9
 		else {
-			transition_inc = (envout - new_dacout) << 12; //was 9
+			transition_inc = (segphase - new_dacout) << 12; //was 9
 			transition_inc = -1 * transition_inc;
 		}
 
 		cur_curve=LIN;
-		accum=envout<<19;
+		accum=segphase<<19;
 
 		transition_ctr=128;
 	}
@@ -779,7 +771,7 @@ void update_envelope(void)
 		if (envelope_running)
 		{
 			//PEGv2: this block takes about 15-18us and runs every 100us (10kHz sampling rate)
-			envout=0;
+			segphase=0;
 			// if (env_state==TRANSITION)
 			// 	DEBUGON;
 			// else
@@ -790,12 +782,12 @@ void update_envelope(void)
 				case (RISE):
 					ticks_since_envout_running_total += use_ticks_since_envout;
 					accum += rise_inc*use_ticks_since_envout;
-					envout = accum>>19;
+					segphase = accum>>19;
 
 					if (accum > 0x7FF80000)
 					{
 						accum = 0x7FF80000;
-						envout = 0x0FFF;
+						segphase = 0x0FFF;
 						if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 							end_segment_flag = SUSTAIN;
 						else
@@ -804,7 +796,7 @@ void update_envelope(void)
 					
 					cur_curve=curve_rise;
 
-					if (envout>=2048) hr_on();
+					if (segphase>=2048) hr_on();
 					else hr_off();
 					eor_off();
 					eof_on();
@@ -815,7 +807,7 @@ void update_envelope(void)
 					eof_off();
 					hr_on();
 
-					envout=0x0FFF;
+					segphase=0x0FFF;
 
 					if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 					{
@@ -829,18 +821,18 @@ void update_envelope(void)
 				case (FALL):
 					ticks_since_envout_running_total += use_ticks_since_envout;
 					accum -= fall_inc*use_ticks_since_envout;
-					envout=accum>>19;
+					segphase=accum>>19;
 
 					if ((accum<0x00080000) || (accum>0x7FF80000))
 					{
 						accum = 0;
-						envout = 0;
+						segphase = 0;
 						end_env_flag = 1;
 					}
 
 					eor_on();
 					eof_off();
-					if (envout<2048)	hr_off();
+					if (segphase<2048)	hr_off();
 					else hr_on();
 
 					cur_curve=curve_fall;
@@ -852,17 +844,17 @@ void update_envelope(void)
 					if (accum < 0x00080000 || (transition_inc==0)) //trans_inc==0 would technically be an error, so this gives us an out
 					{
 						accum = 0;
-						envout = 0;
+						segphase = 0;
 						transition_ctr = use_ticks_since_envout;
 					}
 					else if (accum>0x7FF80000)
 					{
 						accum = 0x7FF80000;
-						envout = 0x0FFF;
+						segphase = 0x0FFF;
 						transition_ctr = use_ticks_since_envout;
 					}
 					else
-						envout = accum>>19;
+						segphase = accum>>19;
 
 					if (transition_inc>0)
 					{
@@ -895,8 +887,8 @@ void update_envelope(void)
 					break;
 			}
 		
-			envout = calc_curve(envout, cur_curve);
-			output_envelope(envout);
+			segphase = calc_curve(segphase, cur_curve);
+			output_envelope(segphase);
 
 			if (end_segment_flag)
 			{
@@ -1031,6 +1023,7 @@ void update_adc_params(uint8_t force_params_update)
 	int8_t t_clock_divider_amount=1;
 	int8_t hys_clock_divider_amount=0;
 	int16_t cv;
+	uint32_t new_dacout;
 	// uint32_t rise_per_clk=0;
 
 	static uint16_t oversample_wait_ctr=0;
@@ -1054,7 +1047,7 @@ void update_adc_params(uint8_t force_params_update)
 			adjusting_shift_mode = 1;
 
 		if (adjusting_shift_mode) 
-			shift = 512 + (tmp>>2);
+			shift = 2048 + tmp;
 		else 
 			offset = tmp;
 
@@ -1251,13 +1244,13 @@ void update_adc_params(uint8_t force_params_update)
 					next_env_state = FALL;
 				}
 
-				accum = envout << 19;
+				accum = segphase << 19;
 	
-				//split (new_dacout - envout) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
-				if (new_dacout > envout)
-					transition_inc = (new_dacout - envout) << 12;
+				//split (new_dacout - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12 
+				if (new_dacout > segphase)
+					transition_inc = (new_dacout - segphase) << 12;
 				else {
-					transition_inc = (envout - new_dacout) << 12;
+					transition_inc = (segphase - new_dacout) << 12;
 					transition_inc = -1 * transition_inc;
 				}
 				cur_curve = LIN;

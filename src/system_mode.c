@@ -23,18 +23,18 @@ void handle_system_mode(void)
 	for (d=0;d<5;d++) {
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
-		set_rgb_led(LED_ENV, c_PURPLE);
-		set_rgb_led(LED_5VENV, c_PURPLE);
-		LEDTRIGOUT_ON;
+		set_dual_led(LED_ENV, c_PURPLE);
+		set_dual_led(LED_5VENV, c_PURPLE);
+		set_inverted_led(1024, PWM_EOF_LED);
 
 		delay_ms(100);
 		if (d==4) delay_ms(500);
 
 		set_rgb_led(LED_PING, c_OFF);
 		set_rgb_led(LED_CYCLE, c_OFF);
-		set_rgb_led(LED_ENV, c_OFF);
-		set_rgb_led(LED_5VENV, c_OFF);
-		LEDTRIGOUT_OFF;
+		set_dual_led(LED_ENV, c_OFF);
+		set_dual_led(LED_5VENV, c_OFF);
+		set_inverted_led(0, PWM_EOF_LED);
 
 		delay_ms(100);
 	}
@@ -67,7 +67,7 @@ void handle_system_mode(void)
 			case(NUM_SYSMODE_PARAMS):
 				system_mode_cur = SET_TRIGOUT_FUNC;
 			case(SET_TRIGOUT_FUNC):
-				LEDTRIGOUT_ON;
+				set_inverted_led(1024, PWM_EOF_LED);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
 					set_rgb_led(LED_CYCLE, c_RED);
 				else if (settings.trigout_function == TRIGOUT_IS_ENDOFFALL)
@@ -78,35 +78,35 @@ void handle_system_mode(void)
 					set_rgb_led(LED_CYCLE, c_WHITE);
 
 				set_rgb_led(LED_PING, c_OFF);
-				set_rgb_led(LED_ENV, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
+				set_dual_led(LED_ENV, c_OFF);
+				set_dual_led(LED_5VENV, c_OFF);
 			break;
 
 			case(SET_TRIGOUT_IS_TRIG):
 				if (settings.trigout_is_trig) {
 					set_rgb_led(LED_CYCLE, c_WHITE);
-					if (systmr & 0x0F00) LEDTRIGOUT_OFF;
-					else LEDTRIGOUT_ON;
+					if (systmr & 0x0F00) set_inverted_led(0, PWM_EOF_LED);
+					else set_inverted_led(1024, PWM_EOF_LED);
 				} else {
 					set_rgb_led(LED_CYCLE, c_ORANGE);
-					if (systmr & 0x1000) LEDTRIGOUT_OFF;
-					else LEDTRIGOUT_ON;
+					if (systmr & 0x1000) set_inverted_led(0, PWM_EOF_LED);
+					else set_inverted_led(1024, PWM_EOF_LED);
 				}
 				set_rgb_led(LED_PING, c_OFF);
-				set_rgb_led(LED_ENV, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
+				set_dual_led(LED_ENV, c_OFF);
+				set_dual_led(LED_5VENV, c_OFF);
 			break;
 
 			case(SET_LIMIT_SKEW):
-				set_rgb_led(LED_ENV, c_BLUE);
+				set_dual_led(LED_ENV, c_BLUE);
 				if (settings.limit_skew)
 					set_rgb_led(LED_CYCLE, c_WHITE);
 				else
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 
 				set_rgb_led(LED_PING, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
-				LEDTRIGOUT_OFF;
+				set_dual_led(LED_5VENV, c_OFF);
+				set_inverted_led(0, PWM_EOF_LED);
 			break;
 			
 			case(SET_FREE_RUNNING_PING):
@@ -117,14 +117,14 @@ void handle_system_mode(void)
 					set_rgb_led(LED_PING, c_DIMBLUE);
 					set_rgb_led(LED_CYCLE, c_WHITE);
 				}
-				set_rgb_led(LED_ENV, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
-				LEDTRIGOUT_OFF;
+				set_dual_led(LED_ENV, c_OFF);
+				set_dual_led(LED_5VENV, c_OFF);
+				set_inverted_led(0, PWM_EOF_LED);
 			break;
 
 			case(SET_TRIGIN_FUNCTION):
-				LEDTRIGOUT_ON;
-				set_rgb_led(LED_ENV, c_RED);
+				set_inverted_led(1024, PWM_EOF_LED);
+				set_dual_led(LED_ENV, c_RED);
 				if (settings.trigin_function == TRIGIN_IS_QNT)
 					set_rgb_led(LED_CYCLE, c_GREEN);
 				else if (settings.trigin_function == TRIGIN_IS_ASYNC)
@@ -133,7 +133,7 @@ void handle_system_mode(void)
 					set_rgb_led(LED_CYCLE, c_RED);
 
 				set_rgb_led(LED_PING, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
+				set_dual_led(LED_5VENV, c_OFF);
 			break;
 
 			case(SET_CYCLEJACK_FUNCTION):
@@ -143,9 +143,9 @@ void handle_system_mode(void)
 					set_rgb_led(LED_CYCLE, (systmr & 0x2000) ? c_ORANGE : c_OFF);
 
 				set_rgb_led(LED_PING, c_OFF);
-				set_rgb_led(LED_ENV, c_OFF);
-				set_rgb_led(LED_5VENV, c_OFF);
-				LEDTRIGOUT_OFF;
+				set_dual_led(LED_ENV, c_OFF);
+				set_dual_led(LED_5VENV, c_OFF);
+				set_inverted_led(0, PWM_EOF_LED);
 			break;
 		}
 
@@ -194,18 +194,18 @@ void handle_system_mode(void)
 	{
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
-		set_rgb_led(LED_ENV, c_PURPLE);
-		set_rgb_led(LED_5VENV, c_PURPLE);
-		LEDTRIGOUT_ON;
+		set_dual_led(LED_ENV, c_PURPLE);
+		set_dual_led(LED_5VENV, c_PURPLE);
+		set_inverted_led(1024, PWM_EOF_LED);
 
 		delay_ms(50);
 
 		set_rgb_led(LED_PING, c_OFF);
 		set_rgb_led(LED_CYCLE, c_OFF);
-		set_rgb_led(LED_ENV, c_OFF);
-		set_rgb_led(LED_5VENV, c_OFF);
-		LEDTRIGOUT_OFF;
-
+		set_dual_led(LED_ENV, c_OFF);
+		set_dual_led(LED_5VENV, c_OFF);
+		set_inverted_led(0, PWM_EOF_LED);
+		
 		delay_ms(50);
 	}
 	digin[CYCLE_BUTTON].edge = 0;

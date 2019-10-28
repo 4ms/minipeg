@@ -1,6 +1,6 @@
 #include "globals.h"
 
-extern uint16_t adc_dma_buffer[NUM_ADCS];
+uint16_t adc_dma_buffer[NUM_ADCS];
 
 analog_t analog[NUM_ADCS];
 
@@ -9,12 +9,48 @@ void setup_fir_lpf(void);
 
 void init_analog_conditioning(void)
 {
+	builtinAdcSetup adc1_setup[NUM_ADCS];
+
+	adc1_setup[CV_SHAPE].gpio 				= GPIOA;
+	adc1_setup[CV_SHAPE].pin 				= GPIO_PIN_0;
+	adc1_setup[CV_SHAPE].channel 			= ADC_CHANNEL_0;
+	adc1_setup[CV_SHAPE].sample_time 		= ADC_SAMPLINGTIME_COMMON_1;
+
+	adc1_setup[CV_DIVMULT].gpio 			= GPIOA;
+	adc1_setup[CV_DIVMULT].pin 				= GPIO_PIN_1;
+	adc1_setup[CV_DIVMULT].channel 			= ADC_CHANNEL_1;
+	adc1_setup[CV_DIVMULT].sample_time 		= ADC_SAMPLINGTIME_COMMON_1;
+
+	adc1_setup[POT_SCALE].gpio 				= GPIOA;
+	adc1_setup[POT_SCALE].pin 				= GPIO_PIN_4;
+	adc1_setup[POT_SCALE].channel 			= ADC_CHANNEL_4;
+	adc1_setup[POT_SCALE].sample_time 		= ADC_SAMPLINGTIME_COMMON_1;
+
+	adc1_setup[POT_OFFSET].gpio 			= GPIOA;
+	adc1_setup[POT_OFFSET].pin 				= GPIO_PIN_5;
+	adc1_setup[POT_OFFSET].channel 			= ADC_CHANNEL_5;
+	adc1_setup[POT_OFFSET].sample_time 		= ADC_SAMPLINGTIME_COMMON_1;
+
+	adc1_setup[POT_SHAPE].gpio 				= GPIOA;
+	adc1_setup[POT_SHAPE].pin 				= GPIO_PIN_6;
+	adc1_setup[POT_SHAPE].channel 			= ADC_CHANNEL_6;
+	adc1_setup[POT_SHAPE].sample_time 		= ADC_SAMPLINGTIME_COMMON_1;
+
+	adc1_setup[POT_DIVMULT].gpio 			= GPIOB;
+	adc1_setup[POT_DIVMULT].pin 			= GPIO_PIN_2;
+	adc1_setup[POT_DIVMULT].channel 		= ADC_CHANNEL_10;
+	adc1_setup[POT_DIVMULT].sample_time 	= ADC_SAMPLINGTIME_COMMON_1;
+
+	ADC_Init(adc_dma_buffer, NUM_ADCS, adc1_setup);
+
 	analog[POT_DIVMULT].polarity = AP_UNIPOLAR;
 	analog[POT_SHAPE].polarity = AP_UNIPOLAR;
 	analog[POT_OFFSET].polarity = AP_UNIPOLAR;
 	analog[POT_SCALE].polarity = AP_UNIPOLAR;
+	
 	analog[CV_SHAPE].polarity = AP_BIPOLAR;
 	analog[CV_DIVMULT].polarity = AP_BIPOLAR;
+
 	setup_fir_lpf();
 }
 
