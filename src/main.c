@@ -1238,11 +1238,11 @@ void update_adc_params(uint8_t force_params_update)
 			}
 
 		}
-		// DEBUGOFF;
+		DEBUGOFF;
 	}
 	else
 	{
-		if (++oversample_wait_ctr>25)
+		if (++oversample_wait_ctr>4)//25)
 		{
 			oversample_wait_ctr=0;
 			// DEBUGON;
