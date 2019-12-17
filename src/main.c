@@ -191,11 +191,15 @@ int main(void)
 
 	while (1)
 	{
+		//loops every ~11uS, maybe 13us if you include envelope updates every 4th loop
+
+		// DEBUGON;
 		read_taptempo();
 		read_trigjacks();
 		read_cycle_button();
 		check_reset_envelopes();
 
+		// DEBUGOFF;
 		update_tap_clock();
 		read_ping_clock();
 		update_adc_params(force_params_update);
@@ -779,6 +783,7 @@ void update_envelope(void)
 		if (envelope_running)
 		{
 			//PEGv2: this block takes about 15-18us and runs every 100us (10kHz sampling rate)
+			//SEG-G0: runs every 50us (20kHz)
 			segphase=0;
 			// if (env_state==TRANSITION)
 			// 	DEBUGON;
@@ -894,7 +899,6 @@ void update_envelope(void)
 				default:
 					break;
 			}
-		
 			segphase = calc_curve(segphase, cur_curve);
 			output_envelope(segphase);
 
@@ -1039,7 +1043,7 @@ void update_adc_params(uint8_t force_params_update)
 
 	if (force_params_update || ++poll_user_input>USER_INPUT_POLL_TIME)
 	{
-		// DEBUGON;
+		DEBUGON;
 		poll_user_input=0;
 
 		update_risefallincs=0;

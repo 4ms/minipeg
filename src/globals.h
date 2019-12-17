@@ -4,12 +4,12 @@
 
 #pragma once
 
-// #define TRIGDEBUGMODE
+#define TRIGDEBUGMODE
 
 
 #include <stm32g0xx.h>
 #include "adc.h"
-#include "cal_detent.h"
+#include "calibration.h"
 #include "delay.h"
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
