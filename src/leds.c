@@ -28,7 +28,7 @@ void create_color(AdjustedColor *col, uint16_t red, uint16_t green, uint16_t blu
 void adjust_palette(void)
 {
 	create_color(&palette[c_OFF], 0, 0, 0);
-	create_color(&palette[c_GREY50], 2048, 2048, 2048);
+	create_color(&palette[c_GREY50], 1024, 1024, 1024);
 	create_color(&palette[c_WHITE], 2048, 2048, 2048);
 	create_color(&palette[c_FULLWHITE], 4095, 4095, 4095);
 	create_color(&palette[c_RED], 4095, 0, 0);
