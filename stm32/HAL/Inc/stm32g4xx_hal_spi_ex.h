@@ -1,10 +1,8 @@
 /**
   ******************************************************************************
-  * @file    stm32_assert.h
+  * @file    stm32g4xx_hal_spi_ex.h
   * @author  MCD Application Team
-  * @brief   STM32 assert template file.
-  *          This file should be copied to the application folder and renamed
-  *          to stm32_assert.h.
+  * @brief   Header file of SPI HAL Extended module.
   ******************************************************************************
   * @attention
   *
@@ -20,38 +18,58 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef STM32_ASSERT_H
-#define STM32_ASSERT_H
+#ifndef STM32G4xx_HAL_SPI_EX_H
+#define STM32G4xx_HAL_SPI_EX_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* Includes ------------------------------------------------------------------*/
+#include "stm32g4xx_hal_def.h"
+
+/** @addtogroup STM32G4xx_HAL_Driver
+  * @{
+  */
+
+/** @addtogroup SPIEx
+  * @{
+  */
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-/* Includes ------------------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  The assert_param macro is used for function's parameters check.
-  * @param  expr: If expr is false, it calls assert_failed function
-  *         which reports the name of the source file and the source
-  *         line number of the call that failed.
-  *         If expr is true, it returns no value.
-  * @retval None
+/* Exported macros -----------------------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+/** @addtogroup SPIEx_Exported_Functions
+  * @{
   */
-#define assert_param(expr) ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
-/* Exported functions ------------------------------------------------------- */
-void assert_failed(uint8_t *file, uint32_t line);
-#else
-#define assert_param(expr) ((void)0U)
-#endif /* USE_FULL_ASSERT */
+
+/* Initialization and de-initialization functions  ****************************/
+/* IO operation functions *****************************************************/
+/** @addtogroup SPIEx_Exported_Functions_Group1
+  * @{
+  */
+HAL_StatusTypeDef HAL_SPIEx_FlushRxFifo(SPI_HandleTypeDef *hspi);
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* STM32_ASSERT_H */
-
+#endif /* STM32G4xx_HAL_SPI_EX_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
