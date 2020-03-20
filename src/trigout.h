@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stdint.h>
 
 void eor_on(void);
 void eor_off(void);

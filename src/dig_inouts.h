@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stddef.h>
 
 #define PIN_IS_HIGH(x,y) (x->IDR & y)
 #define PIN_IS_LOW(x,y) (!(x->IDR & y))

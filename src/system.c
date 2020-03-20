@@ -1,4 +1,5 @@
 #include "system.h"
+#include <stm32g4xx.h>
 
 void Error_Handler(void) {
   //
@@ -8,6 +9,9 @@ void HAL_MspInit(void)
 {
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     __HAL_RCC_PWR_CLK_ENABLE();
+	HAL_SYSCFG_DisableVREFBUF();
+	HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
+	LL_PWR_DisableDeadBatteryPD();
 }
 
 void SystemClock_Config(void)

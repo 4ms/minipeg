@@ -32,10 +32,10 @@
 ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
+static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
 
-void ADC_Init(uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup)
+void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup, uint32_t oversample_ratio)
 {
-    ADC_ChannelConfTypeDef  sConfig;
     GPIO_InitTypeDef        gpio;
     uint8_t i;
 
@@ -53,38 +53,45 @@ void ADC_Init(uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_
     }
 
     //Initialize ADC1 peripheral
-    hadc.Instance                       = ADC1;
+    hadc.Instance                       = ADCx;
     hadc.Init.ClockPrescaler            = ADC_CLOCK_SYNC_PCLK_DIV2;
+
     hadc.Init.Resolution                = ADC_RESOLUTION_12B;
-    hadc.Init.ScanConvMode              = ADC_SCAN_SEQ_FIXED;
+    hadc.Init.DataAlign                 = ADC_DATAALIGN_RIGHT;
+	hadc.Init.GainCompensation 			= 0;
+    
+    hadc.Init.NbrOfConversion           = num_channels;
+	hadc.Init.ScanConvMode              = ADC_SCAN_ENABLE;
     hadc.Init.ContinuousConvMode        = ENABLE;
     hadc.Init.DiscontinuousConvMode     = DISABLE;
+	hadc.Init.DMAContinuousRequests     = ENABLE;
+    hadc.Init.EOCSelection              = ADC_EOC_SEQ_CONV;
     hadc.Init.ExternalTrigConvEdge      = ADC_EXTERNALTRIGCONVEDGE_NONE;
-
     hadc.Init.ExternalTrigConv          = ADC_SOFTWARE_START;
+	hadc.Init.LowPowerAutoWait 			= DISABLE;
 
-    hadc.Init.DataAlign                 = ADC_DATAALIGN_RIGHT;
-    hadc.Init.NbrOfConversion           = num_channels;
-    hadc.Init.DMAContinuousRequests     = ENABLE;
-    hadc.Init.EOCSelection              = ADC_EOC_SEQ_CONV;//ADC_EOC_SINGLE_CONV;
-
-    hadc.Init.LowPowerAutoWait          = DISABLE;
-    hadc.Init.LowPowerAutoPowerOff      = DISABLE;
-    hadc.Init.SamplingTimeCommon1       = ADC_SAMPLETIME_160CYCLES_5;
-    hadc.Init.SamplingTimeCommon2       = ADC_SAMPLETIME_160CYCLES_5;
-
-    hadc.Init.OversamplingMode          = DISABLE;  //Todo: try this
-    hadc.Init.Overrun                   = ADC_OVR_DATA_PRESERVED;
-
-    hadc.Init.TriggerFrequencyMode      = ADC_TRIGGER_FREQ_LOW; 
+	hadc.Init.Overrun 					= ADC_OVR_DATA_OVERWRITTEN;
+	hadc.Init.OversamplingMode 			= ENABLE;
+	hadc.Init.Oversampling.Ratio 		= oversample_ratio;
+	hadc.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_4;
+	hadc.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+	hadc.Init.Oversampling.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE;
 
     err = HAL_ADC_Init(&hadc);
 
+	ADC_MultiModeTypeDef multimode = {0};
+	multimode.Mode = ADC_MODE_INDEPENDENT;
+	HAL_ADCEx_MultiModeConfigChannel(&hadc, &multimode);
+
+    ADC_ChannelConfTypeDef  sConfig;
     for (i=0; i<num_channels; i++)
     {
         sConfig.Channel         = adc_setup[i].channel;
-        sConfig.Rank            = ADC_RANK_CHANNEL_NUMBER;//ADC_REGULAR_RANK_1 + i;
+        sConfig.Rank            = ADC_REGULAR_RANK_1 + i;
         sConfig.SamplingTime    = adc_setup[i].sample_time;
+		sConfig.SingleDiff 		= ADC_SINGLE_ENDED;
+		sConfig.OffsetNumber 	= ADC_OFFSET_NONE;
+		sConfig.Offset 			= 0;
         err = HAL_ADC_ConfigChannel(&hadc, &sConfig);
     }
 
@@ -95,7 +102,10 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 {
     if(adcHandle->Instance==ADC1)
     {
-        __HAL_RCC_ADC_CLK_ENABLE();
+		if (HAL_RCC_ADC12_CLK_ENABLED==0) {
+			HAL_RCC_ADC12_CLK_ENABLED=1;
+		  __HAL_RCC_ADC12_CLK_ENABLE();
+		}
 
         hdma_adc.Instance = DMA1_Channel1;
         hdma_adc.Init.Request = DMA_REQUEST_ADC1;

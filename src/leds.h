@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stdint.h>
 #include "pwm.h"
 
 enum RgbLeds {

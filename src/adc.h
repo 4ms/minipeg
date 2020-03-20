@@ -28,13 +28,15 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stddef.h>
+#include <stm32g4xx_hal_gpio.h>
 
 typedef struct builtinAdcSetup{
 	GPIO_TypeDef	*gpio;
 	uint16_t		pin;
 	uint32_t		channel;
-	uint32_t		sample_time; //must be ADC_SAMPLINGTIME_COMMON_1 or ADC_SAMPLINGTIME_COMMON_2
+	uint32_t		sample_time;
 } builtinAdcSetup;
 
-void ADC_Init(uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup);
+void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup, uint32_t oversample_ratio);
+

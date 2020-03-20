@@ -7,7 +7,7 @@
 #define TRIGDEBUGMODE
 
 
-#include <stm32g0xx.h>
+#include <stm32g4xx.h>
 #include "adc.h"
 #include "calibration.h"
 #include "delay.h"

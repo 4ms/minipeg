@@ -3,8 +3,8 @@
  */
 
 #pragma once
-
-#include <stm32g0xx.h>
+#include <stddef.h>
+#include <stm32g4xx_hal_gpio.h>
 
 enum PwmOutputs {
 	PWM_ENV,

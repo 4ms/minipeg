@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stdint.h>
+#include <stm32g4xx_hal_def.h>
 
 enum CycleJackBehavior {
 	CYCLE_JACK_RISING_EDGE_TOGGLES,

@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stddef.h>
+#include <stm32g4xx_hal_gpio.h>
 
 #define FIRST_CD_POT POT_SCALE
 

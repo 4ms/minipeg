@@ -3,9 +3,9 @@
 
 BINARYNAME 		= main
 
-STARTUP 		= startup_stm32g070xx.s
-SYSTEM 			= system_stm32g0xx.c
-LOADFILE 		= STM32G070RBTx_FLASH.ld
+STARTUP 		= startup_stm32g431xx.s
+SYSTEM 			= system_stm32g4xx.c
+LOADFILE 		= STM32G431C8Tx_FLASH.ld
 
 DEVICE 			= stm32/device
 CORE 			= stm32/CMSIS
@@ -41,19 +41,25 @@ SZ 		= $(ARCH)-size
 
 SZOPTS 	= -d
 
-CPU = -mcpu=cortex-m0plus
-MCU = $(CPU) -mthumb  
+CPU = -mcpu=cortex-m4
+FPU = -mfpu=fpv4-sp-d16
+FLOAT-ABI = -mfloat-abi=hard
+MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
-# ARCH_CFLAGS = -DARM_MATH_CM7 -D'__FPU_PRESENT=1' -DUSE_HAL_DRIVER -DSTM32F730xx
-ARCH_CFLAGS = -DSTM32G070xx -DUSE_HAL_DRIVER
+
+ARCH_CFLAGS = -DARM_MATH_CM4 -D'__FPU_PRESENT=1' 
+ARCH_CFLAGS = -DSTM32G431xx -DUSE_HAL_DRIVER
 
 OPTFLAG = -O3
 
-CFLAGS = -g3 -fno-common \
+CFLAGS = -g3 \
 	$(ARCH_CFLAGS) $(MCU) \
 	-I. $(INCLUDES) \
+	-fno-common \
 	-fdata-sections -ffunction-sections \
 	-specs=nano.specs \
+
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 CXXFLAGS=$(CFLAGS) \
 	-std=c++17 \
@@ -101,18 +107,18 @@ $(HEX): $(ELF)
 	$(OBJCPY) --output-target=ihex $< $@
 	$(SZ) $(SZOPTS) $(ELF)
 
-$(ELF): $(OBJECTS) 
+$(ELF): $(OBJECTS) Makefile
 	$(LD) $(LFLAGS) -o $@ $(OBJECTS)
 
-$(BUILDDIR)/%.o: %.c $(wildcard src/*.h) $(wildcard src/drivers/*.h)
+$(BUILDDIR)/%.o: %.c Makefile | $(BUILDDIR)
 	mkdir -p $(dir $@)
 	$(CC) -c $(OPTFLAG) $(CFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.cc $(wildcard src/*.h) $(wildcard src/drivers/*.h)
+$(BUILDDIR)/%.o: %.cc Makefile | $(BUILDDIR)
 	mkdir -p $(dir $@)
 	$(CC) -c $(OPTFLAG) $(CXXFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.s
+$(BUILDDIR)/%.o: %.s Makefile | $(BUILDDIR)
 	mkdir -p $(dir $@)
 	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(BUILDDIR)/, $(addsuffix .lst, $(basename $<)))
 
@@ -120,7 +126,9 @@ flash: $(BIN)
 	st-flash write $(BIN) 0x8000000
 
 clean:
-	rm -rf build
+	rm -rf $(BUILDDIR)
+
+-include $(wildcard $(BUILDDIR)/*.d)
 
 
 TESTFW_DIR = ../Unity/src

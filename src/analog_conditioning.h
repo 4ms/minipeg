@@ -4,20 +4,37 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
-
+#include <stdint.h>
 
 enum AdcChannels
 {
+	ADC_CV_SHAPE,
+	ADC_CV_DIVMULT,
+	ADC_POT_SCALE,
+	ADC_POT_OFFSET,
+	ADC_POT_SHAPE,
+	ADC_POT_DIVMULT,
+
+	NUM_ADCS
+};
+
+enum AdcCVChannels
+{
 	CV_SHAPE,
 	CV_DIVMULT,
+	NUM_CV_ADCS
+};
+
+enum AdcPotChannels
+{
 	POT_SCALE,
 	POT_OFFSET,
 	POT_SHAPE,
 	POT_DIVMULT,
 
-	NUM_ADCS
+	NUM_POT_ADCS
 };
+
 
 enum AnalogPolarity{
 	AP_UNIPOLAR,
