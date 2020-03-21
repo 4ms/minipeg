@@ -28,6 +28,7 @@
  */
  
 #include "globals.h"
+#include "system.h"
 
 ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
@@ -36,10 +37,9 @@ static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
 
 void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup, uint32_t oversample_ratio)
 {
-    GPIO_InitTypeDef        gpio;
-    uint8_t i;
-
+    GPIO_InitTypeDef gpio;
     HAL_StatusTypeDef err;
+    uint8_t i;
 
     __HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -49,6 +49,7 @@ void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, bu
         gpio.Pin = adc_setup[i].pin;
         gpio.Mode = GPIO_MODE_ANALOG;
         gpio.Pull = GPIO_NOPULL;
+		enable_gpio_rcc(adc_setup[i].gpio);
         HAL_GPIO_Init(adc_setup[i].gpio, &gpio);
     }
 

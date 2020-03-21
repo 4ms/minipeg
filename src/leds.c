@@ -17,12 +17,24 @@ uint16_t adjust_hue(uint16_t base, uint16_t adj)
 void create_color(AdjustedColor *col, uint16_t red, uint16_t green, uint16_t blue)
 {
 	col->ping.r = adjust_hue(red, settings.ping_cal_r);
-	col->ping.g = green;
+	col->ping.g = adjust_hue(green, settings.ping_cal_g);
 	col->ping.b = adjust_hue(blue, settings.ping_cal_b);
 
 	col->cycle.r = adjust_hue(red, settings.cycle_cal_r);
 	col->cycle.g = adjust_hue(green, settings.cycle_cal_g);
-	col->cycle.b = blue;
+	col->cycle.b = adjust_hue(blue, settings.cycle_cal_b);
+
+	col->lock.r = adjust_hue(red, settings.lock_cal_r);
+	col->lock.g = adjust_hue(green, settings.lock_cal_g);
+	col->lock.b = adjust_hue(blue, settings.lock_cal_b);
+
+	col->envA.r = adjust_hue(red, settings.envA_cal_r);
+	col->envA.g = adjust_hue(green, settings.envA_cal_g);
+	col->envA.b = adjust_hue(blue, settings.envA_cal_b);
+
+	col->envB.r = adjust_hue(red, settings.envB_cal_r);
+	col->envB.g = adjust_hue(green, settings.envB_cal_g);
+	col->envB.b = adjust_hue(blue, settings.envB_cal_b);
 }
 
 void adjust_palette(void)
@@ -48,54 +60,34 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 	{
 		update_pwm(palette[color_id].ping.r, PWM_PINGBUT_R);
 		update_pwm(palette[color_id].ping.b, PWM_PINGBUT_B);
-		if (palette[color_id].ping.g > 64) LED_PING_BUT_G_ON;
-		else LED_PING_BUT_G_OFF;
+		update_pwm(palette[color_id].ping.g, PWM_PINGBUT_G);
 	} 
 	else if (rgb_led_id==LED_CYCLE)
 	{
 		update_pwm(palette[color_id].cycle.r, PWM_CYCLEBUT_R);
+		update_pwm(palette[color_id].cycle.b, PWM_CYCLEBUT_B);
 		update_pwm(palette[color_id].cycle.g, PWM_CYCLEBUT_G);
-		if (palette[color_id].cycle.b > 64) LED_CYCLE_BUT_B_ON;
-		else LED_CYCLE_BUT_B_OFF;
 	}
-}
-
-void set_dual_led(enum DualLeds led_id, enum Palette color_id)
-{
-	enum PwmOutputs red, blue;
-
-	if (led_id==LED_ENV)
+	else if (led_id==LED_LOCK)
 	{
-		red = PWM_ENVLED_R;
-		blue = PWM_ENVLED_B;
+		update_pwm(palette[color_id].lock.r, PWM_LOCKBUT_R);
+		update_pwm(palette[color_id].lock.b, PWM_LOCKBUT_B);
+		update_pwm(palette[color_id].lock.g, PWM_LOCKBUT_G);
 	} 
-	else if (led_id==LED_5VENV)
+	else if (led_id==LED_ENVA)
 	{
-		red = PWM_5VENVLED_R;
-		blue = PWM_5VENVLED_B;
+		update_pwm(palette[color_id].envA.r, PWM_ENVA_R);
+		update_pwm(palette[color_id].envA.b, PWM_ENVA_B);
+		update_pwm(palette[color_id].envA.g, PWM_ENVA_G);
+	} 
+	else if (led_id==LED_ENVB)
+	{
+		update_pwm(palette[color_id].envB.r, PWM_ENVB_R);
+		update_pwm(palette[color_id].envB.b, PWM_ENVB_B);
+		update_pwm(palette[color_id].envB.g, PWM_ENVB_G);
 	}
 	else
 		return;
-
-	switch (color_id) {
-		case c_PURPLE:
-			update_pwm(4095, blue);
-			update_pwm(4095, red);
-			break;
-		case c_RED:
-			update_pwm(0, blue);
-			update_pwm(4095, red);
-			break;
-		case c_BLUE:
-			update_pwm(4095, blue);
-			update_pwm(0, red);
-			break;
-		case c_OFF:
-		default:
-			update_pwm(0, blue);
-			update_pwm(0, red);
-			break;
-	}
 }
 
 void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num) {
@@ -123,17 +115,23 @@ void set_inverted_led(uint16_t brightness, enum PwmOutputs pwm_led_num) {
 void all_lights_off(void) {
     update_pwm(0, PWM_CYCLEBUT_R);
     update_pwm(0, PWM_CYCLEBUT_G);
-    LED_CYCLE_BUT_B_OFF;
+    update_pwm(0, PWM_CYCLEBUT_B);
 
     update_pwm(0, PWM_PINGBUT_R);
+    update_pwm(0, PWM_PINGBUT_G);
     update_pwm(0, PWM_PINGBUT_B);
-    LED_PING_BUT_G_OFF;
 
-    update_pwm(0, PWM_ENVLED_B);
-    update_pwm(0, PWM_ENVLED_R);
+    update_pwm(0, PWM_LOCKBUT_R);
+    update_pwm(0, PWM_LOCKBUT_G);
+    update_pwm(0, PWM_LOCKBUT_B);
 
-    update_pwm(0, PWM_5VENVLED_B);
-    update_pwm(0, PWM_5VENVLED_R);
+    update_pwm(0, PWM_ENVA_R);
+    update_pwm(0, PWM_ENVA_G);
+    update_pwm(0, PWM_ENVA_B);
+
+    update_pwm(0, PWM_ENVB_R);
+    update_pwm(0, PWM_ENVB_G);
+    update_pwm(0, PWM_ENVB_B);
 
     set_inverted_led(0, PWM_EOF_LED);
 }

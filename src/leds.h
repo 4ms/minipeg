@@ -10,13 +10,11 @@
 enum RgbLeds {
 	LED_PING,
 	LED_CYCLE,
-	NUM_RGB_LEDS
-};
+	LED_LOCK,
+	LED_ENVA,
+	LED_ENVB,
 
-enum DualLeds {
-	LED_ENV,
-	LED_5VENV,
-	NUM_DUAL_LEDS
+	NUM_RGB_LEDS
 };
 
 enum MonoLeds {
@@ -34,6 +32,9 @@ typedef struct Color {
 typedef struct AdjustedColor {
 	Color ping;
 	Color cycle;
+	Color lock;
+	Color envA;
+	Color envB;
 } AdjustedColor;
 
 
@@ -61,7 +62,7 @@ enum Palette {
 void set_inverted_led(uint16_t brightness, enum PwmOutputs pwm_led_num);
 void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num);
 void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id);
-void set_dual_led(enum DualLeds led_id, enum Palette color_id);
 void adjust_palette(void);
 uint16_t adjust_hue(uint16_t base, uint16_t adj);
 void all_lights_off(void);
+

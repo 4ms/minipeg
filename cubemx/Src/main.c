@@ -50,8 +50,6 @@ DAC_HandleTypeDef hdac1;
 DAC_HandleTypeDef hdac3;
 DMA_HandleTypeDef hdma_dac1_ch1;
 
-OPAMP_HandleTypeDef hopamp1;
-
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -71,7 +69,6 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_DAC3_Init(void);
-static void MX_OPAMP1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
@@ -96,7 +93,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -121,7 +117,6 @@ int main(void)
   MX_ADC2_Init();
   MX_DAC1_Init();
   MX_DAC3_Init();
-  MX_OPAMP1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
@@ -453,40 +448,6 @@ static void MX_DAC3_Init(void)
 }
 
 /**
-  * @brief OPAMP1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_OPAMP1_Init(void)
-{
-
-  /* USER CODE BEGIN OPAMP1_Init 0 */
-
-  /* USER CODE END OPAMP1_Init 0 */
-
-  /* USER CODE BEGIN OPAMP1_Init 1 */
-
-  /* USER CODE END OPAMP1_Init 1 */
-  hopamp1.Instance = OPAMP1;
-  hopamp1.Init.PowerMode = OPAMP_POWERMODE_NORMAL;
-  hopamp1.Init.Mode = OPAMP_PGA_MODE;
-  hopamp1.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_DAC;
-  hopamp1.Init.InternalOutput = DISABLE;
-  hopamp1.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
-  hopamp1.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0;
-  hopamp1.Init.PgaGain = OPAMP_PGA_GAIN_2_OR_MINUS_1;
-  hopamp1.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
-  if (HAL_OPAMP_Init(&hopamp1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN OPAMP1_Init 2 */
-
-  /* USER CODE END OPAMP1_Init 2 */
-
-}
-
-/**
   * @brief TIM1 Initialization Function
   * @param None
   * @retval None
@@ -626,6 +587,16 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
@@ -745,6 +716,10 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
@@ -759,6 +734,13 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
   sConfigOC.Pulse = 0;
   if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
@@ -929,12 +911,12 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(EOF_out_GPIO_Port, EOF_out_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(EOF_GPIO_Port, EOF_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PC13 PC14 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
+  /*Configure GPIO pins : CYCLE_BUT_Pin PING_BUT_Pin */
+  GPIO_InitStruct.Pin = CYCLE_BUT_Pin|PING_BUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PING_JACK_Pin */
@@ -945,22 +927,41 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : CYCLE_JACK_Pin */
   GPIO_InitStruct.Pin = CYCLE_JACK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(CYCLE_JACK_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EOF_out_Pin */
-  GPIO_InitStruct.Pin = EOF_out_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pin : PA2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(EOF_out_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LOCK_BUT_Pin */
+  GPIO_InitStruct.Pin = LOCK_BUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(LOCK_BUT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : TRIG_JACK_Pin */
   GPIO_InitStruct.Pin = TRIG_JACK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(TRIG_JACK_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : EOF_Pin */
+  GPIO_InitStruct.Pin = EOF_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(EOF_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 

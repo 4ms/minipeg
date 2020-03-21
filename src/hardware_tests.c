@@ -1,5 +1,6 @@
 #include "globals.h"
-extern uint16_t adc_dma_buffer[NUM_ADCS];
+extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
+extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 const uint16_t max_pwm = 4095;
 const uint16_t min_pwm = 0;
@@ -46,9 +47,9 @@ void test_hardware(void) {
 
     uint16_t adcval;
     while (!PINGBUT) {
-        update_pwm(PINGJACK ? max_pwm : min_pwm, PWM_PINGBUT_R);
-        update_pwm(CYCLEJACK_READ ? max_pwm : min_pwm, PWM_CYCLEBUT_R);
-        set_inverted_led(TRIGJACK_READ ? max_pwm : min_pwm, PWM_EOF_LED);
+        update_pwm(PING_JACK_READ ? max_pwm : min_pwm, PWM_PINGBUT_R);
+        update_pwm(CYCLE_JACK_READ ? max_pwm : min_pwm, PWM_CYCLEBUT_R);
+        set_inverted_led(TRIG_JACK_READ ? max_pwm : min_pwm, PWM_EOF_LED);
 
         adcval = adc_dma_buffer[CV_SHAPE] / (4095/max_pwm);
         update_pwm(adcval, PWM_ENVLED_R);

@@ -1415,7 +1415,7 @@ __STATIC_INLINE void LL_APB1_GRP2_DisableClockStopSleep(uint32_t Periphs)
   *         @arg @ref LL_APB2_GRP1_PERIPH_SPI1
   *         @arg @ref LL_APB2_GRP1_PERIPH_TIM8
   *         @arg @ref LL_APB2_GRP1_PERIPH_USART1
-  *         @arg @ref LL_APB2_GRP1_PERIPH_SPI4 (*)
+  *         @arg @ref LL_APB2_GRP1_PERIPH_SPI4 (*45)
   *         @arg @ref LL_APB2_GRP1_PERIPH_TIM15
   *         @arg @ref LL_APB2_GRP1_PERIPH_TIM16
   *         @arg @ref LL_APB2_GRP1_PERIPH_TIM17

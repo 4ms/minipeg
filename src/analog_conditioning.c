@@ -8,39 +8,57 @@ analog_t analog[NUM_ADCS];
 //Private:
 void setup_fir_lpf(void);
 
+#define CV_SHAPE_Pin GPIO_PIN_0
+#define CV_SHAPE_GPIO_Port GPIOB
+
+#define CV_DIVMULT_Pin GPIO_PIN_12
+#define CV_DIVMULT_GPIO_Port GPIOB
+
+#define POT_OFFSET_Pin GPIO_PIN_6
+#define POT_OFFSET_GPIO_Port GPIOA
+
+#define POT_SCALE_Pin GPIO_PIN_7
+#define POT_SCALE_GPIO_Port GPIOA
+
+#define POT_DIVMULT_Pin GPIO_PIN_11
+#define POT_DIVMULT_GPIO_Port GPIOB
+
+#define POT_SHAPE_Pin GPIO_PIN_2
+#define POT_SHAPE_GPIO_Port GPIOB
+
 void init_analog_conditioning(void)
 {
 	builtinAdcSetup adc_cv_setup[NUM_CV_ADCS];
 	builtinAdcSetup adc_pot_setup[NUM_POT_ADCS];
 
-	adc_cv_setup[ADC_CV_SHAPE].gpio 			= GPIOA;
-	adc_cv_setup[ADC_CV_SHAPE].pin 				= GPIO_PIN_0;
-	adc_cv_setup[ADC_CV_SHAPE].channel 			= ADC_CHANNEL_0;
+	adc_cv_setup[ADC_CV_SHAPE].gpio 			= CV_SHAPE_GPIO_Port;
+	adc_cv_setup[ADC_CV_SHAPE].pin 				= CV_SHAPE_Pin;
+	adc_cv_setup[ADC_CV_SHAPE].channel 			= ADC_CHANNEL_15;
 	adc_cv_setup[ADC_CV_SHAPE].sample_time 		= ADC_SAMPLETIME_24CYCLES_5;
 
-	adc_cv_setup[ADC_CV_DIVMULT].gpio 			= GPIOA;
-	adc_cv_setup[ADC_CV_DIVMULT].pin 			= GPIO_PIN_1;
-	adc_cv_setup[ADC_CV_DIVMULT].channel 		= ADC_CHANNEL_1;
+	adc_cv_setup[ADC_CV_DIVMULT].gpio 			= CV_DIVMULT_GPIO_Port;
+	adc_cv_setup[ADC_CV_DIVMULT].pin 			= CV_DIVMULT_Pin;
+	adc_cv_setup[ADC_CV_DIVMULT].channel 		= ADC_CHANNEL_11;
 	adc_cv_setup[ADC_CV_DIVMULT].sample_time 	= ADC_SAMPLETIME_24CYCLES_5;
 
-	adc_pot_setup[ADC_POT_SCALE].gpio 			= GPIOA;
-	adc_pot_setup[ADC_POT_SCALE].pin 			= GPIO_PIN_4;
+	adc_pot_setup[ADC_POT_SCALE].gpio 			= POT_SCALE_GPIO_Port;
+	adc_pot_setup[ADC_POT_SCALE].pin 			= POT_SCALE_Pin;
 	adc_pot_setup[ADC_POT_SCALE].channel 		= ADC_CHANNEL_4;
 	adc_pot_setup[ADC_POT_SCALE].sample_time 	= ADC_SAMPLETIME_640CYCLES_5;
 
-	adc_pot_setup[ADC_POT_OFFSET].gpio 			= GPIOA;
-	adc_pot_setup[ADC_POT_OFFSET].pin 			= GPIO_PIN_5;
-	adc_pot_setup[ADC_POT_OFFSET].channel 		= ADC_CHANNEL_5;
+	adc_pot_setup[ADC_POT_OFFSET].gpio 			= POT_OFFSET_GPIO_Port;
+	adc_pot_setup[ADC_POT_OFFSET].pin 			= POT_OFFSET_Pin;
+	adc_pot_setup[ADC_POT_OFFSET].channel 		= ADC_CHANNEL_3;
 	adc_pot_setup[ADC_POT_OFFSET].sample_time 	= ADC_SAMPLETIME_640CYCLES_5;
 
-	adc_pot_setup[ADC_POT_SHAPE].gpio 			= GPIOA;
-	adc_pot_setup[ADC_POT_SHAPE].pin 			= GPIO_PIN_6;
-	adc_pot_setup[ADC_POT_SHAPE].channel 		= ADC_CHANNEL_6;
+	adc_pot_setup[ADC_POT_SHAPE].gpio 			= POT_SHAPE_GPIO_Port;
+	adc_pot_setup[ADC_POT_SHAPE].pin 			= POT_SHAPE_Pin;
+	adc_pot_setup[ADC_POT_SHAPE].channel 		= ADC_CHANNEL_12;
 	adc_pot_setup[ADC_POT_SHAPE].sample_time 	= ADC_SAMPLETIME_640CYCLES_5;
 
-	adc_pot_setup[ADC_POT_DIVMULT].gpio 		= GPIOB;
-	adc_pot_setup[ADC_POT_DIVMULT].pin 			= GPIO_PIN_2;
-	adc_pot_setup[ADC_POT_DIVMULT].channel 		= ADC_CHANNEL_10;
+	adc_pot_setup[ADC_POT_DIVMULT].gpio 		= POT_DIVMULT_GPIO_Port;
+	adc_pot_setup[ADC_POT_DIVMULT].pin 			= POT_DIVMULT_Pin;
+	adc_pot_setup[ADC_POT_DIVMULT].channel 		= ADC_CHANNEL_14;
 	adc_pot_setup[ADC_POT_DIVMULT].sample_time 	= ADC_SAMPLETIME_640CYCLES_5;
 
 	ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, ADC_OVERSAMPLING_RATIO_16);

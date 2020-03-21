@@ -56,13 +56,13 @@ void DEBOUNCE_IRQHandler(void)
                 pin_read = CYCLEBUT;
 
             else if (i==TRIGGER_JACK)
-                pin_read = TRIGJACK_READ;
+                pin_read = TRIG_JACK_READ;
 
             else if (i==CYCLE_JACK)
-                pin_read = CYCLEJACK_READ;
+                pin_read = CYCLE_JACK_READ;
 
             else if (i==PING_JACK)
-                pin_read = PINGJACK;
+                pin_read = PING_JACK_READ;
 
             if (pin_read) t=0x0000;
             else t=0x0001;

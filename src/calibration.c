@@ -2,7 +2,8 @@
 
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
-extern uint16_t adc_dma_buffer[NUM_ADCS];
+extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
+extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 //Private:
 enum CalRequests{
@@ -121,18 +122,18 @@ uint8_t sanity_check_calibration(void)
 enum CalRequests should_enter_calibration_mode(void)
 {
 	if (CYCLEBUT 
-		&& (adc_dma_buffer[POT_SCALE]>1800) && (adc_dma_buffer[POT_SCALE]<2200)
-		&& (adc_dma_buffer[POT_OFFSET]>1800) && (adc_dma_buffer[POT_OFFSET]<2200)
-		&& (adc_dma_buffer[POT_SHAPE]>1800) && (adc_dma_buffer[POT_SHAPE]<2200)
+		&& (adc_pot_dma_buffer[ADC_POT_SCALE]>1800) && (adc_pot_dma_buffer[ADC_POT_SCALE]<2200)
+		&& (adc_pot_dma_buffer[ADC_POT_OFFSET]>1800) && (adc_pot_dma_buffer[ADC_POT_OFFSET]<2200)
+		&& (adc_pot_dma_buffer[ADC_POT_SHAPE]>1800) && (adc_pot_dma_buffer[ADC_POT_SHAPE]<2200)
 		)
 	{
-		if (adc_dma_buffer[POT_DIVMULT] < 70)
+		if (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 70)
 			return CAL_REQUEST_ALL;
 
-		else if ((adc_dma_buffer[POT_DIVMULT]>1800) && (adc_dma_buffer[POT_DIVMULT]<2200))
+		else if ((adc_pot_dma_buffer[ADC_POT_DIVMULT]>1800) && (adc_pot_dma_buffer[ADC_POT_DIVMULT]<2200))
 			return CAL_REQUEST_LEDS;
 
-		else if (adc_dma_buffer[POT_DIVMULT] > 4000) 
+		else if (adc_pot_dma_buffer[ADC_POT_DIVMULT] > 4000) 
 			return CAL_REQUEST_CENTER_DET;
 	}
 
@@ -175,13 +176,13 @@ void calibrate_center_detents(void)
 	while (cur<NUM_CENTER_DETENT_POTS)
 	{
 		delay_ms(stab_delay);
-		read1 = adc_dma_buffer[FIRST_CD_POT+cur];
+		read1 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
 		delay_ms(stab_delay);
-		read2 = adc_dma_buffer[FIRST_CD_POT+cur];
+		read2 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
 		delay_ms(stab_delay);
-		read3 = adc_dma_buffer[FIRST_CD_POT+cur];
+		read3 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
 		delay_ms(stab_delay);
-		read4 = adc_dma_buffer[FIRST_CD_POT+cur];
+		read4 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
 		read_tot = read1 + read2 + read3 + read4;
 		read_avg = read_tot>>2;	
 
@@ -240,13 +241,13 @@ void calibrate_divmult_pot(void)
   
 
 		delay_ms(stab_delay);
-		read1 = adc_dma_buffer[POT_DIVMULT];
+		read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 		delay_ms(stab_delay);
-		read2 = adc_dma_buffer[POT_DIVMULT];
+		read2 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 		delay_ms(stab_delay);
-		read3 = adc_dma_buffer[POT_DIVMULT];
+		read3 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 		delay_ms(stab_delay);
-		read4 = adc_dma_buffer[POT_DIVMULT];
+		read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 		read_tot = read1 + read2 + read3 + read4;
 		read_avg = read_tot>>2;	
@@ -264,13 +265,13 @@ void calibrate_divmult_pot(void)
 			//wait until knob is detected as being moved
 			do {   
 				delay_ms(stab_delay);
-				read1 = adc_dma_buffer[POT_DIVMULT];
+				read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 				delay_ms(stab_delay);
-				read2 = adc_dma_buffer[POT_DIVMULT];
+				read2 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 				delay_ms(stab_delay);
-				read3 = adc_dma_buffer[POT_DIVMULT];
+				read3 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 				delay_ms(stab_delay);
-				read4 = adc_dma_buffer[POT_DIVMULT];
+				read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 				read_tot = read1 + read2 + read3 + read4;
 				read_avg = read_tot >> 2;	
@@ -298,25 +299,25 @@ void calibrate_led_colors(void) {
 
     while (!PINGBUT) {
     	if (CYCLEBUT) {
-    		LED_PING_BUT_G_OFF;
-    		LED_CYCLE_BUT_B_OFF;
+    		// LED_PING_BUT_G_OFF;
+    		// LED_CYCLE_BUT_B_OFF;
     	} else {
-		    LED_PING_BUT_G_ON;
-		    LED_CYCLE_BUT_B_ON;
+		    // LED_PING_BUT_G_ON;
+		    // LED_CYCLE_BUT_B_ON;
     	}
 
-        update_pwm(adjust_hue(2048, adc_dma_buffer[5]), PWM_PINGBUT_R);
-        update_pwm(adjust_hue(2048, adc_dma_buffer[4]), PWM_PINGBUT_B);
+        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_DIVMULT]), PWM_PINGBUT_R);
+        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_PINGBUT_B);
 
-        update_pwm(adjust_hue(2048, adc_dma_buffer[2]), PWM_CYCLEBUT_R);
-        update_pwm(adjust_hue(2048, adc_dma_buffer[3]), PWM_CYCLEBUT_G);
+        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_CYCLEBUT_R);
+        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_CYCLEBUT_G);
     }
 
-    settings.ping_cal_r = adc_dma_buffer[4];
-    settings.ping_cal_b = adc_dma_buffer[5];
+    settings.ping_cal_r = adc_pot_dma_buffer[ADC_POT_DIVMULT];
+    settings.ping_cal_b = adc_pot_dma_buffer[ADC_POT_SHAPE];
 
-    settings.cycle_cal_r = adc_dma_buffer[2];
-    settings.cycle_cal_g = adc_dma_buffer[3];
+    settings.cycle_cal_r = adc_pot_dma_buffer[ADC_POT_SCALE];
+    settings.cycle_cal_g = adc_pot_dma_buffer[ADC_POT_OFFSET];
     
     while(PINGBUT) {;}
 
