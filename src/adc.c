@@ -81,9 +81,9 @@ void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, bu
 	hadc->Init.LowPowerAutoWait 		 = DISABLE;
 
 	hadc->Init.Overrun 					  = ADC_OVR_DATA_OVERWRITTEN;
-	hadc->Init.OversamplingMode 		  = DISABLE;
+	hadc->Init.OversamplingMode 		  = ENABLE;
 	hadc->Init.Oversampling.Ratio 		  = oversample_ratio;
-	hadc->Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_4;
+	hadc->Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_8;
 	hadc->Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
 	hadc->Init.Oversampling.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE;
 
