@@ -34,12 +34,12 @@ void init_analog_conditioning(void)
 	adc_cv_setup[ADC_CV_SHAPE].gpio 			= CV_SHAPE_GPIO_Port;
 	adc_cv_setup[ADC_CV_SHAPE].pin 				= CV_SHAPE_Pin;
 	adc_cv_setup[ADC_CV_SHAPE].channel 			= ADC_CHANNEL_15;
-	adc_cv_setup[ADC_CV_SHAPE].sample_time 		= ADC_SAMPLETIME_24CYCLES_5;
+	adc_cv_setup[ADC_CV_SHAPE].sample_time 		= ADC_SAMPLETIME_640CYCLES_5; //24
 
 	adc_cv_setup[ADC_CV_DIVMULT].gpio 			= CV_DIVMULT_GPIO_Port;
 	adc_cv_setup[ADC_CV_DIVMULT].pin 			= CV_DIVMULT_Pin;
 	adc_cv_setup[ADC_CV_DIVMULT].channel 		= ADC_CHANNEL_11;
-	adc_cv_setup[ADC_CV_DIVMULT].sample_time 	= ADC_SAMPLETIME_24CYCLES_5;
+	adc_cv_setup[ADC_CV_DIVMULT].sample_time 	= ADC_SAMPLETIME_640CYCLES_5; //24
 
 	adc_pot_setup[ADC_POT_SCALE].gpio 			= POT_SCALE_GPIO_Port;
 	adc_pot_setup[ADC_POT_SCALE].pin 			= POT_SCALE_Pin;
@@ -61,7 +61,7 @@ void init_analog_conditioning(void)
 	adc_pot_setup[ADC_POT_DIVMULT].channel 		= ADC_CHANNEL_14;
 	adc_pot_setup[ADC_POT_DIVMULT].sample_time 	= ADC_SAMPLETIME_640CYCLES_5;
 
-	ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, ADC_OVERSAMPLING_RATIO_16);
+	ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, ADC_OVERSAMPLING_RATIO_256); //16
 	ADC_Init(ADC2, adc_pot_dma_buffer, NUM_POT_ADCS, adc_pot_setup, ADC_OVERSAMPLING_RATIO_256);
 
 	analog[POT_DIVMULT].polarity = AP_UNIPOLAR;

@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <stm32g4xx.h>
 
 void system_init(void);
 void Error_Handler(void);

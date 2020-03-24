@@ -13,7 +13,7 @@ void trigout_off(void);
 void trigout_on(void){
 	if (!trigout_high){
 		TRIGOUT_ON;
-		set_inverted_led(kMaxBrightness, PWM_EOF_LED);
+		set_inverted_led(PWM_EOF_LED, kMaxBrightness);
 		trigout_high=1;
 		trigouttmr=0;
 	}
@@ -21,7 +21,7 @@ void trigout_on(void){
 void trigout_off(void){
 	if (!settings.trigout_is_trig && (trigouttmr>TRIGOUT_MIN_GATE_TIME)) {
 		TRIGOUT_OFF;
-		set_inverted_led(0, PWM_EOF_LED);
+		set_inverted_led(PWM_EOF_LED, 0);
 		trigouttmr=0;
 	}
 	trigout_high=0;
@@ -30,7 +30,7 @@ void trigout_off(void){
 void handle_trigout_trigfall(void){
 	if (settings.trigout_is_trig && trigouttmr>TRIGOUT_TRIG_TIME) {
 		TRIGOUT_OFF;
-		set_inverted_led(0, PWM_EOF_LED);
+		set_inverted_led(PWM_EOF_LED, 0);
 		trigouttmr=0;
 	}
 }

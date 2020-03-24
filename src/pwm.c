@@ -39,8 +39,8 @@ void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 		pwm[pwmnum].tim.Instance->CCR6 = pwmval;
 }
 
-#define T2C2_LED_EOF_Pin GPIO_PIN_1
-#define T2C2_LED_EOF_GPIO_Port GPIOA
+#define LED_EOF_Pin GPIO_PIN_1
+#define LED_EOF_GPIO_Port GPIOA
 
 #define ENVA_R_Pin GPIO_PIN_8
 #define ENVA_R_GPIO_Port GPIOA
@@ -70,12 +70,12 @@ void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 #define CYCLEBUT_B_Pin GPIO_PIN_9
 #define CYCLEBUT_B_GPIO_Port GPIOA
 
-#define T4C3_LOCKBUT_R_Pin GPIO_PIN_8
-#define T4C3_LOCKBUT_R_GPIO_Port GPIOB
-#define T2C4_LOCKBUT_G_Pin GPIO_PIN_3
-#define T2C4_LOCKBUT_G_GPIO_Port GPIOA
-#define T2C3_LOCKBUT_B_Pin GPIO_PIN_10
-#define T2C3_LOCKBUT_B_GPIO_Port GPIOB
+#define LOCKBUT_R_Pin GPIO_PIN_8
+#define LOCKBUT_R_GPIO_Port GPIOB
+#define LOCKBUT_G_Pin GPIO_PIN_3
+#define LOCKBUT_G_GPIO_Port GPIOA
+#define LOCKBUT_B_Pin GPIO_PIN_10
+#define LOCKBUT_B_GPIO_Port GPIOB
 
 const uint32_t kTimPeriod = 4095;
 void populate_pwm_pins(struct PWMOutput p[]) {
@@ -130,16 +130,16 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 
 	p[PWM_PINGBUT_G].gpio = PINGBUT_G_GPIO_Port;
 	p[PWM_PINGBUT_G].pinnum = PINGBUT_G_Pin;
-	p[PWM_PINGBUT_G].af = GPIO_AF2_TIM4;
-	p[PWM_PINGBUT_G].tim.Instance = TIM4;
-	p[PWM_PINGBUT_G].timchan = TIM_CHANNEL_1;
+	p[PWM_PINGBUT_G].af = GPIO_AF10_TIM3;
+	p[PWM_PINGBUT_G].tim.Instance = TIM3;
+	p[PWM_PINGBUT_G].timchan = TIM_CHANNEL_4;
 	p[PWM_PINGBUT_G].period = kTimPeriod;
 
 	p[PWM_PINGBUT_B].gpio = PINGBUT_B_GPIO_Port;
 	p[PWM_PINGBUT_B].pinnum = PINGBUT_B_Pin;
-	p[PWM_PINGBUT_B].af = GPIO_AF10_TIM3;
-	p[PWM_PINGBUT_B].tim.Instance = TIM3;
-	p[PWM_PINGBUT_B].timchan = TIM_CHANNEL_4;
+	p[PWM_PINGBUT_B].af = GPIO_AF2_TIM4;
+	p[PWM_PINGBUT_B].tim.Instance = TIM4;
+	p[PWM_PINGBUT_B].timchan = TIM_CHANNEL_1;
 	p[PWM_PINGBUT_B].period = kTimPeriod;
 
 	p[PWM_CYCLEBUT_R].gpio = CYCLEBUT_R_GPIO_Port;
@@ -184,6 +184,12 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_LOCKBUT_B].timchan = TIM_CHANNEL_3;
 	p[PWM_LOCKBUT_B].period = kTimPeriod;
 
+	p[PWM_EOF_LED].gpio = LED_EOF_GPIO_Port;
+	p[PWM_EOF_LED].pinnum = LED_EOF_Pin;
+	p[PWM_EOF_LED].af = GPIO_AF1_TIM2;
+	p[PWM_EOF_LED].tim.Instance = TIM2;
+	p[PWM_EOF_LED].timchan = TIM_CHANNEL_2;
+	p[PWM_EOF_LED].period = kTimPeriod;
 }
 
 void init_pwm_out_pin(struct PWMOutput *p) {
@@ -202,11 +208,10 @@ void init_pwm_tim(struct PWMOutput *p)
 {
 	//Todo: turn on RCC for TIM automatically based on p->tim.Instance
 	__HAL_RCC_TIM1_CLK_ENABLE();
+	__HAL_RCC_TIM2_CLK_ENABLE();
 	__HAL_RCC_TIM3_CLK_ENABLE();
-	__HAL_RCC_TIM14_CLK_ENABLE();
+	__HAL_RCC_TIM4_CLK_ENABLE();
 	__HAL_RCC_TIM15_CLK_ENABLE();
-	__HAL_RCC_TIM16_CLK_ENABLE();
-	__HAL_RCC_TIM17_CLK_ENABLE();
 
 	TIM_OC_InitTypeDef  tim_oc;
 
@@ -218,7 +223,8 @@ void init_pwm_tim(struct PWMOutput *p)
 	p->tim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 	HAL_TIM_PWM_Init(&p->tim);
 
-	tim_oc.OCMode = (p->tim.Instance==TIM14) ? TIM_OCMODE_PWM2 : TIM_OCMODE_PWM1;
+	tim_oc.OCMode = TIM_OCMODE_PWM1;
+	//tim_oc.OCMode = (p->tim.Instance==TIM14) ? TIM_OCMODE_PWM2 : TIM_OCMODE_PWM1;
 	tim_oc.OCFastMode = TIM_OCFAST_DISABLE;
 	tim_oc.OCPolarity = TIM_OCPOLARITY_LOW;
 	tim_oc.OCNPolarity = TIM_OCNPOLARITY_HIGH;
@@ -237,7 +243,6 @@ void start_timers(struct PWMOutput *p)
 
 void init_pwm(void)
 {
-
 	populate_pwm_pins(pwm);
 
 	for (uint8_t i=0;i<NUM_PWMS;i++)

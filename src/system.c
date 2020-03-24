@@ -1,5 +1,7 @@
 #include "system.h"
 #include <stm32g4xx.h>
+#include <stm32g4xx_ll_bus.h>
+#include <stm32g4xx_ll_pwr.h>
 
 static void SetVectorTable(uint32_t reset_address);
 static void SystemClock_Config(void);
@@ -257,7 +259,7 @@ static void SystemClock_Config(void)
 	HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_8);
 
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-    PeriphClkInit.AdcClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
+    PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
 }

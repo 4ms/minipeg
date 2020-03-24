@@ -1,6 +1,4 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
-#
-
 BINARYNAME 		= main
 
 STARTUP 		= startup_stm32g431xx.s
@@ -13,18 +11,23 @@ PERIPH 			= stm32/HAL
 
 BUILDDIR 		= build
 
+SOURCES  += $(wildcard src/*.c)
+SOURCES  += $(wildcard src/*.cc)
+SOURCES  += $(wildcard src/*.cpp)
+SOURCES  += $(wildcard libhwtests/src/*.cpp)
+SOURCES  += $(wildcard libhwtests/src/*.cc)
 SOURCES  += $(wildcard $(PERIPH)/Src/*.c)
 SOURCES  += $(DEVICE)/Source/Templates/gcc/$(STARTUP)
 SOURCES  += $(DEVICE)/Source/Templates/$(SYSTEM)
-SOURCES  += $(wildcard src/*.c)
-# SOURCES  += $(wildcard src/*.cc)
 
-OBJECTS   = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SOURCES))))
+OBJECTS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SOURCES))))
+DEPS = $(OBJECTS:.o=.d)
 
 INCLUDES += -I$(DEVICE)/Include \
 			-I$(CORE)/Include \
 			-I$(PERIPH)/Inc \
 			-I src \
+			-I libhwtests/inc \
 
 ELF 	= $(BUILDDIR)/$(BINARYNAME).elf
 HEX 	= $(BUILDDIR)/$(BINARYNAME).hex
@@ -59,7 +62,7 @@ CFLAGS = -g3 \
 	-fdata-sections -ffunction-sections \
 	-specs=nano.specs \
 
-CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+DEPFLAGS = -MMD -MP -MF $(BUILDDIR)/$(basename $<).d
 
 CXXFLAGS=$(CFLAGS) \
 	-std=c++17 \
@@ -74,27 +77,27 @@ CXXFLAGS=$(CFLAGS) \
 AFLAGS = $(MCU)
 #	-x assembler-with-cpp
 
-
 LDSCRIPT = $(DEVICE)/$(LOADFILE)
 
 LFLAGS =  -Wl,-Map,build/main.map,--cref \
 	-Wl,--gc-sections \
 	$(MCU) -specs=nano.specs  -T $(LDSCRIPT)
 
-
 #-----------------------------------
 # Uncomment to compile unoptimized:
 
 # build/src/main.o: OPTFLAG = -O0
-# build/src/adc.o: OPTFLAG = -O0
-# build/src/hardware_tests.o: OPTFLAG = -O0
+build/src/adc.o: OPTFLAG = -O0
+build/src/analog_conditioning.o: OPTFLAG = -O0
+build/src/hardware_tests.o: OPTFLAG = -O0
+build/libhwtests/%.o: OPTFLAG = -O0
 # build/src/leds.o: OPTFLAG = -O0
 # build/src/pwm.o: OPTFLAG = -O0
 # build/src/debounced_digins.o: OPTFLAG = -O0
 # build/src/flash_user.o: OPTFLAG = -O0
 # build/src/flash.o: OPTFLAG = -O0
 # build/src/envelope_out.o: OPTFLAG = -O0
-# $(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+$(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
 
 all: Makefile $(BIN) $(HEX)
 
@@ -107,18 +110,22 @@ $(HEX): $(ELF)
 	$(OBJCPY) --output-target=ihex $< $@
 	$(SZ) $(SZOPTS) $(ELF)
 
-$(ELF): $(OBJECTS) Makefile
+$(ELF): $(OBJECTS)
 	$(LD) $(LFLAGS) -o $@ $(OBJECTS)
 
-$(BUILDDIR)/%.o: %.c Makefile | $(BUILDDIR)
+$(BUILDDIR)/%.o: %.c $(BUILDDIR)/%.d
 	mkdir -p $(dir $@)
-	$(CC) -c $(OPTFLAG) $(CFLAGS) $< -o $@
+	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.cc Makefile | $(BUILDDIR)
+$(BUILDDIR)/%.o: %.cpp $(BUILDDIR)/%.d
 	mkdir -p $(dir $@)
-	$(CC) -c $(OPTFLAG) $(CXXFLAGS) $< -o $@
+	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.s Makefile | $(BUILDDIR)
+$(BUILDDIR)/%.o: %.cc $(BUILDDIR)/%.d
+	mkdir -p $(dir $@)
+	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
+
+$(BUILDDIR)/%.o: %.s
 	mkdir -p $(dir $@)
 	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(BUILDDIR)/, $(addsuffix .lst, $(basename $<)))
 
@@ -128,8 +135,12 @@ flash: $(BIN)
 clean:
 	rm -rf $(BUILDDIR)
 
--include $(wildcard $(BUILDDIR)/*.d)
+#-include $(wildcard $(BUILDDIR)/*.d)
+%.d: ;
 
+ifneq "$(MAKECMDGOALS)" "clean"
+-include $(DEPS)
+endif
 
 TESTFW_DIR = ../Unity/src
 TEST_DIR = tests
@@ -160,7 +171,7 @@ TEST_INC =  -I $(TESTFW_DIR) \
 			-I stm32/device/Include \
 			-I stm32/CMSIS/Include \
 
-TEST_CFLAGS = -DSTM32G070xx
+TEST_CFLAGS = -DSTM32G431xx
 
 
 $(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)

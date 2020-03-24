@@ -28,13 +28,13 @@ void create_color(AdjustedColor *col, uint16_t red, uint16_t green, uint16_t blu
 	col->lock.g = adjust_hue(green, settings.lock_cal_g);
 	col->lock.b = adjust_hue(blue, settings.lock_cal_b);
 
-	col->envA.r = adjust_hue(red, settings.envA_cal_r);
-	col->envA.g = adjust_hue(green, settings.envA_cal_g);
-	col->envA.b = adjust_hue(blue, settings.envA_cal_b);
+	col->envA.r = adjust_hue(red, settings.enva_cal_r);
+	col->envA.g = adjust_hue(green, settings.enva_cal_g);
+	col->envA.b = adjust_hue(blue, settings.enva_cal_b);
 
-	col->envB.r = adjust_hue(red, settings.envB_cal_r);
-	col->envB.g = adjust_hue(green, settings.envB_cal_g);
-	col->envB.b = adjust_hue(blue, settings.envB_cal_b);
+	col->envB.r = adjust_hue(red, settings.envb_cal_r);
+	col->envB.g = adjust_hue(green, settings.envb_cal_g);
+	col->envB.b = adjust_hue(blue, settings.envb_cal_b);
 }
 
 void adjust_palette(void)
@@ -68,19 +68,19 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id)
 		update_pwm(palette[color_id].cycle.b, PWM_CYCLEBUT_B);
 		update_pwm(palette[color_id].cycle.g, PWM_CYCLEBUT_G);
 	}
-	else if (led_id==LED_LOCK)
+	else if (rgb_led_id==LED_LOCK)
 	{
 		update_pwm(palette[color_id].lock.r, PWM_LOCKBUT_R);
 		update_pwm(palette[color_id].lock.b, PWM_LOCKBUT_B);
 		update_pwm(palette[color_id].lock.g, PWM_LOCKBUT_G);
 	} 
-	else if (led_id==LED_ENVA)
+	else if (rgb_led_id==LED_ENVA)
 	{
 		update_pwm(palette[color_id].envA.r, PWM_ENVA_R);
 		update_pwm(palette[color_id].envA.b, PWM_ENVA_B);
 		update_pwm(palette[color_id].envA.g, PWM_ENVA_G);
 	} 
-	else if (led_id==LED_ENVB)
+	else if (rgb_led_id==LED_ENVB)
 	{
 		update_pwm(palette[color_id].envB.r, PWM_ENVB_R);
 		update_pwm(palette[color_id].envB.b, PWM_ENVB_B);
@@ -94,7 +94,7 @@ void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num) {
 	update_pwm(brightness, pwm_led_num);
 }
 
-void set_inverted_led(uint16_t brightness, enum PwmOutputs pwm_led_num) {
+void set_inverted_led(enum PwmOutputs pwm_led_num, uint16_t brightness) {
 	if (brightness >= kMaxBrightness)
 		update_pwm(0, pwm_led_num);
 	else if (kMaxBrightness == 4095)
@@ -133,5 +133,5 @@ void all_lights_off(void) {
     update_pwm(0, PWM_ENVB_G);
     update_pwm(0, PWM_ENVB_B);
 
-    set_inverted_led(0, PWM_EOF_LED);
+    set_inverted_led(PWM_EOF_LED, 0);
 }

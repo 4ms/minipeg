@@ -4,7 +4,7 @@ todo:
 Lock +5V (or can adjust it?)
 */
 
-#include <stm32g0xx.h>
+#include <stm32g4xx.h>
 #include "globals.h"
 #include "hardware_tests.h"
 
@@ -135,7 +135,7 @@ inline uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
 int main(void)
 {
 	HAL_Init();
-	SystemClock_Config();
+	system_init();
 	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 
 	init_tmrs();
@@ -154,7 +154,7 @@ int main(void)
 
 	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
 
-	if (!read_settings()) 
+	if (1 || !read_settings()) 
 	{
 		test_hardware();
 		write_settings();

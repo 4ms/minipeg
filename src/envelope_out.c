@@ -6,32 +6,32 @@ extern int16_t scale, offset, shift;
 void output_envelope(uint32_t dacval)
 {
 	//Todo: optimize calcs using instruction set
-	int32_t env;
-	uint16_t env5V = dacval;
+	int32_t envA;
+	uint16_t envB = dacval;
 
-	env = (int32_t)dacval;
-	env -= 2048;
-	env += offset;
-	env *= scale;
-	env >>= 12;
-	env += shift;
+	envA = (int32_t)dacval;
+	envA -= 2048;
+	envA += offset;
+	envA *= scale;
+	envA >>= 12;
+	envA += shift;
 
-	if (env>4095) env=4095;
-	else if (env<0) env=0;
+	if (envA>4095) envA=4095;
+	else if (envA<0) envA=0;
 
-	update_pwm(env, PWM_ENV);
-	update_pwm(env5V, PWM_5VENV);
+	//dac_out(envA, ENVA);
+	//dac_out(envB, ENVB);
 
-	if (env<2048) {
-		set_led_brightness(0, PWM_ENVLED_B);
-		set_led_brightness((2048-env)*2, PWM_ENVLED_R);
+	if (envA<2048) {
+		set_led_brightness(0, PWM_ENVA_B);
+		set_led_brightness((2048-envA)*2, PWM_ENVA_R);
 	} else {
-		set_led_brightness((env-2048)*2, PWM_ENVLED_B);
-		set_led_brightness(0, PWM_ENVLED_R);
+		set_led_brightness((envA-2048)*2, PWM_ENVA_B);
+		set_led_brightness(0, PWM_ENVA_R);
 	}
 
 	//Todo: use red if 5V is locked
-	set_led_brightness(env5V, PWM_5VENVLED_B);
+	set_led_brightness(envB, PWM_ENVB_B);
 }
 
 //Todo: figure out if/how to integrate this into the UI
