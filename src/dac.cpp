@@ -23,42 +23,41 @@ void dac_out(enum DACs dac, uint16_t val) {
 }
 
 static void init_dac_trigtmr() {
-	__HAL_RCC_TIM6_CLK_ENABLE();
-	// __HAL_RCC_TIM7_CLK_ENABLE();
+	// __HAL_RCC_TIM6_CLK_ENABLE();
+	__HAL_RCC_TIM7_CLK_ENABLE();
 
-	// TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-	// TIM_MasterConfigTypeDef sMasterConfig7 = {0};
+	htim7.Instance = TIM7;
+	htim7.Init.Prescaler = 150;
+	htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim7.Init.Period = 2500;
+	htim7.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	HAL_TIM_Base_Init(&htim7);
 
-	// htim7.Instance = TIM7;
-	// htim7.Init.Prescaler = 149;
-	// htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-	// htim7.Init.Period = 999;
-	// htim7.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	// htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	// HAL_TIM_Base_Init(&htim7);
+	TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	HAL_TIM_ConfigClockSource(&htim7, &sClockSourceConfig);
 
-	// sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	// HAL_TIM_ConfigClockSource(&htim7, &sClockSourceConfig);
-
-	// sMasterConfig7.MasterOutputTrigger = TIM_TRGO_UPDATE;
-	// sMasterConfig7.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	// HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig7);
+	TIM_MasterConfigTypeDef sMasterConfig7 = {0};
+	sMasterConfig7.MasterOutputTrigger = TIM_TRGO_UPDATE;
+	sMasterConfig7.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig7);
 
 	// TIM_MasterConfigTypeDef sMasterConfig6 = {0};
 
-	htim6.Instance = TIM6;
-	htim6.Init.Prescaler = 0;
-	htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim6.Init.Period = 2499;
-	htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-	HAL_TIM_Base_Init(&htim6);
+	// htim6.Instance = TIM6;
+	// htim6.Init.Prescaler = 0;
+	// htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+	// htim6.Init.Period = 2499;
+	// htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	// HAL_TIM_Base_Init(&htim6);
 
 	// sMasterConfig6.MasterOutputTrigger = TIM_TRGO_UPDATE;
 	// sMasterConfig6.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
 	// HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig6);
 
-	// HAL_TIM_Base_Start(&htim7);
-	HAL_TIM_Base_Start(&htim6);
+	HAL_TIM_Base_Start(&htim7);
+	// HAL_TIM_Base_Start(&htim6);
 }
 
 void init_dac() {
