@@ -87,9 +87,10 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # Uncomment to compile unoptimized:
 
 # build/src/main.o: OPTFLAG = -O0
-build/src/adc.o: OPTFLAG = -O0
-build/src/analog_conditioning.o: OPTFLAG = -O0
+# build/src/adc.o: OPTFLAG = -O0
+# build/src/analog_conditioning.o: OPTFLAG = -O0
 build/src/hardware_tests.o: OPTFLAG = -O0
+build/src/dac.o: OPTFLAG = -O0
 build/libhwtests/%.o: OPTFLAG = -O0
 # build/src/leds.o: OPTFLAG = -O0
 # build/src/pwm.o: OPTFLAG = -O0

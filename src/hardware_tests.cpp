@@ -19,6 +19,7 @@ extern "C" {
 #include "dac.h"
 #include "libhwtests/inc/LEDTester.h"
 #include "libhwtests/inc/LEDButtonChecker.h"
+#include "libhwtests/inc/AdcRangeChecker.hh"
 
 extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
 extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
@@ -70,25 +71,28 @@ static void set_button_led(uint8_t button_num, bool turn_on) {
 
 static void test_leds();
 static void test_buttons();
+static void test_dac();
+static void test_adc();
 
 extern "C" void test_hardware(void) {
     all_lights_off();
 
-	test_leds();
+	//test_leds();
 	test_buttons();
-
+	test_dac();
+	test_adc();
 	while (1) {
 		;
 	}
 }
 
 static void test_leds() {
-	LEDTester test{NUM_PWMS};
-	test.assign_led_onoff_func(set_led);
-	test.reset();
-	while (!test.is_done()) {
+	LEDTester led_checker{NUM_PWMS};
+	led_checker.assign_led_onoff_func(set_led);
+	led_checker.reset();
+	while (!led_checker.is_done()) {
 		while(PINGBUT) {;}
-		test.next_led();
+		led_checker.next_led();
 		while(!PINGBUT) {;}
 	}
 
@@ -97,14 +101,95 @@ static void test_leds() {
 }
 
 static void test_buttons() {
-	LEDButtonChecker but_test{3};
-	but_test.assign_button_led_func(set_button_led);
-	but_test.assign_button_read_func(read_button);
-	but_test.reset();
-	while (!but_test.check_done()) {
-		but_test.run_check();
+	LEDButtonChecker button_checker{3};
+	button_checker.assign_button_led_func(set_button_led);
+	button_checker.assign_button_read_func(read_button);
+	button_checker.reset();
+	while (!button_checker.check_done()) {
+		button_checker.run_check();
 	}
 }
+
+static void test_dac() {
+	init_dac();
+
+}
+
+static void test_adc() {
+	AdcRangeCheckerBounds init {
+		.center_val = 2048,
+		.center_width = 100,
+		.center_check_counts = 4,
+		.min_val = 10,
+		.max_val = 4086
+	};
+
+	AdcRangeChecker adc_checker{init};
+
+	uint8_t adc_map[NUM_ADCS] = {
+		ADC_POT_DIVMULT,
+		ADC_POT_SHAPE,
+		ADC_POT_SCALE,
+		ADC_POT_OFFSET,
+		ADC_CV_SHAPE,
+		ADC_CV_DIVMULT,
+	};
+
+	for (uint32_t adc_i=0; adc_i<NUM_ADCS; adc_i++) {
+		bool done = false;
+		uint8_t cur_adc = adc_map[adc_i];
+		adc_checker.reset();
+
+		set_led(PWM_EOF_LED, true);
+		set_led(PWM_ENVA_R, true);
+		set_led(PWM_ENVB_R, true);
+
+		while (!done) {
+			uint16_t adcval = (adc_i<NUM_POT_ADCS) ?
+								adc_pot_dma_buffer[cur_adc]
+								: adc_cv_dma_buffer[cur_adc];
+			adc_checker.set_adcval(adcval);
+			auto status = adc_checker.check();
+
+
+			if (adc_i>=NUM_POT_ADCS) {
+				// zeroes_ok = check_max_one_cv_is_nonzero(300);
+				// if (!zeroes_ok) {
+				// 	show_multiple_nonzeros_error();
+				// 	adc_checker.reset();
+				// 	set_led(PWM_EOF_LED, true);
+				// 	set_led(PWM_ENVA_R, true);
+				// 	set_led(PWM_ENVB_R, true);
+				// }
+			}
+
+			if (status==ADCCHECK_AT_MIN){
+				set_led(PWM_EOF_LED, false);
+			}
+			else if (status==ADCCHECK_AT_MAX){
+				set_led(PWM_ENVB_R, false);
+			}
+			else if (status==ADCCHECK_AT_CENTER){
+				set_led(PWM_ENVA_R, false);
+			}
+			else if (status==ADCCHECK_ELSEWHERE){
+				set_led(PWM_ENVA_R, true);
+			}
+			else if (status==ADCCHECK_FULLY_COVERED){
+				done = true;
+			}
+
+			if (PINGBUT)
+				done = true;
+		}
+		update_pwm(max_pwm, PWM_CYCLEBUT_G);
+		update_pwm(max_pwm, PWM_LOCKBUT_G);
+		HAL_Delay(350);
+		update_pwm(min_pwm, PWM_CYCLEBUT_G);
+		update_pwm(min_pwm, PWM_LOCKBUT_G);
+	}
+}
+
 
 void other_tests() {
     uint16_t adcval;
@@ -167,3 +252,30 @@ void other_tests() {
 
     all_lights_off();
 }
+
+uint8_t hardwaretest_continue_button(void) {
+	return PINGBUT;
+}
+
+void pause_until_button_pressed(void) {
+	HAL_Delay(80);
+	while (!hardwaretest_continue_button()) {;}
+}
+
+void pause_until_button_released(void) {
+	HAL_Delay(80);
+	while (hardwaretest_continue_button()) {;}
+}
+
+// void flash_ping_until_pressed(void) {
+// 	while (1) {
+// 		LED_PINGBUT_OFF;
+// 		delay_ms(200);
+// 		if (hardwaretest_continue_button()) break;
+// 		LED_PINGBUT_ON;
+// 		delay_ms(200);
+// 	}
+// 	LED_PINGBUT_ON;
+// 	pause_until_button_released();
+// 	LED_PINGBUT_OFF;
+// }

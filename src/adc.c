@@ -172,7 +172,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
         __HAL_LINKDMA(adcHandle, DMA_Handle, hdma_adc2);
     }
 }
-
+/*
 void DMA1_Channel3_IRQHandler(void) //Channel3?
 {
 	HAL_DMA_IRQHandler(&hdma_adc1);
@@ -181,3 +181,4 @@ void DMA1_Channel2_IRQHandler(void)
 {
 	HAL_DMA_IRQHandler(&hdma_adc2);
 }
+*/
