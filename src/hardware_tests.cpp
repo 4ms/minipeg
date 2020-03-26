@@ -132,7 +132,7 @@ static uint16_t interpolate(float phase) {
 
 const float kDacSampleRate = 21000.0f;
 static void update_test_waves() {
-	const float freqHz_a = 21;
+	const float freqHz_a = 3;
 	const float freqHz_b = 4;
 
 	static float phase_a=0.0f;
@@ -160,7 +160,7 @@ static void test_adc() {
 	AdcRangeCheckerBounds init {
 		.center_val = 2048,
 		.center_width = 100,
-		.center_check_counts = 4,
+		.center_check_counts = 400,
 		.min_val = 10,
 		.max_val = 4086
 	};
@@ -191,7 +191,6 @@ static void test_adc() {
 								: adc_cv_dma_buffer[cur_adc];
 			adc_checker.set_adcval(adcval);
 			auto status = adc_checker.check();
-
 
 			if (adc_i>=NUM_POT_ADCS) {
 				// zeroes_ok = check_max_one_cv_is_nonzero(300);
@@ -225,7 +224,7 @@ static void test_adc() {
 		}
 		update_pwm(max_pwm, PWM_CYCLEBUT_G);
 		update_pwm(max_pwm, PWM_LOCKBUT_G);
-		HAL_Delay(350);
+		HAL_Delay(10000);
 		update_pwm(min_pwm, PWM_CYCLEBUT_G);
 		update_pwm(min_pwm, PWM_LOCKBUT_G);
 	}
