@@ -12,7 +12,7 @@ TIM_HandleTypeDef htim6;
 #define ENV_GPIO_Port GPIOA
 #define DAC_UPDATE_TIMER_NUM 6
 
-static void init_dac_update_tmr();
+static void init_dac_update_tmr(uint32_t freq);
 
 void dac_out(enum DACs dac, uint16_t val) {
 	if (dac==DAC_ENVA) {
@@ -23,7 +23,7 @@ void dac_out(enum DACs dac, uint16_t val) {
 	}
 }
 
-void init_dac() {
+void init_dac(uint32_t freq) {
 	hdac1.Instance = DAC1;
 	HAL_DAC_Init(&hdac1);
 
@@ -46,15 +46,16 @@ void init_dac() {
 	HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
 
-	init_dac_update_tmr();
+	init_dac_update_tmr(freq);
 }
 
-static void init_dac_update_tmr() {
+static void init_dac_update_tmr(uint32_t freq) {
 	TimerITInitStruct dac_update_timer_config;
 
+	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq() * 2;
 	dac_update_timer_config.priority1 = 0;
 	dac_update_timer_config.priority2 = 1;
-	dac_update_timer_config.period = 8000;
+	dac_update_timer_config.period = sysclockfreq / freq;// 168MHZ / 21kHz = 8000
 	dac_update_timer_config.prescaler = 0;
 	dac_update_timer_config.clock_division = 0;
 

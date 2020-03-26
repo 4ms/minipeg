@@ -9,7 +9,7 @@ enum DACs {
 	DAC_ENVB,
 };
 
-void init_dac();
+void init_dac(uint32_t freq);
 void dac_out(enum DACs dac, uint16_t val);
 void assign_dac_update_callback(void (*callbackfunc)(void));
 
