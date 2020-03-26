@@ -7,6 +7,7 @@ Lock +5V (or can adjust it?)
 #include <stm32g4xx.h>
 #include "globals.h"
 #include "hardware_tests.h"
+#include "timekeeper.h"
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
@@ -112,6 +113,7 @@ void update_adc_params(uint8_t force_params_update);
 
 void SysTick_Handler(void)
 {
+	HAL_IncTick();
 	systmr++;
 	tapouttmr++;
 	tapintmr++;
@@ -138,6 +140,7 @@ int main(void)
 	system_init();
 	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 
+	init_timekeeper();
 	init_tmrs();
 	init_dig_inouts();
 	eor_off();

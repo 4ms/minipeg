@@ -22,8 +22,4 @@ typedef struct DebouncedDigin {
 	int8_t 		edge;
 } debounced_digin_t;
 
-#define DEBOUNCE_TIMx TIM7
-#define DEBOUNCE_IRQn TIM7_IRQn
-#define DEBOUNCE_TIM_RCC_ENABLE __HAL_RCC_TIM7_CLK_ENABLE
-#define DEBOUNCE_IRQHandler TIM7_IRQHandler
 void init_debouncer(void);

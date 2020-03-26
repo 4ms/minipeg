@@ -1,16 +1,17 @@
 #include "globals.h"
-extern volatile uint32_t pingtmr;
-extern volatile uint32_t ping_irq_timestamp;
-extern volatile uint8_t using_tap_clock;
+#include "debounced_digins.h"
+#include "timekeeper.h"
+
+#define DEBOUNCE_TIM_NUM 7
 
 
 debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
-TIM_HandleTypeDef debounce_tim;
+
+static void debounce_irq(void);
 
 void init_debouncer(void)
 {
     HAL_StatusTypeDef err;
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
 
     for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
     {
@@ -18,74 +19,63 @@ void init_debouncer(void)
         digin[i].state = 0;
         digin[i].edge = 0;
     }
-    DEBOUNCE_TIM_RCC_ENABLE();
-    
-    debounce_tim.Instance = DEBOUNCE_TIMx;
-    debounce_tim.Init.Prescaler = 0;
-    debounce_tim.Init.CounterMode = TIM_COUNTERMODE_UP;
-    debounce_tim.Init.Period = 5000;
-    debounce_tim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    err = HAL_TIM_Base_Init(&debounce_tim);
+   	
+	TimerITInitStruct debounce_timer_config;
 
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    err = HAL_TIMEx_MasterConfigSynchronization(&debounce_tim, &sMasterConfig);
+	debounce_timer_config.priority1 = 1;
+	debounce_timer_config.priority2 = 0;
+	debounce_timer_config.period = 5000;
+	debounce_timer_config.prescaler = 0;
+	debounce_timer_config.clock_division = 0;
 
-    HAL_NVIC_SetPriority(DEBOUNCE_IRQn, 1, 0); //was 1
-    HAL_NVIC_EnableIRQ(DEBOUNCE_IRQn);
-
-    HAL_TIM_Base_Start_IT(&debounce_tim);
+	init_timer_IRQ(DEBOUNCE_TIM_NUM, &debounce_timer_config);
+	start_timer_IRQ(DEBOUNCE_TIM_NUM, &debounce_irq);
 }
 
-void DEBOUNCE_IRQHandler(void)
-{
-    uint16_t t;
-    uint16_t pin_read;
+extern volatile uint32_t pingtmr;
+extern volatile uint32_t ping_irq_timestamp;
+extern volatile uint8_t using_tap_clock;
 
-    if ((__HAL_TIM_GET_FLAG(&debounce_tim, TIM_FLAG_UPDATE) != RESET) &&
-        (__HAL_TIM_GET_IT_SOURCE(&debounce_tim, TIM_IT_UPDATE) != RESET))
-    {
-        __HAL_TIM_CLEAR_IT(&debounce_tim, TIM_IT_UPDATE);
+static void debounce_irq(void) {
+	uint8_t pin_read;
+	uint8_t t;
 
-        for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
-        {
-            if (i==PING_BUTTON)
-                pin_read = PINGBUT;
-            
-            else if (i==CYCLE_BUTTON)
-                pin_read = CYCLEBUT;
+	for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
+	{
+		if (i==PING_BUTTON)
+			pin_read = PINGBUT;
 
-            else if (i==TRIGGER_JACK)
-                pin_read = TRIG_JACK_READ;
+		else if (i==CYCLE_BUTTON)
+			pin_read = CYCLEBUT;
 
-            else if (i==CYCLE_JACK)
-                pin_read = CYCLE_JACK_READ;
+		else if (i==TRIGGER_JACK)
+			pin_read = TRIG_JACK_READ;
 
-            else if (i==PING_JACK)
-                pin_read = PING_JACK_READ;
+		else if (i==CYCLE_JACK)
+			pin_read = CYCLE_JACK_READ;
 
-            if (pin_read) t=0x0000;
-            else t=0x0001;
+		else if (i==PING_JACK)
+			pin_read = PING_JACK_READ;
 
-            digin[i].history=(digin[i].history<<1) | t;
+		if (pin_read) t=0x0000;
+		else t=0x0001;
 
-            if (digin[i].history==0xFFFE)
-            {
-                digin[i].state = 1;
-                digin[i].edge = 1;
-                if (i==PING_JACK) {
-                    ping_irq_timestamp=pingtmr;
-                    pingtmr=0;
-                    using_tap_clock=0;
-                }
-            }
-            else if (digin[i].history==0x0001)
-            {
-                digin[i].state = 0;
-                digin[i].edge = -1;
-            }
+		digin[i].history=(digin[i].history<<1) | t;
 
-        }
-
-    }
+		if (digin[i].history==0xFFFE)
+		{
+			digin[i].state = 1;
+			digin[i].edge = 1;
+			if (i==PING_JACK) {
+				ping_irq_timestamp=pingtmr;
+				pingtmr=0;
+				using_tap_clock=0;
+			}
+		}
+		else if (digin[i].history==0x0001)
+		{
+			digin[i].state = 0;
+			digin[i].edge = -1;
+		}
+	}
 }
