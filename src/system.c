@@ -10,12 +10,16 @@ void Error_Handler(void) {
   //
 }
 
+static void set_option_bytes_ignore_BOOT0_pin();
+
 void system_init(void)
 {
 	SetVectorTable(0x08000000);
 	HAL_Init();
 
 	SystemClock_Config();
+
+	set_option_bytes_ignore_BOOT0_pin();
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);
@@ -34,6 +38,20 @@ void HAL_MspInit(void)
 	HAL_SYSCFG_DisableVREFBUF();
 	HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_ENABLE);
 	LL_PWR_DisableDeadBatteryPD();
+}
+
+static void set_option_bytes_ignore_BOOT0_pin() {
+	HAL_FLASH_Unlock();
+    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
+	HAL_FLASH_OB_Unlock();
+
+	FLASH_OBProgramInitTypeDef OBInit;
+
+	OBInit.OptionType = OPTIONBYTE_USER;
+	OBInit.USERType = OB_USER_nBOOT0 | OB_USER_nSWBOOT0;
+	OBInit.USERConfig = OB_BOOT0_FROM_OB | OB_nBOOT0_SET;
+	HAL_FLASHEx_OBProgram(&OBInit);
+	HAL_FLASH_Lock();
 }
 
 void enable_gpio_rcc(GPIO_TypeDef* port) {
