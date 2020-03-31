@@ -3,7 +3,7 @@
 
 struct SystemSettings settings;
 
-#define USER_FLASH_PAGE 0x0801F800
+#define USER_FLASH_PAGE 0x0801F000
 
 HAL_StatusTypeDef write_settings(void)
 {
@@ -56,3 +56,4 @@ void default_settings(void)
 	settings.start_clk_time = 8000;
 	settings.start_cycle_on = 1;
 }
+
