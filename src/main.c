@@ -136,7 +136,6 @@ inline uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
 
 int main(void)
 {
-	HAL_Init();
 	system_init();
 	SysTick_Config(SystemCoreClock/(TICKS_PER_MS*1000));
 

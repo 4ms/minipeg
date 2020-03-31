@@ -8,7 +8,7 @@ analog_t analog[NUM_ADCS];
 //Private:
 void setup_fir_lpf(void);
 
-#define CV_SHAPE_Pin GPIO_PIN_0
+#define CV_SHAPE_Pin GPIO_PIN_2
 #define CV_SHAPE_GPIO_Port GPIOB
 
 #define CV_DIVMULT_Pin GPIO_PIN_12

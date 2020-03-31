@@ -3,8 +3,11 @@
  */
 
 #pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stddef.h>
-#include <stm32g4xx_hal_gpio.h>
+#include <stm32g4xx.h>
 
 enum PwmOutputs {
 	PWM_ENVA_R,
@@ -37,3 +40,7 @@ enum PwmOutputs {
 
 void init_pwm(void);
 void update_pwm(uint32_t pwmval, enum PwmOutputs channel);
+
+#ifdef __cplusplus
+}
+#endif

@@ -3,6 +3,9 @@
  */
 
 #pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include "pwm.h"
@@ -66,3 +69,6 @@ void adjust_palette(void);
 uint16_t adjust_hue(uint16_t base, uint16_t adj);
 void all_lights_off(void);
 
+#ifdef __cplusplus
+}
+#endif

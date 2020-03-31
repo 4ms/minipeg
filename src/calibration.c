@@ -72,9 +72,20 @@ void default_calibration(void)
 	settings.center_detent_offset[DET_SHAPE] = 0;
 
 	settings.ping_cal_r = 2048;
+	settings.ping_cal_g = 2048;
 	settings.ping_cal_b = 2048;
 	settings.cycle_cal_r = 2048;
 	settings.cycle_cal_g = 2048;
+	settings.cycle_cal_b = 2048;
+	settings.lock_cal_r = 2048;
+	settings.lock_cal_g = 2048;
+	settings.lock_cal_b = 2048;
+	settings.enva_cal_r = 2048;
+	settings.enva_cal_g = 2048;
+	settings.enva_cal_b = 2048;
+	settings.envb_cal_r = 2048;
+	settings.envb_cal_g = 2048;
+	settings.envb_cal_b = 2048;
 }
 
 uint8_t sanity_check_calibration(void)

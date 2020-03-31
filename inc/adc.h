@@ -29,7 +29,7 @@
 #pragma once
 
 #include <stddef.h>
-#include <stm32g4xx_hal_gpio.h>
+#include <stm32g4xx.h>
 
 typedef struct builtinAdcSetup{
 	GPIO_TypeDef	*gpio;

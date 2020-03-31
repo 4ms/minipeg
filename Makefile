@@ -13,7 +13,7 @@ BUILDDIR 		= build
 
 SOURCES  += $(wildcard src/*.c)
 SOURCES  += $(wildcard src/*.cc)
-SOURCES  += $(wildcard src/*.cpp)
+SOURCES  += $(wildcard src/hardware_tests/*.cc)
 SOURCES  += $(wildcard libhwtests/src/*.cpp)
 SOURCES  += $(wildcard libhwtests/src/*.cc)
 SOURCES  += $(wildcard $(PERIPH)/Src/*.c)
@@ -26,7 +26,8 @@ DEPS = $(OBJECTS:.o=.d)
 INCLUDES += -I$(DEVICE)/Include \
 			-I$(CORE)/Include \
 			-I$(PERIPH)/Inc \
-			-I src \
+			-I inc \
+			-I inc/hardware_tests \
 			-I libhwtests/inc \
 
 ELF 	= $(BUILDDIR)/$(BINARYNAME).elf
@@ -89,9 +90,9 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # build/src/main.o: OPTFLAG = -O0
 # build/src/adc.o: OPTFLAG = -O0
 # build/src/analog_conditioning.o: OPTFLAG = -O0
-build/src/hardware_tests.o: OPTFLAG = -O0
-build/src/dac.o: OPTFLAG = -O0
-build/libhwtests/%.o: OPTFLAG = -O0
+# build/src/hardware_tests.o: OPTFLAG = -O0
+# build/src/dac.o: OPTFLAG = -O0
+# build/libhwtests/%.o: OPTFLAG = -O0
 # build/src/leds.o: OPTFLAG = -O0
 # build/src/pwm.o: OPTFLAG = -O0
 # build/src/debounced_digins.o: OPTFLAG = -O0
