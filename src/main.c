@@ -133,6 +133,7 @@ void init_tmrs(void)
 }
 
 inline uint32_t udiv32(uint32_t n27) { return (uint32_t)(1UL<<31) / n27; }
+static const uint32_t kDacSampleRate = 22000;
 
 int main(void)
 {
@@ -156,7 +157,7 @@ int main(void)
 
 	//Todo: figure out when to enter hardware test mode... check settings for passed_hw_test==1 ?
 
-	if (1 || !read_settings()) 
+	if (!read_settings()) 
 	{
 		test_hardware();
 		write_settings();
@@ -166,6 +167,9 @@ int main(void)
 	adjust_palette();
 	check_calibration();
 	adjust_palette();
+
+	init_dac(kDacSampleRate);
+	assign_dac_update_callback(&update_envelope);
 
 	if (settings.start_cycle_on)
 	{
@@ -193,7 +197,7 @@ int main(void)
 
 	while (1)
 	{
-		//loops every ~11uS, maybe 13us if you include envelope updates every 4th loop
+		//G0: loops every ~11uS, maybe 13us if you include envelope updates every 4th loop
 
 		// DEBUGON;
 		read_taptempo();
@@ -473,8 +477,8 @@ void check_reset_envelopes(void)
 	now=divpingtmr;
 
 	/*
-	 Phase-lock the async'ed envelope 
-	   if we're cycling in async mode
+	 Phase-lock the async'ed envelope
+	if we're cycling in async mode
 	...and have passed the phase offset point 
 	...and the envelope hasn't changed shape
 	...and are "ready", meaning we have completed an envelope or received the divided ping (this flag ensures we only reset once per divclk period)
@@ -748,227 +752,6 @@ void do_reset_envelopes(void)
 
 	reset_nextping_flag=0;
 	ticks_since_envout_running_total=0;
-}
-
-/*********UPDATE THE ENVELOPE************
- *					
- *  Update only when timer has overflowed
- *  Timer overflows about once every 3-4 main loop cycles
- * -restart if needed			
- * -calculate new position		
- * -change curve step (RISE/FALL)	
- * -output EOR/EOF/HalfR 		
- *					
- ****************************************/
-
-void update_envelope(void)
-{
-	uint8_t end_segment_flag=0;
-	uint8_t end_env_flag=0;
-
-	if ((clk_time==0) || (div_clk_time==0))
-	{
-		envelope_running=0;
-		outta_sync=0;
-	}
-
-	if (ticks_since_envout)
-	{
-		use_ticks_since_envout = ticks_since_envout;
-		ticks_since_envout = 0;
-
-		if (reset_now_flag)
-		{ 
-			do_reset_envelopes();
-		}
-
-		if (envelope_running)
-		{
-			//PEGv2: this block takes about 15-18us and runs every 100us (10kHz sampling rate)
-			//SEG-G0: runs every 50us (20kHz)
-			segphase=0;
-			// if (env_state==TRANSITION)
-			// 	DEBUGON;
-			// else
-			// 	DEBUGOFF;
-
-			switch (env_state)
-			{
-				case (RISE):
-					ticks_since_envout_running_total += use_ticks_since_envout;
-					accum += rise_inc*use_ticks_since_envout;
-					segphase = accum>>19;
-
-					if (accum > 0x7FF80000)
-					{
-						accum = 0x7FF80000;
-						segphase = 0x0FFF;
-						if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
-							end_segment_flag = SUSTAIN;
-						else
-							end_segment_flag = FALL;
-					}
-					
-					cur_curve=curve_rise;
-
-					if (segphase>=2048) hr_on();
-					else hr_off();
-					eor_off();
-					eof_on();
-				break;
-
-				case (SUSTAIN):
-					eor_off();
-					eof_off();
-					hr_on();
-
-					segphase=0x0FFF;
-
-					if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
-					{
-						accum=0x7FF80000;
-						async_env_changed_shape=1;
-					} else {
-						end_segment_flag=FALL;
-					}
-				break;
-
-				case (FALL):
-					ticks_since_envout_running_total += use_ticks_since_envout;
-					accum -= fall_inc*use_ticks_since_envout;
-					segphase=accum>>19;
-
-					if ((accum<0x00080000) || (accum>0x7FF80000))
-					{
-						accum = 0;
-						segphase = 0;
-						end_env_flag = 1;
-					}
-
-					eor_on();
-					eof_off();
-					if (segphase<2048)	hr_off();
-					else hr_on();
-
-					cur_curve=curve_fall;
-				break;
-
-				case (TRANSITION): 
-					ticks_since_envout_running_total += use_ticks_since_envout;
-					accum += transition_inc*use_ticks_since_envout;
-					if (accum < 0x00080000 || (transition_inc==0)) //trans_inc==0 would technically be an error, so this gives us an out
-					{
-						accum = 0;
-						segphase = 0;
-						transition_ctr = use_ticks_since_envout;
-					}
-					else if (accum>0x7FF80000)
-					{
-						accum = 0x7FF80000;
-						segphase = 0x0FFF;
-						transition_ctr = use_ticks_since_envout;
-					}
-					else
-						segphase = accum>>19;
-
-					if (transition_inc>0)
-					{
-						eor_off();
-						eof_on();
-					}
-					else
-					{
-						eor_on();
-						eof_off();
-					}
-
-					transition_ctr -= use_ticks_since_envout;
-					if (transition_ctr <= 0)
-					{
-						end_segment_flag = next_env_state;
-						accum = accum_endpoint;
-
-						//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
-						if (outta_sync) //2 means we got to transistion from reset_now_flag
-							outta_sync=0;
-						else if (outta_sync==1)
-							outta_sync=2;
-						else
-							outta_sync=0;
-					}
-				break;
-
-				default:
-					break;
-			}
-			segphase = calc_curve(segphase, cur_curve);
-			output_envelope(segphase);
-
-			if (end_segment_flag)
-			{
-				if (end_segment_flag==FALL)
-					curve_fall = next_curve_fall;
-
-				if (end_segment_flag==RISE)
-					curve_rise = next_curve_rise;
-
-				if (end_segment_flag==SUSTAIN)
-					curve_fall = next_curve_fall;
-				
-				env_state = end_segment_flag;
-				end_segment_flag = 0;
-			}
-
-			if (end_env_flag)
-			{
-				eof_on();
-				eor_off();	//should already be OFF, but make sure
-				hr_off();
-
-				curve_rise = next_curve_rise;
-				curve_fall = next_curve_fall;
-
-				//Loop if needed
-				if (cycle_but_on || trigq_down || reset_nextping_flag)
-				{
-					//Todo: SPEG code changed order here, check for race conditions
-					if (sync_to_ping_mode)
-						reset_nextping_flag = 0; 
-					else
-					{
-						ready_to_start_async = 1;
-						if (async_env_changed_shape) //if we altered the waveshape, then re-calc the landing spot
-							async_phase_diff = divpingtmr;
-						async_env_changed_shape = 0;
-					}
-					envelope_running = 1;
-					env_state = RISE;
-				}
-				else
-				{
-					envelope_running = 0;
-					env_state = WAIT;
-					outta_sync = 0;
-				}
-			}
-
-		} 
-		else
-		{ //envelope_running!=1 
-			eor_off();
-			hr_off();
-			eof_on();
-			outta_sync = 0;
-			
-			output_envelope(0);
-			//Todo: offset if holding down CYCLE while turning Offset:
-			//if (cycle_offset_combo)
-			//	output_offset();
-			//else
-			//	output_envelope(0);
-			ticks_since_envout = 0;
-		}
-	}
 }
 
 int8_t calc_divided_ping_div_ctr(uint8_t envstate)
