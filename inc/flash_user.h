@@ -5,13 +5,14 @@
 #pragma once
 
 #include <stdint.h>
-#include <stm32g4xx_hal_def.h>
+#include <stm32g4xx.h>
 
 enum CycleJackBehavior {
 	CYCLE_JACK_RISING_EDGE_TOGGLES,
 	CYCLE_JACK_BOTH_EDGES_TOGGLE,
 	NUM_CYCLEJACK_FUNCTIONS
 };
+
 enum TrigOutFunctions {
 	TRIGOUT_IS_ENDOFRISE,
 	TRIGOUT_IS_ENDOFFALL,
@@ -20,12 +21,21 @@ enum TrigOutFunctions {
 
 	NUM_TRIGOUT_FUNCTIONS
 };
+
 enum TrigInFunctions {
 	TRIGIN_IS_ASYNC,
 	TRIGIN_IS_ASYNC_SUSTAIN,
 	TRIGIN_IS_QNT,
 
 	NUM_TRIGIN_FUNCTIONS
+};
+
+enum CenterDetentPots{
+	DET_SCALE,
+	DET_OFFSET,
+	DET_SHAPE,
+
+	NUM_CENTER_DETENT_POTS
 };
 
 #define VALID_SETTINGS 0xC001

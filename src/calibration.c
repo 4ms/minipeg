@@ -6,6 +6,8 @@ extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
 extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 //Private:
+#define FIRST_CD_POT POT_SCALE
+
 enum CalRequests{
 	CAL_REQUEST_NONE,
 	CAL_REQUEST_ALL,
@@ -168,16 +170,16 @@ void calibrate_center_detents(void)
 	while (PINGBUT) {;}
 	while (CYCLEBUT) {;}
 
-	delay_ms(100);
+	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_WHITE);
 	set_rgb_led(LED_CYCLE, c_WHITE);
-	delay_ms(100);
+	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
-	delay_ms(100);
+	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_WHITE);
 	set_rgb_led(LED_CYCLE, c_WHITE);
-	delay_ms(100);
+	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
@@ -186,13 +188,13 @@ void calibrate_center_detents(void)
 
 	while (cur<NUM_CENTER_DETENT_POTS)
 	{
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read1 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read2 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read3 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read4 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
 		read_tot = read1 + read2 + read3 + read4;
 		read_avg = read_tot>>2;	
@@ -251,13 +253,13 @@ void calibrate_divmult_pot(void)
 		set_rgb_led(LED_CYCLE, c_OFF); //off = reading pot 
   
 
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read2 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read3 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-		delay_ms(stab_delay);
+		HAL_Delay(stab_delay);
 		read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 		read_tot = read1 + read2 + read3 + read4;
@@ -271,17 +273,17 @@ void calibrate_divmult_pot(void)
 			if (j==0 || j==(NUM_DIVMULTS-2)) diff=80;
 			else diff=160;
 
-			delay_ms(20);
+			HAL_Delay(20);
 
 			//wait until knob is detected as being moved
 			do {   
-				delay_ms(stab_delay);
+				HAL_Delay(stab_delay);
 				read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-				delay_ms(stab_delay);
+				HAL_Delay(stab_delay);
 				read2 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-				delay_ms(stab_delay);
+				HAL_Delay(stab_delay);
 				read3 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-				delay_ms(stab_delay);
+				HAL_Delay(stab_delay);
 				read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 				read_tot = read1 + read2 + read3 + read4;

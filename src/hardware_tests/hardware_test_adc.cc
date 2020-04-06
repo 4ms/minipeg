@@ -77,7 +77,7 @@ void test_adc() {
 		}
 		update_pwm(max_pwm, PWM_CYCLEBUT_G);
 		update_pwm(max_pwm, PWM_LOCKBUT_G);
-		HAL_Delay(10000);
+		HAL_Delay(200);
 		update_pwm(min_pwm, PWM_CYCLEBUT_G);
 		update_pwm(min_pwm, PWM_LOCKBUT_G);
 	}

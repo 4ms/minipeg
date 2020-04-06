@@ -1,23 +1,24 @@
 #include "globals.h"
-extern __IO uint32_t systmr;
+
 extern struct SystemSettings settings;
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern uint8_t adjusting_shift_mode;
- 
+
 void handle_system_mode(void)
 {
 	uint8_t d;
 	enum SystemModeParams system_mode_cur;
 	static uint32_t ping_held_time = 0;
 	static uint32_t cycle_held_time = 0;
+	uint32_t now = HAL_GetTick();
 
 	if (digin[CYCLE_BUTTON].state == 0)
-		cycle_held_time = systmr;
+		cycle_held_time = now;
 
 	if (adjusting_shift_mode)
 		return;
 
-	if ((systmr - cycle_held_time) <= (3000*TICKS_PER_MS)) 
+	if ((now - cycle_held_time) <= (3000*TICKS_PER_MS))
 		return;
 
 	for (d=0;d<5;d++) {
@@ -27,8 +28,8 @@ void handle_system_mode(void)
 		set_rgb_led(LED_ENVB, c_PURPLE);
 		set_inverted_led(PWM_EOF_LED, 1024);
 
-		delay_ms(100);
-		if (d==4) delay_ms(500);
+		HAL_Delay(100);
+		if (d==4) HAL_Delay(500);
 
 		set_rgb_led(LED_PING, c_OFF);
 		set_rgb_led(LED_CYCLE, c_OFF);
@@ -36,25 +37,25 @@ void handle_system_mode(void)
 		set_rgb_led(LED_ENVB, c_OFF);
 		set_inverted_led(PWM_EOF_LED, 0);
 
-		delay_ms(100);
+		HAL_Delay(100);
 	}
 
 	while(digin[CYCLE_BUTTON].state==1) {;}
-	delay_ms(50);
+	HAL_Delay(50);
 
-	ping_held_time = systmr;
+	ping_held_time = now;
 	system_mode_cur=SET_TRIGOUT_FUNC;
-	
+
 	while (1)
 	{
 		if (digin[PING_BUTTON].state == 0)
-			ping_held_time = systmr;
-		else if ((systmr - ping_held_time) > (3000*TICKS_PER_MS)) 
+			ping_held_time = now;
+		else if ((now - ping_held_time) > (3000*TICKS_PER_MS))
 			break;
 
 		if (digin[CYCLE_BUTTON].state == 0)
-			cycle_held_time = systmr;
-		else if ((systmr - cycle_held_time) > (3000*TICKS_PER_MS)) 
+			cycle_held_time = now;
+		else if ((now - cycle_held_time) > (3000*TICKS_PER_MS))
 			break;
 
 		if (digin[PING_BUTTON].edge == -1 ) {
@@ -85,11 +86,11 @@ void handle_system_mode(void)
 			case(SET_TRIGOUT_IS_TRIG):
 				if (settings.trigout_is_trig) {
 					set_rgb_led(LED_CYCLE, c_WHITE);
-					if (systmr & 0x0F00) set_inverted_led(PWM_EOF_LED, 0);
+					if (now & 0x0F00) set_inverted_led(PWM_EOF_LED, 0);
 					else set_inverted_led(PWM_EOF_LED, 1024);
 				} else {
 					set_rgb_led(LED_CYCLE, c_ORANGE);
-					if (systmr & 0x1000) set_inverted_led(PWM_EOF_LED, 0);
+					if (now & 0x1000) set_inverted_led(PWM_EOF_LED, 0);
 					else set_inverted_led(PWM_EOF_LED, 1024);
 				}
 				set_rgb_led(LED_PING, c_OFF);
@@ -108,10 +109,10 @@ void handle_system_mode(void)
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_inverted_led(PWM_EOF_LED, 0);
 			break;
-			
+
 			case(SET_FREE_RUNNING_PING):
 				if (settings.free_running_ping) {
-					set_rgb_led(LED_PING, (systmr & 0x1000) ? c_WHITE : c_DIMBLUE);
+					set_rgb_led(LED_PING, (now & 0x1000) ? c_WHITE : c_DIMBLUE);
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 				} else {
 					set_rgb_led(LED_PING, c_DIMBLUE);
@@ -138,9 +139,9 @@ void handle_system_mode(void)
 
 			case(SET_CYCLEJACK_FUNCTION):
 				if (settings.cycle_jack_behavior == CYCLE_JACK_RISING_EDGE_TOGGLES)
-					set_rgb_led(LED_CYCLE, (systmr & 0x1000) ? c_RED : c_GREEN);
+					set_rgb_led(LED_CYCLE, (now & 0x1000) ? c_RED : c_GREEN);
 				else
-					set_rgb_led(LED_CYCLE, (systmr & 0x2000) ? c_ORANGE : c_OFF);
+					set_rgb_led(LED_CYCLE, (now & 0x2000) ? c_ORANGE : c_OFF);
 
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
@@ -152,7 +153,7 @@ void handle_system_mode(void)
 		if (digin[CYCLE_BUTTON].edge == -1)
 		{
 			digin[CYCLE_BUTTON].edge = 0;
-			delay_ms(50); //to de-noise the cycle button
+			HAL_Delay(50); //to de-noise the cycle button
 
 			switch(system_mode_cur)
 			{
@@ -172,7 +173,7 @@ void handle_system_mode(void)
 				case(SET_FREE_RUNNING_PING):
 					settings.free_running_ping = settings.free_running_ping ? 0 : 1;
 					break;
-				
+
 				case(SET_TRIGIN_FUNCTION):
 					if (++settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
 						settings.trigin_function = 0;
@@ -187,9 +188,9 @@ void handle_system_mode(void)
 			}
 		}
 	}
-	
+
 	write_settings();
-	
+
 	while(digin[CYCLE_BUTTON].state || digin[PING_BUTTON].state)
 	{
 		set_rgb_led(LED_PING, c_WHITE);
@@ -198,15 +199,15 @@ void handle_system_mode(void)
 		set_rgb_led(LED_ENVB, c_PURPLE);
 		set_inverted_led(PWM_EOF_LED, 1024);
 
-		delay_ms(50);
+		HAL_Delay(50);
 
 		set_rgb_led(LED_PING, c_OFF);
 		set_rgb_led(LED_CYCLE, c_OFF);
 		set_rgb_led(LED_ENVA, c_OFF);
 		set_rgb_led(LED_ENVB, c_OFF);
 		set_inverted_led(PWM_EOF_LED, 0);
-		
-		delay_ms(50);
+
+		HAL_Delay(50);
 	}
 	digin[CYCLE_BUTTON].edge = 0;
 	digin[PING_BUTTON].edge = 0;

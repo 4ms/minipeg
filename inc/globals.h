@@ -10,7 +10,6 @@
 #include <stm32g4xx.h>
 #include "adc.h"
 #include "calibration.h"
-#include "delay.h"
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
 #include "envelope_out.h"
@@ -25,15 +24,11 @@
 #include "system.h"
 
 
-#define TICKS_PER_MS 20
+#define TICKS_PER_MS 1
 
-#define ADC_DRIFT 16
-#define USER_INPUT_POLL_TIME 80
-#define DIV_ADC_HYSTERESIS 16
 
 #define HOLDTIMECLEAR 20000 //4800000
 #define LIMIT_SKEW_TIME 50
-#define NUM_ADC_CYCLES_BEFORE_TRANSITION 100 //10 is about 100ms
 
 //SYSTEM_MODE_HOLD_TIME: how long the ping button must be held down to enter System Mode
 //200000 is about 5s
@@ -56,30 +51,7 @@
 #define QNT_REPHASES_WHEN_CYCLE_OFF 0
 #define CYCLE_REPHASES_DIV_PING 1
 
-#define SCALE_PLATEAU_WIDTH 100
-#define SCALE_PLATEAU_LOW (2048 - (SCALE_PLATEAU_WIDTH/2))
-#define SCALE_PLATEAU_HIGH	(2048 + (SCALE_PLATEAU_WIDTH/2))
-
-#define OFFSET_PLATEAU_WIDTH 100
-#define OFFSET_PLATEAU_LOW (2048 - (OFFSET_PLATEAU_WIDTH/2))
-#define OFFSET_PLATEAU_HIGH	(2048 + (OFFSET_PLATEAU_WIDTH/2))
 
 
-enum envelopeStates {
-	WAIT = 0,
-	RISE = 1,
-	SUSTAIN = 2,
-	FALL = 3,
-	TRANSITION = 4
-};
 
-static inline uint16_t diff(uint16_t a, uint16_t b){
-	if (a>b) return (a-b);
-	else return (b-a);
-}
-
-static inline uint32_t diff32(uint32_t a, uint32_t b){
-	if (a>b) return (a-b);
-	else return(b-a);
-}
 

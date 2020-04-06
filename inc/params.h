@@ -4,17 +4,16 @@
 
 #pragma once
 
-#include <stm32g0xx.h>
+#include <stdint.h>
 
+// enum AnalogParams {
+// 	DIVMULT,
+// 	SHAPE,
+// 	SCALE,
+// 	OFFSET,
 
-enum AnalogParams {
-	DIVMULT,
-	SHAPE,
-	SCALE,
-	OFFSET,
+// 	NUM_ANALOG_PARAMS
+// };
 
-	NUM_ANALOG_PARAMS
-};
-
-void update_analog(void);
+void update_adc_params(uint8_t force_params_update);
 

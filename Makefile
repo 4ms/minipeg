@@ -88,8 +88,13 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # Uncomment to compile unoptimized:
 
 # build/src/main.o: OPTFLAG = -O0
-# build/src/adc.o: OPTFLAG = -O0
+# build/src/params.o: OPTFLAG = -O0
+# build/src/envelope_calcs.o: OPTFLAG = -O0
+build/src/envelope_out.o: OPTFLAG = -O0
+# build/src/dig_inouts.o: OPTFLAG = -O0
+# build/src/env_transition.o: OPTFLAG = -O0
 # build/src/analog_conditioning.o: OPTFLAG = -O0
+# build/src/adc.o: OPTFLAG = -O0
 # build/src/hardware_tests.o: OPTFLAG = -O0
 # build/src/dac.o: OPTFLAG = -O0
 # build/libhwtests/%.o: OPTFLAG = -O0
@@ -98,8 +103,7 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # build/src/debounced_digins.o: OPTFLAG = -O0
 # build/src/flash_user.o: OPTFLAG = -O0
 # build/src/flash.o: OPTFLAG = -O0
-# build/src/envelope_out.o: OPTFLAG = -O0
-$(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+# $(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
 
 all: Makefile $(BIN) $(HEX)
 

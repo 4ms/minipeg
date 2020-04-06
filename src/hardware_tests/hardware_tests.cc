@@ -2,7 +2,6 @@
 extern "C" {
 #include "adc.h"
 #include "calibration.h"
-#include "delay.h"
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
 #include "envelope_out.h"
@@ -38,7 +37,7 @@ extern "C" void test_hardware(void) {
 	uint32_t repeats = 10;
 	while (repeats--) {
 		animate_success();
-		HAL_Delay(2000);
+		HAL_Delay(100);
 	}
 }
 

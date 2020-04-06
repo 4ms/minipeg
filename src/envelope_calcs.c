@@ -23,6 +23,15 @@ int8_t get_clk_div_nominal(uint16_t adc_val){
 	return(P_array[NUM_DIVMULTS-1]);
 }
 
+void calc_rise_fall_incs(struct PingableEnvelope *e)
+{
+	e->fall_time = get_fall_time(e->skew, e->div_clk_time);
+	e->rise_time = e->div_clk_time - e->fall_time;
+	e->rise_inc = (1UL<<31) / e->rise_time;
+	e->fall_inc = (1UL<<31) / e->fall_time;
+}
+
+
 uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time)
 {
 	if (clock_divide_amount>1)
@@ -60,17 +69,15 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)
 
 		else if (skew<=25)
 		{
-			//return smaller of skew_portion and squared link funcion, but at least 50 
+			//return smaller of skew_portion and squared link funcion, but at least 50
 			if (skew_portion<50) skew_portion=50;
-
 			u=skew*skew*2;
-		
 			return (skew_portion<u) ? skew_portion : u;
-			
+
 		}
-		else if (skew>=255) 
+		else if (skew>=255)
 			return(div_clk_time-20);
-		
+
 		else if (skew>200)
 		{
 			if (skew_portion>(div_clk_time-20))
@@ -89,8 +96,8 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)
 
 		else if ((skew>125) && (skew<=129))
 			return(div_clk_time>>1);
-		
-		else 
+
+		else
 			return (skew * (div_clk_time >> 8));
 	}
 
@@ -185,3 +192,4 @@ int16_t calc_curve(int16_t phase, char cur_curve)
 		return (phase*(127-cur_curve) + t_loga*cur_curve) >> 7;
 	}
 }
+
