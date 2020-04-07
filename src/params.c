@@ -13,9 +13,10 @@ extern uint32_t clk_time;
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
-extern int16_t scale, offset, shift;
 extern int16_t cycle_latched_offset;
 extern uint8_t adjusting_shift_mode;
+
+int32_t scale, offset, shift;
 
 static uint16_t shape;
 static int8_t read_divmult(void);
@@ -37,6 +38,12 @@ static int16_t plateau(int16_t val, const uint16_t low, const uint16_t high);
 
 #define ADC_DRIFT 16
 #define DIV_ADC_HYSTERESIS 16
+
+void init_params(void)
+{
+	//Todo: store shift value in flash
+	shift = 2048; //=settings.shift_value
+}
 
 void update_adc_params(uint8_t force_params_update)
 {
@@ -108,7 +115,7 @@ static uint8_t read_shape_scale_offset(void)
 	if (adjusting_shift_mode) 
 		shift = 2048 + tmp;
 	else 
-		offset = tmp;
+		offset = tmp - 2048;
 
 	//Todo: plateau the CV
 	cv = 2048 - analog[CV_SHAPE].lpf_val;

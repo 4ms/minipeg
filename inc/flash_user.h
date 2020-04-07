@@ -60,6 +60,8 @@ struct SystemSettings {
 	uint16_t 				lock_cal_r, lock_cal_g, lock_cal_b;
 	uint16_t 				enva_cal_r, enva_cal_g, enva_cal_b;
 	uint16_t 				envb_cal_r, envb_cal_g, envb_cal_b;
+
+	int32_t 				shift_value;
 };
 
 HAL_StatusTypeDef write_settings(void);

@@ -4,7 +4,7 @@
 #include "env_transition.h"
 #include "timers.h"
 
-extern int16_t scale, offset, shift;
+extern int32_t scale, offset, shift;
 extern uint32_t clk_time;
 extern uint8_t triga_down;
 extern uint8_t trigq_down;
@@ -14,7 +14,7 @@ extern struct SystemSettings settings;
 
 static void do_reset_envelope(struct PingableEnvelope *e);
 static uint16_t update_envelope(struct PingableEnvelope *e);
-static void output_env_val(uint32_t rawA, uint32_t rawB);
+static void output_env_val(uint16_t rawA, uint16_t rawB);
 static void handle_env_segment_end(struct PingableEnvelope *e, uint8_t end_segment_flag);
 static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag);
 
@@ -232,24 +232,21 @@ static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag)
 }
 
 
-static int32_t calc_dacval(uint32_t raw_env_val)
+static int32_t scale_shift_offset_env(uint16_t raw_env_val)
 {
-	int32_t env;
-	env = (int32_t)raw_env_val;
-	env -= 2048;
-	env += offset;
-	env *= scale;
-	env >>= 12;
-	env += shift;
+	int32_t env = (int32_t)raw_env_val;
+	env = (  ( (env + offset) * scale ) / 4096  ) + shift;
 
 	if (env>4095) env = 4095;
 	else if (env<0) env = 0;
+
+	return env;
 }
 
-static void output_env_val(uint32_t rawA, uint32_t rawB)
+static void output_env_val(uint16_t rawA, uint16_t rawB)
 {
-	int32_t envA = calc_dacval(rawA);
-	int32_t envB = calc_dacval(rawB);
+	int32_t envA = scale_shift_offset_env(rawA);
+	int32_t envB = scale_shift_offset_env(rawB);
 
 	dac_out(DAC_ENVA, envA);
 	dac_out(DAC_ENVB, envB);

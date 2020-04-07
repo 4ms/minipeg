@@ -50,9 +50,6 @@ uint8_t system_mode_cur=0;
 uint8_t initial_cycle_button_state=0;
 char update_cycle_button_now=0;
 
-int16_t offset=0;
-int16_t scale=0;
-int16_t shift=2048;
 uint8_t adjusting_shift_mode=0;
 int16_t cycle_latched_offset;
 
@@ -110,6 +107,8 @@ int main(void)
 
 	init_dac(kDacSampleRate);
 	assign_dac_update_callback(&update_envelopes);
+
+	init_params();
 
 	//Todo: store each envelope running separately
 	if (settings.start_cycle_on)
