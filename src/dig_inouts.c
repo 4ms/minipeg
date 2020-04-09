@@ -34,7 +34,7 @@ void init_dig_inouts(void){
 	HAL_GPIO_Init(TRIG_JACK_GPIO_Port, &gpio);
 	gpio.Pin = PING_JACK_Pin;	
 	HAL_GPIO_Init(PING_JACK_GPIO_Port, &gpio);
-	gpio.Pin = CYCLE_JACK_Pin;
-	HAL_GPIO_Init(CYCLE_JACK_GPIO_Port, &gpio);
+	gpio.Pin = AUXTRIG_JACK_Pin;
+	HAL_GPIO_Init(AUXTRIG_JACK_GPIO_Port, &gpio);
 }
 

@@ -4,7 +4,7 @@ extern "C" {
 #include "calibration.h"
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
-#include "envelope_out.h"
+#include "env_update.h"
 #include "flash_user.h"
 #include "leds.h"
 #include "pwm.h"

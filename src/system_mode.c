@@ -180,7 +180,7 @@ void handle_system_mode(void)
 					break;
 
 				case(SET_CYCLEJACK_FUNCTION):
-					if (++settings.cycle_jack_behavior >= NUM_CYCLEJACK_FUNCTIONS)
+					if (++settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
 						settings.cycle_jack_behavior = 0;
 					break;
 				default:

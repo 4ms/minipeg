@@ -37,7 +37,7 @@ extern volatile uint32_t ping_irq_timestamp;
 extern volatile uint8_t using_tap_clock;
 
 static void debounce_irq(void) {
-	uint8_t pin_read;
+	uint32_t pin_read;
 	uint8_t t;
 
 	for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
@@ -48,28 +48,30 @@ static void debounce_irq(void) {
 		else if (i==CYCLE_BUTTON)
 			pin_read = CYCLEBUT;
 
+		else if (i==LOCK_BUTTON)
+			pin_read = LOCKBUT;
+
 		else if (i==TRIGGER_JACK)
 			pin_read = TRIG_JACK_READ;
 
-		else if (i==CYCLE_JACK)
-			pin_read = CYCLE_JACK_READ;
+		else if (i==AUXTRIG_JACK)
+			pin_read = AUXTRIG_JACK_READ;
 
 		else if (i==PING_JACK)
 			pin_read = PING_JACK_READ;
 
-		if (pin_read) t=0x0000;
-		else t=0x0001;
-
-		digin[i].history=(digin[i].history<<1) | t;
+		digin[i].history <<= 1;
+		digin[i].history |= pin_read ? 0x0000 : 0x0001;
 
 		if (digin[i].history==0xFFFE)
 		{
 			digin[i].state = 1;
 			digin[i].edge = 1;
-			if (i==PING_JACK) {
-				ping_irq_timestamp=pingtmr;
-				pingtmr=0;
-				using_tap_clock=0;
+			if (i==PING_JACK)
+			{
+				ping_irq_timestamp = pingtmr;
+				pingtmr = 0;
+				using_tap_clock = 0;
 			}
 		}
 		else if (digin[i].history==0x0001)

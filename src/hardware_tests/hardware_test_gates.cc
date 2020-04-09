@@ -3,14 +3,14 @@
 #include "leds.h"
 
 #include "hardware_test_util.h"
-#include "../libhwtests/inc/GateInChecker.h"
-#include "../libhwtests/inc/GateOutput.h"
+#include "GateInChecker.h"
+#include "GateOutput.h"
 
 static bool read_jack(uint8_t gate_num) {
 	if (gate_num==0)
 		return PING_JACK_READ ? true : false;
 	else if (gate_num==1)
-		return CYCLE_JACK_READ ? true : false;
+		return AUXTRIG_JACK_READ ? true : false;
 	else if (gate_num==2)
 		return TRIG_JACK_READ ? true : false;
 	else
@@ -51,7 +51,7 @@ static void set_trigout(bool state) {
 }
 
 void test_gate_out() {
-	GateOutput trigout{2, 0.25f, 0.0f, 2140000};
+	GateOutput trigout{2, 0.25f, 0.0f, 1140000};
 
 	trigout.assign_gate_onoff_func(set_trigout);
 	trigout.reset();

@@ -52,7 +52,11 @@ void default_settings(void)
 	settings.trigout_is_trig = 0;
 	settings.trigin_function = TRIGIN_IS_ASYNC;
 	settings.trigout_function = TRIGOUT_IS_ENDOFFALL;
+
+	settings.auxtrigin_assignment = AUX_ENV_TRIG;
+	settings.auxtrigin_function = TRIGIN_IS_ASYNC_SUSTAIN;
 	settings.cycle_jack_behavior = CYCLE_JACK_RISING_EDGE_TOGGLES;
+
 	settings.start_clk_time = 8000;
 	settings.start_cycle_on = 1;
 }

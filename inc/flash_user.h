@@ -7,10 +7,19 @@
 #include <stdint.h>
 #include <stm32g4xx.h>
 
-enum CycleJackBehavior {
+#include "envelope_calcs.h"
+enum CycleJackBehaviors {
 	CYCLE_JACK_RISING_EDGE_TOGGLES,
-	CYCLE_JACK_BOTH_EDGES_TOGGLE,
-	NUM_CYCLEJACK_FUNCTIONS
+	CYCLE_JACK_BOTH_EDGES_TOGGLES,
+
+	NUM_CYCLEJACK_BEHAVIORS
+};
+
+enum AuxTrigJackAssignment {
+	AUX_ENV_TRIG,
+	CYCLE_TOGGLE,
+
+	NUM_AUX_TRIG_JACK_ASSIGNMENTS
 };
 
 enum TrigOutFunctions {
@@ -38,7 +47,7 @@ enum CenterDetentPots{
 	NUM_CENTER_DETENT_POTS
 };
 
-#define VALID_SETTINGS 0xC001
+#define VALID_SETTINGS 0xC002
 
 struct SystemSettings {
 	uint16_t				is_valid;
@@ -50,7 +59,10 @@ struct SystemSettings {
 	uint8_t 				trigout_is_trig;
 	enum TrigInFunctions 	trigin_function;
 	enum TrigOutFunctions 	trigout_function;
-	enum CycleJackBehavior 	cycle_jack_behavior;
+
+	enum AuxTrigJackAssignment auxtrigin_assignment;
+	enum TrigInFunctions 	auxtrigin_function;
+	enum CycleJackBehaviors	cycle_jack_behavior;
 
 	uint32_t				start_clk_time;
 	uint8_t					start_cycle_on;
@@ -63,6 +75,11 @@ struct SystemSettings {
 
 	int32_t 				shift_value;
 };
+
+
+//The following are not user modifiable, change at your own risk!
+#define QNT_REPHASES_WHEN_CYCLE_OFF 0
+#define CYCLE_REPHASES_DIV_PING 1
 
 HAL_StatusTypeDef write_settings(void);
 uint8_t read_settings(void);
