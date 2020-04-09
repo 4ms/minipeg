@@ -43,6 +43,10 @@ void init_params(void)
 {
 	//Todo: store shift value in flash
 	shift = 2048; //=settings.shift_value
+	offset = 0;
+	scale = 0;
+
+	a.locked = 0;//Todo: placeholder
 }
 
 void update_adc_params(uint8_t force_params_update)
@@ -57,29 +61,37 @@ void update_adc_params(uint8_t force_params_update)
 		if (read_shape_scale_offset())
 		{
 			calc_skew_and_curves(shape, &m.skew, &m.next_curve_rise, &m.next_curve_fall);
-			reset_transition_counter();
-			update_env_tracking(&m);
 			calc_rise_fall_incs(&m);
-			//if (!a.locked) ...
+			update_env_tracking(&m);
+
+			copy_skew_and_curves(&a, &m);
+			copy_rise_fall_incs(&a, &m);
+			update_env_tracking(&a);
+
+			reset_transition_counter();
 		}
 
-		if (m.env_state!=TRANSITION || !m.envelope_running)
+		if (m.env_state!=TRANSITION || !m.envelope_running) //Todo: remove !m.envelope_running and test. if m.env_state==TRANSITION, then m.envelope_running should never be true
 		{
 			int8_t new_clock_divider_amount = read_divmult();
 			if (new_clock_divider_amount != 0)
 			{
-				reset_transition_counter();
-				update_env_tracking(&m);
 				update_clock_divider_amount(&m, new_clock_divider_amount);
 				calc_rise_fall_incs(&m);
-				//if (!a.locked) ...
+				update_env_tracking(&m);
+
+				update_clock_divider_amount(&a, new_clock_divider_amount);
+				copy_rise_fall_incs(&a, &m);
+				update_env_tracking(&a);
+
+				reset_transition_counter();
 			}
 		}
 
-		if (check_to_start_transition()) 
+		if (check_to_start_transition())
 		{
 			do_start_transition(&m);
-			//if (!a.locked) do_start_transition(&a);
+			do_start_transition(&a);
 		}
 	}
 	else
@@ -90,7 +102,6 @@ void update_adc_params(uint8_t force_params_update)
 			condition_analog();
 		}
 	}
-
 }
 
 
@@ -202,23 +213,30 @@ static int16_t plateau(int16_t val, const uint16_t low, const uint16_t high){
 
 static void update_env_tracking(struct PingableEnvelope *e)
 {
-	if (e->envelope_running && e->sync_to_ping_mode)
-		e->tracking_changedrisefalls = 1;
+	if (!e->locked)
+	{
+		if (e->envelope_running && e->sync_to_ping_mode)
+			e->tracking_changedrisefalls = 1;
 
-	e->async_env_changed_shape = 1;
+		e->async_env_changed_shape = 1;
+	}
 }
 
 static void update_clock_divider_amount(struct PingableEnvelope *e, int16_t new_clock_divider_amount)
 {
-	e->clock_divider_amount = new_clock_divider_amount;
-
-	if (clk_time)
+	if (!e->locked)
 	{
-		if (e->ping_div_ctr < 0) e->ping_div_ctr=0;
-		if (e->ping_div_ctr > e->clock_divider_amount) 
-			e->ping_div_ctr = e->clock_divider_amount;
+		e->clock_divider_amount = new_clock_divider_amount;
 
-		e->div_clk_time = get_clk_div_time(new_clock_divider_amount, clk_time);
+		if (clk_time)
+		{
+			if (e->ping_div_ctr < 0) e->ping_div_ctr=0;
+			if (e->ping_div_ctr > e->clock_divider_amount) 
+				e->ping_div_ctr = e->clock_divider_amount;
+
+			e->div_clk_time = get_clk_div_time(new_clock_divider_amount, clk_time);
+		}
 	}
 }
+
 

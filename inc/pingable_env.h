@@ -53,7 +53,12 @@ struct PingableEnvelope {
 	char outta_sync;
 
 	uint8_t locked;
+
+	uint8_t trigq_down;
+	uint8_t triga_down;
 };
 
 void init_pingable_env(struct PingableEnvelope *e);
+void copy_rise_fall_incs(struct PingableEnvelope *dst, struct PingableEnvelope *src);
+void copy_skew_and_curves(struct PingableEnvelope *dst, struct PingableEnvelope *src);
 

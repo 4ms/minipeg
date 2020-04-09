@@ -38,6 +38,8 @@ uint8_t check_to_start_transition(void)
 void do_start_transition(struct PingableEnvelope *e)
 {
 	uint32_t elapsed_time;
+	if (e->locked)
+		return;
 
 	if (e->div_clk_time && e->sync_to_ping_mode)
 	{
@@ -94,19 +96,23 @@ void start_transition(struct PingableEnvelope *e, uint32_t elapsed_time)
 	uint64_t time_tmp;
 	uint16_t segphase_endpoint;
 
+	if (e->locked)
+		return;
+
 	if (elapsed_time > e->div_clk_time)
 		elapsed_time -= e->div_clk_time;
 
 	if (elapsed_time <= e->rise_time)
-	{ //We're rising
-		time_tmp = ((uint64_t)elapsed_time) << 12; //12 bits
+	{
+		time_tmp = ((uint64_t)elapsed_time) << 12;
 		segphase_endpoint = time_tmp/e->rise_time;
 		if (segphase_endpoint > 4095)
 			segphase_endpoint = 4095;
 		e->accum_endpoint = segphase_endpoint << 19;
 		segphase_endpoint = calc_curve(segphase_endpoint, e->next_curve_rise);
 		e->next_env_state = RISE;
-	} else
+	}
+	else
 	{
 		elapsed_time -= e->rise_time;
 		time_tmp = ((uint64_t)elapsed_time) << 12;

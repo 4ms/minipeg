@@ -16,6 +16,7 @@ enum ShapeRegions {
 	SYM2RAMPDOWN_LOG2LIN,
 	RAMPDOWN_EXP2LIN,
 
+
 	NUM_SHAPE_REGIONS
 };
 enum PureSkews {
@@ -35,3 +36,4 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time);
 int16_t calc_curve(int16_t t_dacout, char cur_curve);
 void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_rise, uint8_t *next_curve_fall);
 void calc_rise_fall_incs(struct PingableEnvelope *e);
+void calc_div_clk_time(struct PingableEnvelope *e, uint32_t new_clk_time);

@@ -23,14 +23,14 @@ int8_t get_clk_div_nominal(uint16_t adc_val){
 	return(P_array[NUM_DIVMULTS-1]);
 }
 
-void calc_rise_fall_incs(struct PingableEnvelope *e)
+void calc_div_clk_time(struct PingableEnvelope *e, uint32_t new_clk_time)
 {
-	e->fall_time = get_fall_time(e->skew, e->div_clk_time);
-	e->rise_time = e->div_clk_time - e->fall_time;
-	e->rise_inc = (1UL<<31) / e->rise_time;
-	e->fall_inc = (1UL<<31) / e->fall_time;
+	if (!e->locked)
+	{
+		e->div_clk_time = get_clk_div_time(e->clock_divider_amount, new_clk_time);
+		calc_rise_fall_incs(e);
+	}
 }
-
 
 uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time)
 {
@@ -42,6 +42,16 @@ uint32_t get_clk_div_time(int8_t clock_divide_amount, uint32_t clk_time)
 		return clk_time;
 }
 
+void calc_rise_fall_incs(struct PingableEnvelope *e)
+{
+	if (!e->locked)
+	{
+		e->fall_time = get_fall_time(e->skew, e->div_clk_time);
+		e->rise_time = e->div_clk_time - e->fall_time;
+		e->rise_inc = (1UL<<31) / e->rise_time;
+		e->fall_inc = (1UL<<31) / e->fall_time;
+	}
+}
 
 //skew: 0..255, 0 means fall=min
 uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time)

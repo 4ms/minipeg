@@ -12,7 +12,6 @@
 #include "calibration.h"
 #include "dig_inouts.h"
 #include "envelope_calcs.h"
-#include "envelope_out.h"
 #include "flash_user.h"
 #include "leds.h"
 #include "pwm.h"
@@ -46,10 +45,6 @@
 //1 is 212us
 #define TRIGOUT_TRIG_TIME 91
 #define TRIGOUT_MIN_GATE_TIME 37
-
-//The following are not user modifiable, change at your own risk!
-#define QNT_REPHASES_WHEN_CYCLE_OFF 0
-#define CYCLE_REPHASES_DIV_PING 1
 
 
 

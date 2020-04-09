@@ -92,6 +92,7 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # build/src/envelope_calcs.o: OPTFLAG = -O0
 # build/src/envelope_out.o: OPTFLAG = -O0
 # build/src/dac.o: OPTFLAG = -O0
+# build/src/debounced_digins.o: OPTFLAG = -O0
 # build/src/dig_inouts.o: OPTFLAG = -O0
 # build/src/env_transition.o: OPTFLAG = -O0
 # build/src/analog_conditioning.o: OPTFLAG = -O0

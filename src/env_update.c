@@ -1,4 +1,7 @@
-#include "globals.h"
+#include "env_update.h"
+#include "trigout.h"
+#include "leds.h"
+#include "flash_user.h"
 #include "dac.h"
 #include "pingable_env.h"
 #include "env_transition.h"
@@ -6,20 +9,22 @@
 
 extern int32_t scale, offset, shift;
 extern uint32_t clk_time;
-extern uint8_t triga_down;
-extern uint8_t trigq_down;
 extern uint8_t cycle_but_on;
 extern struct PingableEnvelope m, a;
 extern struct SystemSettings settings;
+extern volatile uint8_t using_tap_clock;
+extern volatile uint32_t tapouttmr;
+extern volatile uint32_t pingtmr;
 
 static void do_reset_envelope(struct PingableEnvelope *e);
 static uint16_t update_envelope(struct PingableEnvelope *e);
 static void output_env_val(uint16_t rawA, uint16_t rawB);
 static void handle_env_segment_end(struct PingableEnvelope *e, uint8_t end_segment_flag);
 static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag);
+static void start_envelope_in_sync(struct PingableEnvelope *e);
+static void start_envelope_immediate(struct PingableEnvelope *e);
 
-
-void update_envelopes(void)
+void update_all_envelopes(void)
 {
 	m.divpingtmr++;
 	a.divpingtmr++;
@@ -31,14 +36,6 @@ void update_envelopes(void)
 }
 
 
-/*********UPDATE THE ENVELOPE************
- *
- * -restart if needed
- * -calculate new position
- * -change curve step (RISE/FALL)
- * -output EOR/EOF/HalfR
- *
- ****************************************/
 const uint32_t k_accum_max = (0xFFF << 19);
 const uint32_t k_accum_min = (0x001 << 19);
 
@@ -68,7 +65,6 @@ static uint16_t update_envelope(struct PingableEnvelope *e)
 	{
 		// if (e->env_state==TRANSITION) DEBUGON;
 		// else DEBUGOFF;
-
 		switch (e->env_state)
 		{
 			case (RISE):
@@ -78,7 +74,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e)
 				{
 					e->accum = k_accum_max;
 					e->segphase = 0x0FFF;
-					if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
+					if (e->triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 						end_segment_flag = SUSTAIN;
 					else
 						end_segment_flag = FALL;
@@ -95,7 +91,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e)
 				eof_off();
 				hr_on();
 				e->segphase = 0x0FFF;
-				if (triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
+				if (e->triga_down && settings.trigin_function==TRIGIN_IS_ASYNC_SUSTAIN)
 				{
 					e->accum = k_accum_max;
 					e->async_env_changed_shape = 1;
@@ -207,7 +203,7 @@ static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag)
 		e->curve_fall = e->next_curve_fall;
 
 		//Loop if needed
-		if (cycle_but_on || trigq_down || e->reset_nextping_flag)
+		if (cycle_but_on || e->trigq_down || e->reset_nextping_flag)
 		{
 			//Todo: SPEG code changed order here, check for race conditions
 			if (e->sync_to_ping_mode)
@@ -230,7 +226,6 @@ static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag)
 		}
 	}
 }
-
 
 static int32_t scale_shift_offset_env(uint16_t raw_env_val)
 {
@@ -294,3 +289,161 @@ static void do_reset_envelope(struct PingableEnvelope *e)
 	e->reset_nextping_flag = 0;
 }
 
+
+void check_restart_async_env(struct PingableEnvelope *e)
+{
+	if (e->async_phase_diff > e->div_clk_time) 
+		e->async_phase_diff = 0; //fail-safe measure
+
+	if (!e->sync_to_ping_mode
+			&& cycle_but_on
+			&& (e->divpingtmr >= e->async_phase_diff)
+			&& !e->async_env_changed_shape
+			&& e->ready_to_start_async
+			&& !e->triga_down)
+	{
+		e->reset_now_flag = 1;
+		e->ready_to_start_async = 0;
+		e->async_env_changed_shape = 0;
+	}
+}
+
+void sync_env_to_clk(struct PingableEnvelope *e)
+{
+	if (!e->sync_to_ping_mode)
+		e->ready_to_start_async=1;
+	else
+	{ 
+		if (e->reset_nextping_flag || cycle_but_on || e->trigq_down )
+		{
+			if (!e->tracking_changedrisefalls)
+			{
+				e->reset_now_flag = 1;
+				e->reset_nextping_flag = 0;
+			}
+		}  
+		e->ping_div_ctr = e->clock_divider_amount; //make sure it restarts the next ping
+	}
+}
+
+uint8_t resync_on_ping(struct PingableEnvelope *e)
+{
+	if (cycle_but_on || e->trigq_down || e->reset_nextping_flag || e->envelope_running)
+	{
+		if (e->clock_divider_amount > 1) //we're dividing the clock, so resync on every N pings
+		{
+			if (e->envelope_running && !e->tracking_changedrisefalls)
+				e->ping_div_ctr++;
+
+			if (e->ping_div_ctr>=e->clock_divider_amount)
+			{
+				e->divpingtmr = 0;
+				sync_env_to_clk(e); 
+				e->ping_div_ctr = 0;
+				//Todo: two differnces: 1) reset_nextping_flag is only cleared if big boolean is true, but below it's cleared always. 2) ready_to_start_async is set if we're not syncing to ping, but below it's not touched
+
+				// if (e->sync_to_ping_mode && !e->tracking_changedrisefalls && (cycle_but_on || e->reset_nextping_flag || e->trigq_down))
+				// 	e->reset_now_flag = 1;
+				// e->reset_nextping_flag = 0;
+				// e->ping_div_ctr = 0;
+				// e->divpingtmr = 0;
+
+				return 1;
+			}
+
+		} else {
+			//re-sync on every ping, since we're mult or = to the clock
+			if (e->sync_to_ping_mode 
+					&& !e->tracking_changedrisefalls 
+					&& (e->reset_nextping_flag || cycle_but_on || e->trigq_down)
+				)
+				e->reset_now_flag = 1;
+
+			e->reset_nextping_flag = 0; //FYI: reset_next_ping goes low only right after an envelope starts (on the ping, of course)
+			e->divpingtmr = 0;
+		}
+	}
+	return 0;
+}
+
+void start_envelope(struct PingableEnvelope *e)
+{
+	if (!e->envelope_running)
+	{
+		if (e->sync_to_ping_mode)
+			start_envelope_in_sync(e);
+		else
+			start_envelope_immediate(e);
+	}
+	else if (CYCLE_REPHASES_DIV_PING)
+		e->ping_div_ctr = e->clock_divider_amount;
+}
+
+static void start_envelope_immediate(struct PingableEnvelope *e)
+{
+	e->envelope_running = 1;
+	e->reset_now_flag = 1;
+	e->ready_to_start_async = 0;
+	e->async_phase_diff = e->divpingtmr;
+}
+
+static void start_envelope_in_sync(struct PingableEnvelope *e)
+{
+	//Todo: use floats
+	uint64_t time_tmp = 0;
+	uint32_t elapsed_time;
+
+	e->envelope_running=1;
+
+	if (using_tap_clock)
+		elapsed_time = tapouttmr;
+	else
+		elapsed_time = pingtmr;
+
+	if (e->clock_divider_amount <= 1)
+	{
+		while (elapsed_time > e->div_clk_time)
+			elapsed_time -= e->div_clk_time;
+	} else {
+		while (elapsed_time <= e->div_clk_time)
+			elapsed_time += clk_time;
+		elapsed_time -= clk_time;
+	}
+
+	if (elapsed_time <= e->rise_time)
+	{
+		time_tmp = ((uint64_t)elapsed_time) << 12;
+		e->accum = time_tmp / e->rise_time;
+		e->accum <<= 19;
+		e->env_state = RISE;
+		e->curve_rise = e->next_curve_rise;
+	} else {
+		elapsed_time = elapsed_time - e->rise_time;
+		time_tmp = ((uint64_t)elapsed_time) << 12;
+		e->accum = 4096 - (time_tmp/e->fall_time);
+		e->accum <<= 19;
+		e->env_state = FALL;
+		e->curve_fall = e->next_curve_fall;
+
+	}
+	e->ping_div_ctr = e->clock_divider_amount;
+}
+
+void stop_envelope(struct PingableEnvelope *e)
+{
+	if (!e->locked)
+	{
+		e->env_state = WAIT;
+		e->envelope_running = 0;
+		e->divpingtmr = 0;
+		e->div_clk_time = 0;
+		e->accum = 0;
+
+		//Todo: make sure the following doesn't mess up stopping tap clock 
+		//by holding ping down for long-press
+		e->rise_time = 0;
+		e->fall_time = 0;
+		e->rise_inc = 0;
+		e->fall_inc = 0;
+	}
+}
