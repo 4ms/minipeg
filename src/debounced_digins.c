@@ -64,8 +64,6 @@ static void debounce_irq(void) {
 
 		if (digin[i].history==0xFFFE)
 		{
-			if (i==TRIGGER_JACK)
-				DEBUGON;
 			digin[i].state = 1;
 			digin[i].edge = 1;
 			if (i==PING_JACK)
@@ -81,5 +79,4 @@ static void debounce_irq(void) {
 			digin[i].edge = -1;
 		}
 	}
-	DEBUGOFF;
 }
