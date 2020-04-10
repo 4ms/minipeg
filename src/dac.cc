@@ -19,7 +19,7 @@ void dac_out(enum DACs dac, uint16_t val) {
 		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 4095-val);
 	}
 	else if (dac==DAC_ENVB) {
-		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 4095-val);
+		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, val);
 	}
 }
 
@@ -66,6 +66,14 @@ static void init_dac_update_tmr(uint32_t freq) {
 
 void assign_dac_update_callback(void (*callbackfunc)(void)) {
 	start_timer_IRQ(DAC_UPDATE_TIMER_NUM, reinterpret_cast<void *>(callbackfunc));
+}
+
+void pause_dac_timer(void) {
+	pause_timer_IRQ(DAC_UPDATE_TIMER_NUM);
+}
+
+void resume_dac_timer(void) {
+	resume_timer_IRQ(DAC_UPDATE_TIMER_NUM);
 }
 
 void HAL_DAC_MspInit(DAC_HandleTypeDef* hdac) {
