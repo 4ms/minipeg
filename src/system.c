@@ -51,6 +51,7 @@ static void set_option_bytes_ignore_BOOT0_pin() {
 	OBInit.USERType = OB_USER_nBOOT0 | OB_USER_nSWBOOT0;
 	OBInit.USERConfig = OB_BOOT0_FROM_OB | OB_nBOOT0_SET;
 	HAL_FLASHEx_OBProgram(&OBInit);
+	HAL_FLASH_OB_Lock();
 	HAL_FLASH_Lock();
 }
 
