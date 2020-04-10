@@ -36,7 +36,8 @@ BIN 	= $(BUILDDIR)/$(BINARYNAME).bin
 
 ARCH 	= arm-none-eabi
 CC 		= $(ARCH)-gcc
-LD 		= $(ARCH)-gcc
+CXX 	= $(ARCH)-g++
+LD 		= $(ARCH)-g++
 AS 		= $(ARCH)-as
 OBJCPY 	= $(ARCH)-objcopy
 OBJDMP 	= $(ARCH)-objdump
@@ -119,19 +120,23 @@ $(HEX): $(ELF)
 	$(SZ) $(SZOPTS) $(ELF)
 
 $(ELF): $(OBJECTS)
-	$(LD) $(LFLAGS) -o $@ $(OBJECTS)
+	@echo "Linking..."
+	@$(LD) $(LFLAGS) -o $@ $(OBJECTS)
 
 $(BUILDDIR)/%.o: %.c $(BUILDDIR)/%.d
-	mkdir -p $(dir $@)
-	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CFLAGS) $< -o $@
+	@mkdir -p $(dir $@)
+	@echo "Compiling $< at $(OPTFLAG)"
+	@$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CFLAGS) $< -o $@
 
 $(BUILDDIR)/%.o: %.cpp $(BUILDDIR)/%.d
-	mkdir -p $(dir $@)
-	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
+	@mkdir -p $(dir $@)
+	@echo "Compiling $< at $(OPTFLAG)"
+	@$(CXX) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
 
 $(BUILDDIR)/%.o: %.cc $(BUILDDIR)/%.d
-	mkdir -p $(dir $@)
-	$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
+	@mkdir -p $(dir $@)
+	@echo "Compiling $< at $(OPTFLAG)"
+	@$(CXX) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
 
 $(BUILDDIR)/%.o: %.s
 	mkdir -p $(dir $@)
