@@ -38,7 +38,6 @@ extern volatile uint8_t using_tap_clock;
 
 static void debounce_irq(void) {
 	uint32_t pin_read;
-	uint8_t t;
 
 	for (uint8_t i=0; i<NUM_DEBOUNCED_DIGINS; i++)
 	{
@@ -65,6 +64,8 @@ static void debounce_irq(void) {
 
 		if (digin[i].history==0xFFFE)
 		{
+			if (i==TRIGGER_JACK)
+				DEBUGON;
 			digin[i].state = 1;
 			digin[i].edge = 1;
 			if (i==PING_JACK)
@@ -80,4 +81,5 @@ static void debounce_irq(void) {
 			digin[i].edge = -1;
 		}
 	}
+	DEBUGOFF;
 }

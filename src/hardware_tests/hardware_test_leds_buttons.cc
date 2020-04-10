@@ -22,7 +22,11 @@ void test_leds() {
 }
 
 void test_buttons() {
+#ifdef LOCK_PCB
 	LEDButtonChecker button_checker{3};
+#else
+	LEDButtonChecker button_checker{2};
+#endif
 	button_checker.assign_button_led_func(set_button_led);
 	button_checker.assign_button_read_func(read_button);
 	button_checker.reset();

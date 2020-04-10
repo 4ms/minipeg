@@ -6,6 +6,8 @@
 
 #define TRIGDEBUGMODE
 
+//#define LOCK_PCB
+
 
 #include <stm32g4xx.h>
 #include "adc.h"

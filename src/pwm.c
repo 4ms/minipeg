@@ -16,6 +16,9 @@ void init_pwm_out_pin(struct PWMOutput *p);
 void populate_pwm_pins(struct PWMOutput *p);
 
 void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
+	if (pwmnum >= NUM_PWMS)
+		return;
+
 	uint8_t channel;
 
 	channel = pwm[pwmnum].timchan;
@@ -163,6 +166,14 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_CYCLEBUT_B].timchan = TIM_CHANNEL_2;
 	p[PWM_CYCLEBUT_B].period = kTimPeriod;
 
+	p[PWM_EOF_LED].gpio = LED_EOF_GPIO_Port;
+	p[PWM_EOF_LED].pinnum = LED_EOF_Pin;
+	p[PWM_EOF_LED].af = GPIO_AF1_TIM2;
+	p[PWM_EOF_LED].tim.Instance = TIM2;
+	p[PWM_EOF_LED].timchan = TIM_CHANNEL_2;
+	p[PWM_EOF_LED].period = kTimPeriod;
+
+#ifdef LOCK_PCB
 	p[PWM_LOCKBUT_R].gpio = LOCKBUT_R_GPIO_Port;
 	p[PWM_LOCKBUT_R].pinnum = LOCKBUT_R_Pin;
 	p[PWM_LOCKBUT_R].af = GPIO_AF2_TIM4;
@@ -183,13 +194,7 @@ void populate_pwm_pins(struct PWMOutput p[]) {
 	p[PWM_LOCKBUT_B].tim.Instance = TIM2;
 	p[PWM_LOCKBUT_B].timchan = TIM_CHANNEL_3;
 	p[PWM_LOCKBUT_B].period = kTimPeriod;
-
-	p[PWM_EOF_LED].gpio = LED_EOF_GPIO_Port;
-	p[PWM_EOF_LED].pinnum = LED_EOF_Pin;
-	p[PWM_EOF_LED].af = GPIO_AF1_TIM2;
-	p[PWM_EOF_LED].tim.Instance = TIM2;
-	p[PWM_EOF_LED].timchan = TIM_CHANNEL_2;
-	p[PWM_EOF_LED].period = kTimPeriod;
+#endif
 }
 
 void init_pwm_out_pin(struct PWMOutput *p) {
