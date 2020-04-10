@@ -50,6 +50,8 @@ void init_dac(uint32_t freq) {
 }
 
 static void init_dac_update_tmr(uint32_t freq) {
+	if (freq==0)
+		return;
 	TimerITInitStruct dac_update_timer_config;
 
 	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq() * 2;

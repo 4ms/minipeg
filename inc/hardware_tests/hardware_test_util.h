@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "settings.h"
 
 const uint16_t max_pwm = 4095;
 const uint16_t min_pwm = 0;
