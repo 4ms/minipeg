@@ -235,12 +235,10 @@ void handle_async_trig(struct PingableEnvelope *e)
 		e->outta_sync = 1;		//otherwise set the outta_sync flag which works to force a slew limited transition to zero
 
 	e->async_phase_diff = e->divpingtmr;
-	DEBUGON;
 }
 
 void read_trigjacks(void)
 {
-	DEBUGOFF;
 	if (digin[TRIGGER_JACK].edge==1)
 	{
 		digin[TRIGGER_JACK].edge = 0;
