@@ -26,7 +26,7 @@ extern "C" {
 static void animate_success();
 
 extern "C" void test_hardware(void) {
-    all_lights_off();
+	all_lights_off();
 
 	test_leds();
 	test_buttons();

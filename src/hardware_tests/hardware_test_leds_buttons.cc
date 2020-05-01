@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "pwm.h"
 #include "leds.h"
 
