@@ -52,6 +52,7 @@ struct PingableEnvelope m, a;
 static void read_ping_button(void);
 static void read_trigjacks(void);
 static void read_cycle_button(void);
+static void read_lock_button(void);
 static void check_reset_envelopes(void);
 static void update_tap_clock(void);
 static void read_ping_clock(void);
@@ -134,6 +135,7 @@ int main(void)
 		read_ping_button();
 		read_trigjacks();
 		read_cycle_button();
+		read_lock_button();
 		check_reset_envelopes();
 
 		//DEBUGOFF;
@@ -305,7 +307,7 @@ void update_trigout(void)
 }
 
 
-void read_cycle_button(void)
+static void read_cycle_button(void)
 {
 	if (digin[CYCLE_BUTTON].edge == 1)
 	{
@@ -343,6 +345,21 @@ void read_cycle_button(void)
 			cycle_but_on = 0;
 			set_rgb_led(LED_CYCLE, c_OFF);
 		}
+	}
+}
+
+static void read_lock_button(void)
+{
+	if (digin[LOCK_BUTTON].edge == 1)
+	{
+		digin[LOCK_BUTTON].edge = 0;
+	}
+
+	if (digin[LOCK_BUTTON].edge == -1)
+	{
+		digin[LOCK_BUTTON].edge = 0;
+		a.locked = 1-a.locked;
+		set_rgb_led(LED_LOCK, a.locked ? c_RED : c_OFF);	
 	}
 }
 
@@ -506,4 +523,8 @@ void SysTick_Handler(void)
 {
 	HAL_IncTick();
 }
+
+void _exit(int status){while(1);}
+void _kill(void){while(1);}
+int _getpid(void){return 1;}
 
