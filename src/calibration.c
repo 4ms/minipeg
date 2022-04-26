@@ -312,32 +312,35 @@ void calibrate_divmult_pot(void)
 	settings.midpt_array[NUM_DIVMULTS-1] = 4095;
 }
 
-
 void calibrate_led_colors(void) {
 
-    while (!PINGBUT) {
-    	if (CYCLEBUT) {
-    		// LED_PING_BUT_G_OFF;
-    		// LED_CYCLE_BUT_B_OFF;
-    	} else {
-		    // LED_PING_BUT_G_ON;
-		    // LED_CYCLE_BUT_B_ON;
-    	}
+	set_rgb_led(LED_CYCLE, c_OFF);
 
-        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_DIVMULT]), PWM_PINGBUT_R);
-        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_PINGBUT_B);
+	while (!PINGBUT) {
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_PINGBUT_R);
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_PINGBUT_G);
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_PINGBUT_B);
+	}
+	settings.ping_cal_r = adc_pot_dma_buffer[ADC_POT_SCALE];
+	settings.ping_cal_g = adc_pot_dma_buffer[ADC_POT_SHAPE];
+	settings.ping_cal_b = adc_pot_dma_buffer[ADC_POT_OFFSET];
 
-        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_CYCLEBUT_R);
-        update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_CYCLEBUT_G);
-    }
+	HAL_Delay(100);
+	while (PINGBUT) {
+		;
+	}
+	HAL_Delay(100);
 
-    settings.ping_cal_r = adc_pot_dma_buffer[ADC_POT_DIVMULT];
-    settings.ping_cal_b = adc_pot_dma_buffer[ADC_POT_SHAPE];
+	set_rgb_led(LED_PING, c_OFF);
 
-    settings.cycle_cal_r = adc_pot_dma_buffer[ADC_POT_SCALE];
-    settings.cycle_cal_g = adc_pot_dma_buffer[ADC_POT_OFFSET];
-    
-    while(PINGBUT) {;}
+	while (!PINGBUT) {
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_CYCLEBUT_R);
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_CYCLEBUT_G);
+		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_CYCLEBUT_B);
+	}
+	settings.cycle_cal_r = adc_pot_dma_buffer[ADC_POT_SCALE];
+	settings.cycle_cal_g = adc_pot_dma_buffer[ADC_POT_SHAPE];
+	settings.cycle_cal_b = adc_pot_dma_buffer[ADC_POT_OFFSET];
 
-    all_lights_off();
+	all_lights_off();
 }
