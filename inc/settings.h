@@ -2,7 +2,7 @@
 
 #define TRIGDEBUGMODE
 
-#define LOCK_PCB
+//#define LOCK_PCB
 
 #define TICKS_PER_MS 1
 
@@ -14,4 +14,3 @@
 
 #define TRIGOUT_TRIG_TIME 91
 #define TRIGOUT_MIN_GATE_TIME 37
-
