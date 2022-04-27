@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include "pwm.h"
+#include <stdint.h>
 
 enum RgbLeds {
 	LED_PING,
@@ -40,7 +40,6 @@ typedef struct AdjustedColor {
 	Color envB;
 } AdjustedColor;
 
-
 enum Palette {
 	c_OFF,
 	c_GREY50,
@@ -54,7 +53,7 @@ enum Palette {
 	c_BLUE,
 	c_DIMBLUE,
 	c_PURPLE,
-	
+
 	NUM_COLORS
 };
 

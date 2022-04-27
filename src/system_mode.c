@@ -4,8 +4,7 @@ extern struct SystemSettings settings;
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern uint8_t adjusting_shift_mode;
 
-void handle_system_mode(void)
-{
+void handle_system_mode(void) {
 	uint8_t d;
 	enum SystemModeParams system_mode_cur;
 	static uint32_t ping_held_time = 0;
@@ -18,10 +17,10 @@ void handle_system_mode(void)
 	if (adjusting_shift_mode)
 		return;
 
-	if ((now - cycle_held_time) <= (3000*TICKS_PER_MS))
+	if ((now - cycle_held_time) <= (3000 * TICKS_PER_MS))
 		return;
 
-	for (d=0;d<5;d++) {
+	for (d = 0; d < 5; d++) {
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
 		set_rgb_led(LED_ENVA, c_PURPLE);
@@ -29,7 +28,8 @@ void handle_system_mode(void)
 		set_inverted_led(PWM_EOF_LED, 1024);
 
 		HAL_Delay(100);
-		if (d==4) HAL_Delay(500);
+		if (d == 4)
+			HAL_Delay(500);
 
 		set_rgb_led(LED_PING, c_OFF);
 		set_rgb_led(LED_CYCLE, c_OFF);
@@ -40,34 +40,34 @@ void handle_system_mode(void)
 		HAL_Delay(100);
 	}
 
-	while(digin[CYCLE_BUTTON].state==1) {;}
+	while (digin[CYCLE_BUTTON].state == 1) {
+		;
+	}
 	HAL_Delay(50);
 
 	ping_held_time = now;
-	system_mode_cur=SET_TRIGOUT_FUNC;
+	system_mode_cur = SET_TRIGOUT_FUNC;
 
-	while (1)
-	{
+	while (1) {
 		if (digin[PING_BUTTON].state == 0)
 			ping_held_time = now;
-		else if ((now - ping_held_time) > (3000*TICKS_PER_MS))
+		else if ((now - ping_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
 		if (digin[CYCLE_BUTTON].state == 0)
 			cycle_held_time = now;
-		else if ((now - cycle_held_time) > (3000*TICKS_PER_MS))
+		else if ((now - cycle_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
-		if (digin[PING_BUTTON].edge == -1 ) {
+		if (digin[PING_BUTTON].edge == -1) {
 			system_mode_cur++;
 			digin[PING_BUTTON].edge = 0;
 		}
 
-		switch (system_mode_cur)
-		{
-			case(NUM_SYSMODE_PARAMS):
+		switch (system_mode_cur) {
+			case (NUM_SYSMODE_PARAMS):
 				system_mode_cur = SET_TRIGOUT_FUNC;
-			case(SET_TRIGOUT_FUNC):
+			case (SET_TRIGOUT_FUNC):
 				set_inverted_led(PWM_EOF_LED, 1024);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
 					set_rgb_led(LED_CYCLE, c_RED);
@@ -81,24 +81,28 @@ void handle_system_mode(void)
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-			break;
+				break;
 
-			case(SET_TRIGOUT_IS_TRIG):
+			case (SET_TRIGOUT_IS_TRIG):
 				if (settings.trigout_is_trig) {
 					set_rgb_led(LED_CYCLE, c_WHITE);
-					if (now & 0x0F00) set_inverted_led(PWM_EOF_LED, 0);
-					else set_inverted_led(PWM_EOF_LED, 1024);
+					if (now & 0x0F00)
+						set_inverted_led(PWM_EOF_LED, 0);
+					else
+						set_inverted_led(PWM_EOF_LED, 1024);
 				} else {
 					set_rgb_led(LED_CYCLE, c_ORANGE);
-					if (now & 0x1000) set_inverted_led(PWM_EOF_LED, 0);
-					else set_inverted_led(PWM_EOF_LED, 1024);
+					if (now & 0x1000)
+						set_inverted_led(PWM_EOF_LED, 0);
+					else
+						set_inverted_led(PWM_EOF_LED, 1024);
 				}
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-			break;
+				break;
 
-			case(SET_LIMIT_SKEW):
+			case (SET_LIMIT_SKEW):
 				set_rgb_led(LED_ENVA, c_BLUE);
 				if (settings.limit_skew)
 					set_rgb_led(LED_CYCLE, c_WHITE);
@@ -108,9 +112,9 @@ void handle_system_mode(void)
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_inverted_led(PWM_EOF_LED, 0);
-			break;
+				break;
 
-			case(SET_FREE_RUNNING_PING):
+			case (SET_FREE_RUNNING_PING):
 				if (settings.free_running_ping) {
 					set_rgb_led(LED_PING, (now & 0x1000) ? c_WHITE : c_DIMBLUE);
 					set_rgb_led(LED_CYCLE, c_ORANGE);
@@ -121,9 +125,9 @@ void handle_system_mode(void)
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_inverted_led(PWM_EOF_LED, 0);
-			break;
+				break;
 
-			case(SET_TRIGIN_FUNCTION):
+			case (SET_TRIGIN_FUNCTION):
 				set_inverted_led(PWM_EOF_LED, 1024);
 				set_rgb_led(LED_ENVA, c_RED);
 				if (settings.trigin_function == TRIGIN_IS_QNT)
@@ -135,9 +139,9 @@ void handle_system_mode(void)
 
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-			break;
+				break;
 
-			case(SET_CYCLEJACK_FUNCTION):
+			case (SET_CYCLEJACK_FUNCTION):
 				if (settings.cycle_jack_behavior == CYCLE_JACK_RISING_EDGE_TOGGLES)
 					set_rgb_led(LED_CYCLE, (now & 0x1000) ? c_RED : c_GREEN);
 				else
@@ -147,39 +151,37 @@ void handle_system_mode(void)
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_inverted_led(PWM_EOF_LED, 0);
-			break;
+				break;
 		}
 
-		if (digin[CYCLE_BUTTON].edge == -1)
-		{
+		if (digin[CYCLE_BUTTON].edge == -1) {
 			digin[CYCLE_BUTTON].edge = 0;
 			HAL_Delay(50); //to de-noise the cycle button
 
-			switch(system_mode_cur)
-			{
-				case(SET_TRIGOUT_FUNC):
+			switch (system_mode_cur) {
+				case (SET_TRIGOUT_FUNC):
 					if (++settings.trigout_function >= NUM_TRIGOUT_FUNCTIONS)
 						settings.trigout_function = 0;
 					break;
 
-				case(SET_TRIGOUT_IS_TRIG):
+				case (SET_TRIGOUT_IS_TRIG):
 					settings.trigout_is_trig = settings.trigout_is_trig ? 0 : 1;
 					break;
 
-				case(SET_LIMIT_SKEW):
+				case (SET_LIMIT_SKEW):
 					settings.limit_skew = settings.limit_skew ? 0 : 1;
 					break;
 
-				case(SET_FREE_RUNNING_PING):
+				case (SET_FREE_RUNNING_PING):
 					settings.free_running_ping = settings.free_running_ping ? 0 : 1;
 					break;
 
-				case(SET_TRIGIN_FUNCTION):
+				case (SET_TRIGIN_FUNCTION):
 					if (++settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
 						settings.trigin_function = 0;
 					break;
 
-				case(SET_CYCLEJACK_FUNCTION):
+				case (SET_CYCLEJACK_FUNCTION):
 					if (++settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
 						settings.cycle_jack_behavior = 0;
 					break;
@@ -191,8 +193,7 @@ void handle_system_mode(void)
 
 	write_settings();
 
-	while(digin[CYCLE_BUTTON].state || digin[PING_BUTTON].state)
-	{
+	while (digin[CYCLE_BUTTON].state || digin[PING_BUTTON].state) {
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
 		set_rgb_led(LED_ENVA, c_PURPLE);

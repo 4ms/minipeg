@@ -6,15 +6,16 @@
 
 #include <stddef.h>
 
-#define PIN_IS_HIGH(x,y) ((x)->IDR & (y))
-#define PIN_IS_LOW(x,y) (!((x)->IDR & (y)))
+#define PIN_IS_HIGH(x, y) ((x)->IDR & (y))
+#define PIN_IS_LOW(x, y) (!((x)->IDR & (y)))
 
-#define PIN_HIGH(x,y) (x)->BSRR = (y)
-#define PIN_LOW(x,y) (x)->BRR = (y)
+#define PIN_HIGH(x, y) (x)->BSRR = (y)
+#define PIN_LOW(x, y) (x)->BRR = (y)
 
-#define ALL_GPIO_RCC_ENABLE  __HAL_RCC_GPIOA_CLK_ENABLE();\
-                             __HAL_RCC_GPIOB_CLK_ENABLE();\
-                             __HAL_RCC_GPIOC_CLK_ENABLE
+#define ALL_GPIO_RCC_ENABLE                                                                                            \
+	__HAL_RCC_GPIOA_CLK_ENABLE();                                                                                      \
+	__HAL_RCC_GPIOB_CLK_ENABLE();                                                                                      \
+	__HAL_RCC_GPIOC_CLK_ENABLE
 
 #define PING_BUT_Pin GPIO_PIN_14
 #define PING_BUT_GPIO_Port GPIOC
@@ -48,16 +49,15 @@
 #define TRIG_JACK_READ PIN_IS_HIGH(TRIG_JACK_GPIO_Port, TRIG_JACK_Pin)
 
 #ifdef TRIGDEBUGMODE
-    #define TRIGOUT_ON 
-    #define TRIGOUT_OFF 
-    #define DEBUGON PIN_HIGH(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
-    #define DEBUGOFF PIN_LOW(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
+#define TRIGOUT_ON
+#define TRIGOUT_OFF
+#define DEBUGON PIN_HIGH(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
+#define DEBUGOFF PIN_LOW(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
 #else
-    #define TRIGOUT_ON PIN_HIGH(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
-    #define TRIGOUT_OFF PIN_LOW(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
-    #define DEBUGON
-    #define DEBUGOFF
+#define TRIGOUT_ON PIN_HIGH(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
+#define TRIGOUT_OFF PIN_LOW(TRIGOUT_GPIO_Port, TRIGOUT_Pin)
+#define DEBUGON
+#define DEBUGOFF
 #endif
 
 void init_dig_inouts(void);
-

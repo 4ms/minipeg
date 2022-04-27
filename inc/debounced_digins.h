@@ -18,9 +18,9 @@ enum DebouncedDiginList {
 };
 
 typedef struct DebouncedDigin {
-	uint16_t 	history;
-	uint8_t 	state;
-	int8_t 		edge;
+	uint16_t history;
+	uint8_t state;
+	int8_t edge;
 } debounced_digin_t;
 
 void init_debouncer(void);

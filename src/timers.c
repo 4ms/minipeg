@@ -8,12 +8,10 @@ volatile uint32_t tapintmr = 0;
 volatile uint32_t pingtmr = 0;
 volatile uint32_t trigouttmr = 0;
 
-void inc_tmrs(void)
-{
+void inc_tmrs(void) {
 	systmr++;
 	tapouttmr++;
 	tapintmr++;
 	pingtmr++;
 	trigouttmr++;
 }
-

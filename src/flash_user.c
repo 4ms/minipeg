@@ -5,8 +5,7 @@ struct SystemSettings settings;
 
 #define USER_FLASH_PAGE 0x0801F000
 
-HAL_StatusTypeDef write_settings(void)
-{
+HAL_StatusTypeDef write_settings(void) {
 	HAL_StatusTypeDef status;
 
 	flash_begin_open_program();
@@ -19,19 +18,17 @@ HAL_StatusTypeDef write_settings(void)
 
 	uint32_t sz = sizeof(struct SystemSettings);
 	settings.is_valid = VALID_SETTINGS;
-	status = flash_open_program_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
+	status = flash_open_program_word_array((uint32_t *)(&settings), USER_FLASH_PAGE, sz);
 
 	flash_end_open_program();
 	return status;
 }
 
-uint8_t read_settings(void)
-{
+uint8_t read_settings(void) {
 	uint32_t sz = sizeof(struct SystemSettings);
-	flash_read_word_array((uint32_t*)(&settings), USER_FLASH_PAGE, sz);
+	flash_read_word_array((uint32_t *)(&settings), USER_FLASH_PAGE, sz);
 
-	if (!check_settings_valid())
-	{
+	if (!check_settings_valid()) {
 		default_settings();
 		return 0;
 	}
@@ -39,13 +36,11 @@ uint8_t read_settings(void)
 	return 1;
 }
 
-uint8_t check_settings_valid(void)
-{
-	return settings.is_valid==VALID_SETTINGS;
+uint8_t check_settings_valid(void) {
+	return settings.is_valid == VALID_SETTINGS;
 }
 
-void default_settings(void)
-{
+void default_settings(void) {
 	default_calibration();
 	settings.limit_skew = 0;
 	settings.free_running_ping = 0;
@@ -60,4 +55,3 @@ void default_settings(void)
 	settings.start_clk_time = 8000;
 	settings.start_cycle_on = 1;
 }
-

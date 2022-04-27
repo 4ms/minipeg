@@ -1,7 +1,6 @@
 #include "pingable_env.h"
 
-void init_pingable_env(struct PingableEnvelope *e)
-{
+void init_pingable_env(struct PingableEnvelope *e) {
 	e->divpingtmr = 0;
 	e->ping_div_ctr = 0;
 	e->clock_divider_amount = 1;
@@ -34,20 +33,16 @@ void init_pingable_env(struct PingableEnvelope *e)
 	e->locked = 0;
 }
 
-void copy_skew_and_curves(struct PingableEnvelope *dst, struct PingableEnvelope *src)
-{
-	if (!dst->locked)
-	{
+void copy_skew_and_curves(struct PingableEnvelope *dst, struct PingableEnvelope *src) {
+	if (!dst->locked) {
 		dst->skew = src->skew;
 		dst->next_curve_rise = src->next_curve_rise;
 		dst->next_curve_fall = src->next_curve_fall;
 	}
 }
 
-void copy_rise_fall_incs(struct PingableEnvelope *dst, struct PingableEnvelope *src)
-{
-	if (!dst->locked)
-	{
+void copy_rise_fall_incs(struct PingableEnvelope *dst, struct PingableEnvelope *src) {
+	if (!dst->locked) {
 		dst->fall_time = src->fall_time;
 		dst->rise_time = src->rise_time;
 		dst->rise_inc = src->rise_inc;

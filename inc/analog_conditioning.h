@@ -1,4 +1,4 @@
-	/*
+/*
  * analog_conditioning.h
  */
 
@@ -6,8 +6,7 @@
 
 #include <stdint.h>
 
-enum AdcChannels
-{
+enum AdcChannels {
 	CV_SHAPE,
 	CV_DIVMULT,
 	POT_SCALE,
@@ -18,15 +17,9 @@ enum AdcChannels
 	NUM_ADCS
 };
 
-enum AdcCVChannels
-{
-	ADC_CV_SHAPE,
-	ADC_CV_DIVMULT,
-	NUM_CV_ADCS
-};
+enum AdcCVChannels { ADC_CV_SHAPE, ADC_CV_DIVMULT, NUM_CV_ADCS };
 
-enum AdcPotChannels
-{
+enum AdcPotChannels {
 	ADC_POT_SCALE,
 	ADC_POT_OFFSET,
 	ADC_POT_SHAPE,
@@ -35,11 +28,7 @@ enum AdcPotChannels
 	NUM_POT_ADCS
 };
 
-
-enum AnalogPolarity{
-	AP_UNIPOLAR,
-	AP_BIPOLAR
-};
+enum AnalogPolarity { AP_UNIPOLAR, AP_BIPOLAR };
 
 #define MAX_LPF_SIZE 16
 
@@ -59,7 +48,6 @@ typedef struct AnalogConditioned {
 	// uint16_t bracketed_val;
 
 } analog_t;
-
 
 void condition_analog(void);
 void init_analog_conditioning(void);

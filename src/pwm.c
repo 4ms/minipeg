@@ -23,22 +23,22 @@ void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 
 	channel = pwm[pwmnum].timchan;
 
-	if (channel==TIM_CHANNEL_1)
+	if (channel == TIM_CHANNEL_1)
 		pwm[pwmnum].tim.Instance->CCR1 = pwmval;
 
-	else if (channel==TIM_CHANNEL_2)
+	else if (channel == TIM_CHANNEL_2)
 		pwm[pwmnum].tim.Instance->CCR2 = pwmval;
 
-	else if (channel==TIM_CHANNEL_3)
+	else if (channel == TIM_CHANNEL_3)
 		pwm[pwmnum].tim.Instance->CCR3 = pwmval;
 
-	else if (channel==TIM_CHANNEL_4)
+	else if (channel == TIM_CHANNEL_4)
 		pwm[pwmnum].tim.Instance->CCR4 = pwmval;
 
-	else if (channel==TIM_CHANNEL_5)
+	else if (channel == TIM_CHANNEL_5)
 		pwm[pwmnum].tim.Instance->CCR5 = pwmval;
 
-	else if (channel==TIM_CHANNEL_6)
+	else if (channel == TIM_CHANNEL_6)
 		pwm[pwmnum].tim.Instance->CCR6 = pwmval;
 }
 
@@ -209,8 +209,7 @@ void init_pwm_out_pin(struct PWMOutput *p) {
 	HAL_GPIO_Init(p->gpio, &gpio);
 }
 
-void init_pwm_tim(struct PWMOutput *p)
-{
+void init_pwm_tim(struct PWMOutput *p) {
 	//Todo: turn on RCC for TIM automatically based on p->tim.Instance
 	__HAL_RCC_TIM1_CLK_ENABLE();
 	__HAL_RCC_TIM2_CLK_ENABLE();
@@ -218,7 +217,7 @@ void init_pwm_tim(struct PWMOutput *p)
 	__HAL_RCC_TIM4_CLK_ENABLE();
 	__HAL_RCC_TIM15_CLK_ENABLE();
 
-	TIM_OC_InitTypeDef  tim_oc;
+	TIM_OC_InitTypeDef tim_oc;
 
 	p->tim.Init.Prescaler = 0;
 	p->tim.Init.Period = p->period;
@@ -240,23 +239,18 @@ void init_pwm_tim(struct PWMOutput *p)
 	HAL_TIM_PWM_ConfigChannel(&p->tim, &tim_oc, p->timchan);
 }
 
-void start_timers(struct PWMOutput *p)
-{
+void start_timers(struct PWMOutput *p) {
 	HAL_TIM_PWM_Start(&p->tim, p->timchan);
 }
 
-
-void init_pwm(void)
-{
+void init_pwm(void) {
 	populate_pwm_pins(pwm);
 
-	for (uint8_t i=0;i<NUM_PWMS;i++)
-	{
+	for (uint8_t i = 0; i < NUM_PWMS; i++) {
 		init_pwm_out_pin(&pwm[i]);
 		init_pwm_tim(&pwm[i]);
 	}
 
-	for (uint8_t i=0;i<NUM_PWMS;i++)
+	for (uint8_t i = 0; i < NUM_PWMS; i++)
 		start_timers(&pwm[i]);
 }
-

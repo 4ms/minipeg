@@ -27,20 +27,18 @@
  * -----------------------------------------------------------------------------
  */
 
-
 #pragma once
 
 #include <stdint.h>
 
-typedef struct TimerITInitStruct{
-	uint8_t		priority1;
-	uint8_t		priority2;
-	uint16_t	period;
-	uint8_t		prescaler;
-	uint8_t		clock_division;
+typedef struct TimerITInitStruct {
+	uint8_t priority1;
+	uint8_t priority2;
+	uint16_t period;
+	uint8_t prescaler;
+	uint8_t clock_division;
 
 } TimerITInitStruct;
-
 
 void init_timekeeper(void);
 void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit);

@@ -8,13 +8,7 @@ extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 //Private:
 #define FIRST_CD_POT POT_SCALE
 
-enum CalRequests{
-	CAL_REQUEST_NONE,
-	CAL_REQUEST_ALL,
-	CAL_REQUEST_CENTER_DET,
-	CAL_REQUEST_LEDS
-};
-
+enum CalRequests { CAL_REQUEST_NONE, CAL_REQUEST_ALL, CAL_REQUEST_CENTER_DET, CAL_REQUEST_LEDS };
 
 uint8_t sanity_check_calibration(void);
 void calibrate_divmult_pot(void);
@@ -99,77 +93,72 @@ void default_calibration(void) {
 	settings.envb_cal_b = 2048;
 }
 
-uint8_t sanity_check_calibration(void)
-{
+uint8_t sanity_check_calibration(void) {
 	uint8_t j;
 
-	for (j = 0; j < (NUM_DIVMULTS-1); j++ ) {
-		if (settings.midpt_array[j+1] <= settings.midpt_array[j])
+	for (j = 0; j < (NUM_DIVMULTS - 1); j++) {
+		if (settings.midpt_array[j + 1] <= settings.midpt_array[j])
 			return 0; //fail
-	}	
-	for (j = 0; j < NUM_CENTER_DETENT_POTS; j++ ) {
+	}
+	for (j = 0; j < NUM_CENTER_DETENT_POTS; j++) {
 		if ((settings.center_detent_offset[j] < -1000) || (settings.center_detent_offset[j] > 1000))
 			return 0;
 	}
 
-	if (settings.limit_skew>1)
+	if (settings.limit_skew > 1)
 		return 0;
-	if (settings.free_running_ping>1)
+	if (settings.free_running_ping > 1)
 		return 0;
-	if (settings.trigout_is_trig>1)
+	if (settings.trigout_is_trig > 1)
 		return 0;
-	if (settings.trigin_function>=NUM_TRIGIN_FUNCTIONS)
+	if (settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
 		return 0;
-	if (settings.trigout_function>=NUM_TRIGOUT_FUNCTIONS)
+	if (settings.trigout_function >= NUM_TRIGOUT_FUNCTIONS)
 		return 0;
-	if (settings.cycle_jack_behavior>=NUM_CYCLEJACK_BEHAVIORS)
+	if (settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
 		return 0;
 	if (settings.auxtrigin_assignment > NUM_AUX_TRIG_JACK_ASSIGNMENTS)
 		return 0;
 	if (settings.auxtrigin_function > NUM_TRIGIN_FUNCTIONS)
 		return 0;
-	
-	if ((settings.start_clk_time>0x8000000) || (settings.start_clk_time<100)) 
+
+	if ((settings.start_clk_time > 0x8000000) || (settings.start_clk_time < 100))
 		return 0;
-	if (settings.start_cycle_on>1)
+	if (settings.start_cycle_on > 1)
 		return 0;
 
-	if (settings.ping_cal_r < 1 ||  settings.ping_cal_r > 4096) 
+	if (settings.ping_cal_r < 1 || settings.ping_cal_r > 4096)
 		return 0;
-	if (settings.ping_cal_b < 1 ||  settings.ping_cal_b > 4096) 
+	if (settings.ping_cal_b < 1 || settings.ping_cal_b > 4096)
 		return 0;
-	if (settings.cycle_cal_r < 1 ||  settings.cycle_cal_r > 4096) 
+	if (settings.cycle_cal_r < 1 || settings.cycle_cal_r > 4096)
 		return 0;
-	if (settings.cycle_cal_g < 1 ||  settings.cycle_cal_g > 4096) 
+	if (settings.cycle_cal_g < 1 || settings.cycle_cal_g > 4096)
 		return 0;
 
 	return 1; //pass
 }
 
-enum CalRequests should_enter_calibration_mode(void)
-{
-	if (CYCLEBUT 
-		&& (adc_pot_dma_buffer[ADC_POT_SCALE]>1800) && (adc_pot_dma_buffer[ADC_POT_SCALE]<2200)
-		&& (adc_pot_dma_buffer[ADC_POT_OFFSET]>1800) && (adc_pot_dma_buffer[ADC_POT_OFFSET]<2200)
-		&& (adc_pot_dma_buffer[ADC_POT_SHAPE]>1800) && (adc_pot_dma_buffer[ADC_POT_SHAPE]<2200)
-		)
+enum CalRequests should_enter_calibration_mode(void) {
+	if (CYCLEBUT && (adc_pot_dma_buffer[ADC_POT_SCALE] > 1800) && (adc_pot_dma_buffer[ADC_POT_SCALE] < 2200) &&
+		(adc_pot_dma_buffer[ADC_POT_OFFSET] > 1800) && (adc_pot_dma_buffer[ADC_POT_OFFSET] < 2200) &&
+		(adc_pot_dma_buffer[ADC_POT_SHAPE] > 1800) && (adc_pot_dma_buffer[ADC_POT_SHAPE] < 2200))
 	{
 		if (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 70)
 			return CAL_REQUEST_ALL;
 
-		else if ((adc_pot_dma_buffer[ADC_POT_DIVMULT]>1800) && (adc_pot_dma_buffer[ADC_POT_DIVMULT]<2200))
+		else if ((adc_pot_dma_buffer[ADC_POT_DIVMULT] > 1800) && (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 2200))
 			return CAL_REQUEST_LEDS;
 
-		else if (adc_pot_dma_buffer[ADC_POT_DIVMULT] > 4000) 
+		else if (adc_pot_dma_buffer[ADC_POT_DIVMULT] > 4000)
 			return CAL_REQUEST_CENTER_DET;
 	}
 
 	return CAL_REQUEST_NONE;
 }
 
-void calibrate_center_detents(void)
-{
-	const uint16_t stab_delay=15;
+void calibrate_center_detents(void) {
+	const uint16_t stab_delay = 15;
 	enum CenterDetentPots cur = DET_SCALE;
 	uint16_t read_tot;
 	uint16_t read_avg;
@@ -177,12 +166,15 @@ void calibrate_center_detents(void)
 	int16_t t;
 	enum Palette color;
 
-
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT) {;}
-	while (CYCLEBUT) {;}
+	while (PINGBUT) {
+		;
+	}
+	while (CYCLEBUT) {
+		;
+	}
 
 	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_WHITE);
@@ -197,55 +189,78 @@ void calibrate_center_detents(void)
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT) {;}
-	while (CYCLEBUT) {;}
+	while (PINGBUT) {
+		;
+	}
+	while (CYCLEBUT) {
+		;
+	}
 
-	while (cur<NUM_CENTER_DETENT_POTS)
-	{
+	while (cur < NUM_CENTER_DETENT_POTS) {
 		HAL_Delay(stab_delay);
-		read1 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
+		read1 = adc_pot_dma_buffer[FIRST_CD_POT + cur];
 		HAL_Delay(stab_delay);
-		read2 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
+		read2 = adc_pot_dma_buffer[FIRST_CD_POT + cur];
 		HAL_Delay(stab_delay);
-		read3 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
+		read3 = adc_pot_dma_buffer[FIRST_CD_POT + cur];
 		HAL_Delay(stab_delay);
-		read4 = adc_pot_dma_buffer[FIRST_CD_POT+cur];
+		read4 = adc_pot_dma_buffer[FIRST_CD_POT + cur];
 		read_tot = read1 + read2 + read3 + read4;
-		read_avg = read_tot>>2;	
+		read_avg = read_tot >> 2;
 
 		t = read_avg + settings.center_detent_offset[cur];
-		if (t > 2152 || t < 1957)		color = c_RED; 		//red: out of range
-		else if (t > 2102 || t < 2007)	color = c_ORANGE; 	//orange: warning, close to edge
-		else if (t > 2068 || t < 2028)	color = c_YELLOW;	//yellow: ok: more than 20 from center
-		else 							color = c_GREEN; 	//green: within 20 of center 
+		if (t > 2152 || t < 1957)
+			color = c_RED; //red: out of range
+		else if (t > 2102 || t < 2007)
+			color = c_ORANGE; //orange: warning, close to edge
+		else if (t > 2068 || t < 2028)
+			color = c_YELLOW; //yellow: ok: more than 20 from center
+		else
+			color = c_GREEN; //green: within 20 of center
 
 		set_rgb_led(LED_CYCLE, color);
 
-	 	if (CYCLEBUT)
-	 	{
+		if (CYCLEBUT) {
 			settings.center_detent_offset[cur] = 2048 - read_avg;
 			t = 0;
-			while (t<100) {if (CYCLEBUT) t++; else t=0;}
+			while (t < 100) {
+				if (CYCLEBUT)
+					t++;
+				else
+					t = 0;
+			}
 			t = 0;
-			while (t<100) {if (!CYCLEBUT) t++; else t=0;}
+			while (t < 100) {
+				if (!CYCLEBUT)
+					t++;
+				else
+					t = 0;
+			}
 		}
 
-		if (PINGBUT)
-	 	{
+		if (PINGBUT) {
 			t = 0;
-			while (t<100) {if (PINGBUT) t++; else t=0;}
+			while (t < 100) {
+				if (PINGBUT)
+					t++;
+				else
+					t = 0;
+			}
 			t = 0;
-			while (t<100) {if (!PINGBUT) t++; else t=0;}
+			while (t < 100) {
+				if (!PINGBUT)
+					t++;
+				else
+					t = 0;
+			}
 
 			cur++;
 		}
-
 	}
 }
 
-void calibrate_divmult_pot(void)
-{
-	const uint16_t stab_delay=15;
+void calibrate_divmult_pot(void) {
+	const uint16_t stab_delay = 15;
 	uint16_t calib_array[NUM_DIVMULTS];
 	uint16_t read_tot;
 	uint16_t read_avg;
@@ -258,14 +273,23 @@ void calibrate_divmult_pot(void)
 
 	set_rgb_led(LED_CYCLE, c_RED);
 	t = 0;
-	while (t<100) {if (CYCLEBUT) t++; else t=0;}
+	while (t < 100) {
+		if (CYCLEBUT)
+			t++;
+		else
+			t = 0;
+	}
 	t = 0;
-	while (t<100) {if (!CYCLEBUT) t++; else t=0;}
+	while (t < 100) {
+		if (!CYCLEBUT)
+			t++;
+		else
+			t = 0;
+	}
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	for ( j = 0; j < NUM_DIVMULTS; j++ ) {
-		set_rgb_led(LED_CYCLE, c_OFF); //off = reading pot 
-  
+	for (j = 0; j < NUM_DIVMULTS; j++) {
+		set_rgb_led(LED_CYCLE, c_OFF); //off = reading pot
 
 		HAL_Delay(stab_delay);
 		read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
@@ -277,20 +301,22 @@ void calibrate_divmult_pot(void)
 		read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 		read_tot = read1 + read2 + read3 + read4;
-		read_avg = read_tot>>2;	
-		
+		read_avg = read_tot >> 2;
+
 		calib_array[j] = read_avg;
 
-		if (j<(NUM_DIVMULTS-1)){		
+		if (j < (NUM_DIVMULTS - 1)) {
 			set_rgb_led(LED_CYCLE, c_GREEN); //blue = ready for user to change knob
 
-			if (j==0 || j==(NUM_DIVMULTS-2)) diff=80;
-			else diff=160;
+			if (j == 0 || j == (NUM_DIVMULTS - 2))
+				diff = 80;
+			else
+				diff = 160;
 
 			HAL_Delay(20);
 
 			//wait until knob is detected as being moved
-			do {   
+			do {
 				HAL_Delay(stab_delay);
 				read1 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 				HAL_Delay(stab_delay);
@@ -301,24 +327,34 @@ void calibrate_divmult_pot(void)
 				read4 = adc_pot_dma_buffer[ADC_POT_DIVMULT];
 
 				read_tot = read1 + read2 + read3 + read4;
-				read_avg = read_tot >> 2;	
+				read_avg = read_tot >> 2;
 			} while ((read_avg - calib_array[j]) < diff);
 
 			set_rgb_led(LED_CYCLE, c_WHITE); //green = press cycle button
 
 			t = 0;
-			while (t<100) {if (CYCLEBUT) t++; else t=0;}
+			while (t < 100) {
+				if (CYCLEBUT)
+					t++;
+				else
+					t = 0;
+			}
 			t = 0;
-			while (t<100) {if (!CYCLEBUT) t++; else t=0;}
+			while (t < 100) {
+				if (!CYCLEBUT)
+					t++;
+				else
+					t = 0;
+			}
 			set_rgb_led(LED_CYCLE, c_OFF);
 		}
 	}
 
 	//convert the calib_array values to mid-points
-	for(j=0;j<(NUM_DIVMULTS-1);j++){
-		settings.midpt_array[j] = (calib_array[j] + calib_array[j+1]) >> 1;
+	for (j = 0; j < (NUM_DIVMULTS - 1); j++) {
+		settings.midpt_array[j] = (calib_array[j] + calib_array[j + 1]) >> 1;
 	}
-	settings.midpt_array[NUM_DIVMULTS-1] = 4095;
+	settings.midpt_array[NUM_DIVMULTS - 1] = 4095;
 }
 
 void calibrate_led_colors(void) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#define TRIGDEBUGMODE
+// #define TRIGDEBUGMODE
 
 //#define LOCK_PCB
 

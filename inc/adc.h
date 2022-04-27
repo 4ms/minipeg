@@ -31,12 +31,15 @@
 #include <stddef.h>
 #include <stm32g4xx.h>
 
-typedef struct builtinAdcSetup{
-	GPIO_TypeDef	*gpio;
-	uint16_t		pin;
-	uint32_t		channel;
-	uint32_t		sample_time;
+typedef struct builtinAdcSetup {
+	GPIO_TypeDef *gpio;
+	uint16_t pin;
+	uint32_t channel;
+	uint32_t sample_time;
 } builtinAdcSetup;
 
-void ADC_Init(ADC_TypeDef *ADCx, uint16_t *adc_buffer, uint32_t num_channels, builtinAdcSetup *adc_setup, uint32_t oversample_ratio);
-
+void ADC_Init(ADC_TypeDef *ADCx,
+			  uint16_t *adc_buffer,
+			  uint32_t num_channels,
+			  builtinAdcSetup *adc_setup,
+			  uint32_t oversample_ratio);

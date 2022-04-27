@@ -4,7 +4,7 @@
 #include "dig_inouts.h"
 #include <stm32g4xx.h>
 
-void init_dig_inouts(void){
+void init_dig_inouts(void) {
 	GPIO_InitTypeDef gpio = {0};
 
 	ALL_GPIO_RCC_ENABLE();
@@ -20,10 +20,11 @@ void init_dig_inouts(void){
 	gpio.Mode = GPIO_MODE_INPUT;
 	gpio.Pull = GPIO_PULLUP;
 
-	gpio.Pin = PING_BUT_Pin;		
+	gpio.Pin = PING_BUT_Pin;
 	HAL_GPIO_Init(PING_BUT_GPIO_Port, &gpio);
-	gpio.Pin = CYCLE_BUT_Pin;	
+	gpio.Pin = CYCLE_BUT_Pin;
 	HAL_GPIO_Init(CYCLE_BUT_GPIO_Port, &gpio);
+
 	gpio.Pin = LOCK_BUT_Pin;
 	HAL_GPIO_Init(LOCK_BUT_GPIO_Port, &gpio);
 
@@ -32,9 +33,8 @@ void init_dig_inouts(void){
 
 	gpio.Pin = TRIG_JACK_Pin;
 	HAL_GPIO_Init(TRIG_JACK_GPIO_Port, &gpio);
-	gpio.Pin = PING_JACK_Pin;	
+	gpio.Pin = PING_JACK_Pin;
 	HAL_GPIO_Init(PING_JACK_GPIO_Port, &gpio);
 	gpio.Pin = AUXTRIG_JACK_Pin;
 	HAL_GPIO_Init(AUXTRIG_JACK_GPIO_Port, &gpio);
 }
-

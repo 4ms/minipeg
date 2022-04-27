@@ -15,10 +15,9 @@ TIM_HandleTypeDef htim6;
 static void init_dac_update_tmr(uint32_t freq);
 
 void dac_out(enum DACs dac, uint16_t val) {
-	if (dac==DAC_ENVA) {
-		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 4095-val);
-	}
-	else if (dac==DAC_ENVB) {
+	if (dac == DAC_ENVA) {
+		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 4095 - val);
+	} else if (dac == DAC_ENVB) {
 		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, val);
 	}
 }
@@ -28,7 +27,7 @@ void init_dac(uint32_t freq) {
 	HAL_DAC_Init(&hdac1);
 
 	DAC_ChannelConfTypeDef sConfig = {0};
-	sConfig.DAC_HighFrequency = DAC_HIGH_FREQUENCY_INTERFACE_MODE_DISABLE;//_AUTOMATIC
+	sConfig.DAC_HighFrequency = DAC_HIGH_FREQUENCY_INTERFACE_MODE_DISABLE; //_AUTOMATIC
 	sConfig.DAC_DMADoubleDataMode = DISABLE;
 	sConfig.DAC_SignedFormat = DISABLE;
 	sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
@@ -50,14 +49,14 @@ void init_dac(uint32_t freq) {
 }
 
 static void init_dac_update_tmr(uint32_t freq) {
-	if (freq==0)
+	if (freq == 0)
 		return;
 	TimerITInitStruct dac_update_timer_config;
 
 	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq() * 2;
 	dac_update_timer_config.priority1 = 0;
 	dac_update_timer_config.priority2 = 1;
-	dac_update_timer_config.period = sysclockfreq / freq;// 168MHZ / 21kHz = 8000
+	dac_update_timer_config.period = sysclockfreq / freq; // 168MHZ / 21kHz = 8000
 	dac_update_timer_config.prescaler = 0;
 	dac_update_timer_config.clock_division = 0;
 
@@ -76,17 +75,16 @@ void resume_dac_timer(void) {
 	resume_timer_IRQ(DAC_UPDATE_TIMER_NUM);
 }
 
-void HAL_DAC_MspInit(DAC_HandleTypeDef* hdac) {
+void HAL_DAC_MspInit(DAC_HandleTypeDef *hdac) {
 
-  GPIO_InitTypeDef gpio = {0};
+	GPIO_InitTypeDef gpio = {0};
 
-  if (hdac->Instance==DAC1) {
-    __HAL_RCC_DAC1_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    gpio.Pin = ENVA_Pin | ENVB_Pin;
-    gpio.Mode = GPIO_MODE_ANALOG;
-    gpio.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(ENV_GPIO_Port, &gpio);
-  }
+	if (hdac->Instance == DAC1) {
+		__HAL_RCC_DAC1_CLK_ENABLE();
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		gpio.Pin = ENVA_Pin | ENVB_Pin;
+		gpio.Mode = GPIO_MODE_ANALOG;
+		gpio.Pull = GPIO_NOPULL;
+		HAL_GPIO_Init(ENV_GPIO_Port, &gpio);
+	}
 }
-
