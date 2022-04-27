@@ -6,7 +6,7 @@ extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
 extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 //Private:
-#define FIRST_CD_POT POT_SCALE
+#define FIRST_CD_POT ADC_POT_SCALE
 
 enum CalRequests { CAL_REQUEST_NONE, CAL_REQUEST_ALL, CAL_REQUEST_CENTER_DET, CAL_REQUEST_LEDS };
 
