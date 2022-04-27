@@ -22,33 +22,42 @@ enum CalRequests should_enter_calibration_mode(void);
 void calibrate_center_detents(void);
 void calibrate_led_colors(void);
 
-void check_calibration(void)
-{
-	if (!sanity_check_calibration())
-	{
-		default_settings();
-		write_settings();
-	}
-
-	enum CalRequests c = should_enter_calibration_mode();
-	if (c != CAL_REQUEST_NONE)
-	{
-		if (c==CAL_REQUEST_ALL) 
-			calibrate_divmult_pot();
-
-		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_CENTER_DET)
-			calibrate_center_detents();
-
-		if (c==CAL_REQUEST_ALL || c==CAL_REQUEST_LEDS)
-			calibrate_led_colors();
-
-		write_settings();
+void error_writing_settings(void) {
+	int loops = 20;
+	while (loops--) {
+		set_rgb_led(LED_PING, c_WHITE);
+		set_rgb_led(LED_CYCLE, c_WHITE);
+		HAL_Delay(100);
+		set_rgb_led(LED_PING, c_RED);
+		set_rgb_led(LED_CYCLE, c_RED);
+		HAL_Delay(100);
 	}
 }
 
+void check_calibration(void) {
+	if (!sanity_check_calibration()) {
+		default_settings();
+		if (write_settings() != HAL_OK)
+			error_writing_settings();
+	}
 
-void default_calibration(void)
-{
+	enum CalRequests c = should_enter_calibration_mode();
+	if (c != CAL_REQUEST_NONE) {
+		if (c == CAL_REQUEST_ALL)
+			calibrate_divmult_pot();
+
+		if (c == CAL_REQUEST_ALL || c == CAL_REQUEST_CENTER_DET)
+			calibrate_center_detents();
+
+		if (c == CAL_REQUEST_ALL || c == CAL_REQUEST_LEDS)
+			calibrate_led_colors();
+
+		if (write_settings() != HAL_OK)
+			error_writing_settings();
+	}
+}
+
+void default_calibration(void) {
 	settings.midpt_array[0] = 68;
 	settings.midpt_array[1] = 262;
 	settings.midpt_array[2] = 509;
