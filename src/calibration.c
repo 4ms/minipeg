@@ -15,6 +15,8 @@ void calibrate_divmult_pot(void);
 enum CalRequests should_enter_calibration_mode(void);
 void calibrate_center_detents(void);
 void calibrate_led_colors(void);
+static void wait_for_pingbut_downup(void);
+static void wait_for_cyclebut_downup(void);
 
 void error_writing_settings(void) {
 	int loops = 20;
@@ -164,12 +166,10 @@ void calibrate_center_detents(void) {
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT) {
+	while (PINGBUT)
 		;
-	}
-	while (CYCLEBUT) {
+	while (CYCLEBUT)
 		;
-	}
 
 	HAL_Delay(100);
 	set_rgb_led(LED_PING, c_WHITE);
@@ -184,12 +184,10 @@ void calibrate_center_detents(void) {
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT) {
+	while (PINGBUT)
 		;
-	}
-	while (CYCLEBUT) {
+	while (CYCLEBUT)
 		;
-	}
 
 	while (cur < NUM_CENTER_DETENT_POTS) {
 		HAL_Delay(stab_delay);
@@ -217,38 +215,11 @@ void calibrate_center_detents(void) {
 
 		if (CYCLEBUT) {
 			settings.center_detent_offset[cur] = 2048 - read_avg;
-			t = 0;
-			while (t < 100) {
-				if (CYCLEBUT)
-					t++;
-				else
-					t = 0;
-			}
-			t = 0;
-			while (t < 100) {
-				if (!CYCLEBUT)
-					t++;
-				else
-					t = 0;
-			}
+			wait_for_cyclebut_downup();
 		}
 
 		if (PINGBUT) {
-			t = 0;
-			while (t < 100) {
-				if (PINGBUT)
-					t++;
-				else
-					t = 0;
-			}
-			t = 0;
-			while (t < 100) {
-				if (!PINGBUT)
-					t++;
-				else
-					t = 0;
-			}
-
+			wait_for_pingbut_downup();
 			cur++;
 		}
 	}
@@ -267,20 +238,7 @@ void calibrate_divmult_pot(void) {
 	set_rgb_led(LED_PING, c_OFF);
 
 	set_rgb_led(LED_CYCLE, c_RED);
-	t = 0;
-	while (t < 100) {
-		if (CYCLEBUT)
-			t++;
-		else
-			t = 0;
-	}
-	t = 0;
-	while (t < 100) {
-		if (!CYCLEBUT)
-			t++;
-		else
-			t = 0;
-	}
+	wait_for_cyclebut_downup();
 	set_rgb_led(LED_CYCLE, c_OFF);
 
 	for (j = 0; j < NUM_DIVMULTS; j++) {
@@ -327,20 +285,7 @@ void calibrate_divmult_pot(void) {
 
 			set_rgb_led(LED_CYCLE, c_WHITE); //green = press cycle button
 
-			t = 0;
-			while (t < 100) {
-				if (CYCLEBUT)
-					t++;
-				else
-					t = 0;
-			}
-			t = 0;
-			while (t < 100) {
-				if (!CYCLEBUT)
-					t++;
-				else
-					t = 0;
-			}
+			wait_for_cyclebut_downup();
 			set_rgb_led(LED_CYCLE, c_OFF);
 		}
 	}
@@ -356,6 +301,10 @@ void calibrate_led_colors(void) {
 
 	set_rgb_led(LED_CYCLE, c_OFF);
 
+	while (PINGBUT)
+		;
+	HAL_Delay(100);
+
 	while (!PINGBUT) {
 		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_PINGBUT_R);
 		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_PINGBUT_G);
@@ -366,9 +315,8 @@ void calibrate_led_colors(void) {
 	settings.ping_cal_b = adc_pot_dma_buffer[ADC_POT_OFFSET];
 
 	HAL_Delay(100);
-	while (PINGBUT) {
+	while (PINGBUT)
 		;
-	}
 	HAL_Delay(100);
 
 	uint16_t r;
@@ -394,4 +342,22 @@ void calibrate_led_colors(void) {
 	settings.cycle_cal_b = adc_pot_dma_buffer[ADC_POT_OFFSET];
 
 	all_lights_off();
+}
+
+static void wait_for_pingbut_downup(void) {
+	uint32_t t = 0;
+	while (t < 100)
+		t = PINGBUT ? t + 1 : 0;
+	t = 0;
+	while (t < 100)
+		t = !PINGBUT ? t + 1 : 0;
+}
+
+static void wait_for_cyclebut_downup(void) {
+	uint32_t t = 0;
+	while (t < 100)
+		t = CYCLEBUT ? t + 1 : 0;
+	t = 0;
+	while (t < 100)
+		t = !CYCLEBUT ? t + 1 : 0;
 }
