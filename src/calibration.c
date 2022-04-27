@@ -340,12 +340,23 @@ void calibrate_led_colors(void) {
 	}
 	HAL_Delay(100);
 
-	set_rgb_led(LED_PING, c_OFF);
+	uint16_t r;
+	uint16_t g;
+	uint16_t b;
 
 	while (!PINGBUT) {
-		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_CYCLEBUT_R);
-		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_CYCLEBUT_G);
-		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_CYCLEBUT_B);
+		if (!CYCLEBUT) {
+			r = 4095;
+			g = 600;
+			b = 0;
+		} else {
+			r = 2048;
+			g = 2048;
+			b = 2048;
+		}
+		update_pwm(adjust_hue(r, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_CYCLEBUT_R);
+		update_pwm(adjust_hue(g, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_CYCLEBUT_G);
+		update_pwm(adjust_hue(b, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_CYCLEBUT_B);
 	}
 	settings.cycle_cal_r = adc_pot_dma_buffer[ADC_POT_SCALE];
 	settings.cycle_cal_g = adc_pot_dma_buffer[ADC_POT_SHAPE];
