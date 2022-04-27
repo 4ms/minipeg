@@ -45,13 +45,12 @@ char update_cycle_button_now = 0;
 uint8_t adjusting_shift_mode = 0;
 int16_t cycle_latched_offset;
 
-struct PingableEnvelope m, a;
+struct PingableEnvelope m;
 
 // main.h
 static void read_ping_button(void);
 static void read_trigjacks(void);
 static void read_cycle_button(void);
-static void read_lock_button(void);
 static void check_reset_envelopes(void);
 static void update_tap_clock(void);
 static void read_ping_clock(void);
@@ -66,7 +65,6 @@ int main(void) {
 
 	init_timekeeper();
 	init_pingable_env(&m);
-	init_pingable_env(&a);
 	init_dig_inouts();
 	eor_off();
 	eof_off();
@@ -105,19 +103,16 @@ int main(void) {
 		cycle_but_on = 1;
 		set_rgb_led(LED_CYCLE, c_ORANGE);
 		m.envelope_running = 1;
-		a.envelope_running = 1;
 		using_tap_clock = 1;
 	} else {
 		cycle_but_on = 0;
 		set_rgb_led(LED_CYCLE, c_OFF);
 		m.envelope_running = 0;
-		a.envelope_running = 0;
 	}
 
 	if (settings.start_clk_time) {
 		clk_time = settings.start_clk_time;
 		m.div_clk_time = settings.start_clk_time;
-		a.div_clk_time = settings.start_clk_time; // Todo: settings.start_clk_time_aux;
 	}
 
 	last_tapin_time = 0;
@@ -125,15 +120,15 @@ int main(void) {
 	while (1) {
 		// G0: loops every ~11uS, maybe 13us if you include envelope updates every
 		// 4th loop G4: loops every ~2uS, with ~10us gaps
+		// p4 unit no-lock: 1.2uS fastest loop. Max 10us loop... average 530kHz
 
-		// DEBUGON;
+		DEBUGON;
 		read_ping_button();
 		read_trigjacks();
 		read_cycle_button();
-		read_lock_button();
 		check_reset_envelopes();
 
-		// DEBUGOFF;
+		DEBUGOFF;
 		update_tap_clock();
 		read_ping_clock();
 		update_adc_params(force_params_update);
@@ -166,7 +161,6 @@ static void read_ping_button(void) {
 			tapouttmr = 0;
 
 			calc_div_clk_time(&m, clk_time);
-			calc_div_clk_time(&a, clk_time);
 
 			force_transition();
 			force_params_update = 1;
@@ -174,7 +168,6 @@ static void read_ping_button(void) {
 			if (now > HOLDTIMECLEAR) { // button has been down for more than 2 seconds
 				if (using_tap_clock) {
 					stop_envelope(&m);
-					stop_envelope(&a);
 					clk_time = 0;
 					using_tap_clock = 0;
 				}
@@ -240,27 +233,16 @@ void read_trigjacks(void) {
 		m.trigq_down = 0;
 	}
 
-	if (digin[AUXTRIG_JACK].edge == 1) {
-		digin[AUXTRIG_JACK].edge = 0;
-		if (settings.auxtrigin_assignment == AUX_ENV_TRIG) {
-			if (settings.auxtrigin_function == TRIGIN_IS_QNT)
-				handle_qnt_trig(&a);
-			else
-				handle_async_trig(&a);
-		} else if (settings.auxtrigin_assignment == CYCLE_TOGGLE)
-			do_toggle_cycle = 1;
+	if (digin[CYCLE_JACK].edge == 1) {
+		digin[CYCLE_JACK].edge = 0;
+		do_toggle_cycle = 1;
 	}
 
-	if (digin[AUXTRIG_JACK].edge == -1) {
-		digin[AUXTRIG_JACK].edge = 0;
+	if (digin[CYCLE_JACK].edge == -1) {
+		digin[CYCLE_JACK].edge = 0;
 
-		if (settings.auxtrigin_assignment == AUX_ENV_TRIG) {
-			a.triga_down = 0;
-			a.trigq_down = 0;
-		} else if (settings.auxtrigin_assignment == CYCLE_TOGGLE) {
-			if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES)
-				do_toggle_cycle = 1;
-		}
+		if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES)
+			do_toggle_cycle = 1;
 	}
 }
 
@@ -303,10 +285,8 @@ static void read_cycle_button(void) {
 
 			if (clk_time > 0) {
 				calc_div_clk_time(&m, clk_time);
-				calc_div_clk_time(&a, clk_time);
 
 				start_envelope(&m);
-				start_envelope(&a);
 
 				update_trigout();
 			}
@@ -314,18 +294,6 @@ static void read_cycle_button(void) {
 			cycle_but_on = 0;
 			set_rgb_led(LED_CYCLE, c_OFF);
 		}
-	}
-}
-
-static void read_lock_button(void) {
-	if (digin[LOCK_BUTTON].edge == 1) {
-		digin[LOCK_BUTTON].edge = 0;
-	}
-
-	if (digin[LOCK_BUTTON].edge == -1) {
-		digin[LOCK_BUTTON].edge = 0;
-		a.locked = 1 - a.locked;
-		set_rgb_led(LED_LOCK, a.locked ? c_RED : c_OFF);
 	}
 }
 
@@ -357,15 +325,6 @@ void check_reset_envelopes(void) {
 
 	} else
 		ping_led_off();
-
-	check_restart_async_env(&a);
-
-	if (a.div_clk_time) {
-		if (a.divpingtmr > a.div_clk_time) {
-			a.divpingtmr = a.divpingtmr - a.div_clk_time;
-			sync_env_to_clk(&a);
-		}
-	}
 }
 
 // Todo: this only needs to be done when tapouttmr updates
@@ -377,9 +336,6 @@ void update_tap_clock(void) {
 				// Todo: Yet another sync to the clock,is this needed?
 				if (m.clock_divider_amount <= 1)
 					m.divpingtmr = 0;
-
-				if (a.clock_divider_amount <= 1)
-					a.divpingtmr = 0;
 
 				got_tap_clock = 1;
 			}
@@ -416,18 +372,10 @@ void read_ping_clock(void) {
 			m.divpingtmr = 0;
 		}
 
-		if (a.clock_divider_amount <= 1) {
-			// if (!using_tap_clock)
-			a.divpingtmr = 0;
-		}
-
 		calc_div_clk_time(&m, clk_time);
-		calc_div_clk_time(&a, clk_time);
 
 		if (resync_on_ping(&m))
 			ping_led_on();
-
-		resync_on_ping(&a);
 
 	} else {
 		/*	If we haven't received a ping within 2x expected clock time (that is,
@@ -446,14 +394,10 @@ void read_ping_clock(void) {
 					clk_time = tapout_clk_time;
 
 					calc_div_clk_time(&m, clk_time);
-					calc_div_clk_time(&a, clk_time);
 
 					m.reset_now_flag = 1;
-					if (!a.locked)
-						a.reset_now_flag = 1;
 				} else {
 					stop_envelope(&m);
-					stop_envelope(&a);
 					clk_time = 0;
 				}
 				ping_led_off();

@@ -8,7 +8,7 @@
 #include "math_util.h"
 #include "pingable_env.h"
 
-extern struct PingableEnvelope m, a;
+extern struct PingableEnvelope m;
 extern uint32_t clk_time;
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
@@ -44,8 +44,6 @@ void init_params(void) {
 	shift = 2048; //=settings.shift_value
 	offset = 0;
 	scale = 0;
-
-	a.locked = 0; //Todo: placeholder
 }
 
 void update_adc_params(uint8_t force_params_update) {
@@ -60,10 +58,6 @@ void update_adc_params(uint8_t force_params_update) {
 			calc_rise_fall_incs(&m);
 			update_env_tracking(&m);
 
-			copy_skew_and_curves(&a, &m);
-			copy_rise_fall_incs(&a, &m);
-			update_env_tracking(&a);
-
 			reset_transition_counter();
 		}
 
@@ -76,17 +70,12 @@ void update_adc_params(uint8_t force_params_update) {
 				calc_rise_fall_incs(&m);
 				update_env_tracking(&m);
 
-				update_clock_divider_amount(&a, new_clock_divider_amount);
-				copy_rise_fall_incs(&a, &m);
-				update_env_tracking(&a);
-
 				reset_transition_counter();
 			}
 		}
 
 		if (check_to_start_transition()) {
 			do_start_transition(&m);
-			do_start_transition(&a);
 		}
 	} else {
 		if (++oversample_wait_ctr > 4) {
@@ -198,25 +187,21 @@ static int16_t plateau(int16_t val, const uint16_t low, const uint16_t high) {
 }
 
 static void update_env_tracking(struct PingableEnvelope *e) {
-	if (!e->locked) {
-		if (e->envelope_running && e->sync_to_ping_mode)
-			e->tracking_changedrisefalls = 1;
+	if (e->envelope_running && e->sync_to_ping_mode)
+		e->tracking_changedrisefalls = 1;
 
-		e->async_env_changed_shape = 1;
-	}
+	e->async_env_changed_shape = 1;
 }
 
 static void update_clock_divider_amount(struct PingableEnvelope *e, int16_t new_clock_divider_amount) {
-	if (!e->locked) {
-		e->clock_divider_amount = new_clock_divider_amount;
+	e->clock_divider_amount = new_clock_divider_amount;
 
-		if (clk_time) {
-			if (e->ping_div_ctr < 0)
-				e->ping_div_ctr = 0;
-			if (e->ping_div_ctr > e->clock_divider_amount)
-				e->ping_div_ctr = e->clock_divider_amount;
+	if (clk_time) {
+		if (e->ping_div_ctr < 0)
+			e->ping_div_ctr = 0;
+		if (e->ping_div_ctr > e->clock_divider_amount)
+			e->ping_div_ctr = e->clock_divider_amount;
 
-			e->div_clk_time = get_clk_div_time(new_clock_divider_amount, clk_time);
-		}
+		e->div_clk_time = get_clk_div_time(new_clock_divider_amount, clk_time);
 	}
 }

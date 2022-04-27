@@ -9,7 +9,7 @@ extern volatile uint32_t pingtmr;
 const uint32_t NUM_ADC_CYCLES_BEFORE_TRANSITION = 100; //10 is about 100ms
 static uint32_t didnt_change_divmult = 0;
 
-static int8_t calc_divided_ping_div_ctr(struct PingableEnvelope *e, uint8_t envstate);
+static int8_t calc_divided_ping_div_ctr(struct PingableEnvelope *e, enum envelopeStates envstate);
 
 void reset_transition_counter(void) {
 	didnt_change_divmult = 1;
@@ -32,8 +32,6 @@ uint8_t check_to_start_transition(void) {
 
 void do_start_transition(struct PingableEnvelope *e) {
 	uint32_t elapsed_time;
-	if (e->locked)
-		return;
 
 	if (e->div_clk_time && e->sync_to_ping_mode) {
 		e->tracking_changedrisefalls = 0;
@@ -82,9 +80,6 @@ void do_start_transition(struct PingableEnvelope *e) {
 void start_transition(struct PingableEnvelope *e, uint32_t elapsed_time) {
 	uint64_t time_tmp;
 	uint16_t segphase_endpoint;
-
-	if (e->locked)
-		return;
 
 	if (elapsed_time > e->div_clk_time)
 		elapsed_time -= e->div_clk_time;

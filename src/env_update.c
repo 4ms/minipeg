@@ -10,7 +10,7 @@
 extern int32_t scale, offset, shift;
 extern uint32_t clk_time;
 extern uint8_t cycle_but_on;
-extern struct PingableEnvelope m, a;
+extern struct PingableEnvelope m;
 extern struct SystemSettings settings;
 extern volatile uint8_t using_tap_clock;
 extern volatile uint32_t tapouttmr;
@@ -18,7 +18,7 @@ extern volatile uint32_t pingtmr;
 
 static void do_reset_envelope(struct PingableEnvelope *e);
 static uint16_t update_envelope(struct PingableEnvelope *e);
-static void output_env_val(uint16_t rawA, uint16_t rawB);
+static void output_env_val(uint16_t rawA);
 static void handle_env_segment_end(struct PingableEnvelope *e, uint8_t end_segment_flag);
 static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag);
 static void start_envelope_in_sync(struct PingableEnvelope *e);
@@ -26,12 +26,10 @@ static void start_envelope_immediate(struct PingableEnvelope *e);
 
 void update_all_envelopes(void) {
 	m.divpingtmr++;
-	a.divpingtmr++;
 	inc_tmrs();
 
 	uint16_t envA = update_envelope(&m);
-	uint16_t envB = update_envelope(&a);
-	output_env_val(envA, envB);
+	output_env_val(envA);
 }
 
 const uint32_t k_accum_max = (0xFFF << 19);
@@ -216,9 +214,9 @@ static int32_t scale_shift_offset_env(uint16_t raw_env_val) {
 	return env;
 }
 
-static void output_env_val(uint16_t rawA, uint16_t rawB) {
+static void output_env_val(uint16_t rawA) {
 	int32_t envA = scale_shift_offset_env(rawA);
-	int32_t envB = scale_shift_offset_env(rawB);
+	int32_t envB = rawA;
 
 	dac_out(DAC_ENVA, envA);
 	dac_out(DAC_ENVB, envB);
@@ -231,7 +229,6 @@ static void output_env_val(uint16_t rawA, uint16_t rawB) {
 		set_led_brightness(0, PWM_ENVA_R);
 	}
 
-	//Todo: use red if 5V is locked
 	set_led_brightness(envB, PWM_ENVB_B);
 }
 
@@ -382,18 +379,16 @@ static void start_envelope_in_sync(struct PingableEnvelope *e) {
 }
 
 void stop_envelope(struct PingableEnvelope *e) {
-	if (!e->locked) {
-		e->env_state = WAIT;
-		e->envelope_running = 0;
-		e->divpingtmr = 0;
-		e->div_clk_time = 0;
-		e->accum = 0;
+	e->env_state = WAIT;
+	e->envelope_running = 0;
+	e->divpingtmr = 0;
+	e->div_clk_time = 0;
+	e->accum = 0;
 
-		//Todo: make sure the following doesn't mess up stopping tap clock
-		//by holding ping down for long-press
-		e->rise_time = 0;
-		e->fall_time = 0;
-		e->rise_inc = 0;
-		e->fall_inc = 0;
-	}
+	//Todo: make sure the following doesn't mess up stopping tap clock
+	//by holding ping down for long-press
+	e->rise_time = 0;
+	e->fall_time = 0;
+	e->rise_inc = 0;
+	e->fall_inc = 0;
 }

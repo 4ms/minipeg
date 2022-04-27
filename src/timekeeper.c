@@ -26,18 +26,7 @@
  *
  * -----------------------------------------------------------------------------
  */
-//Todo: Convert to C++
-//template <unsigned TIMnum>
-//class timertask {
-//    timertask(...config...);
-//    timertask();
-//    config_timer_task(...config...);
-//    assign_taskfunc(void func());
-//    start();
-//    pause();
-//    resume();
-//...but how to generate a function that overrides TIMx_IRQHandler()?
-// Can we hard-program the vector table entry to point to a static member function?
+//Todo: Use mdrivlib timekeeper
 
 #include "timekeeper.h"
 #include "globals.h"

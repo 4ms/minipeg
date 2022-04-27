@@ -1,7 +1,13 @@
 #pragma once
 #include <stdint.h>
 
-enum envelopeStates { WAIT = 0, RISE = 1, SUSTAIN = 2, FALL = 3, TRANSITION = 4 };
+enum envelopeStates {
+	WAIT = 0,
+	RISE = 1,
+	SUSTAIN = 2,
+	FALL = 3,
+	TRANSITION = 4,
+};
 
 struct PingableEnvelope {
 	volatile uint32_t divpingtmr;
@@ -45,8 +51,6 @@ struct PingableEnvelope {
 	int32_t transition_ctr;
 	uint32_t accum_endpoint;
 	char outta_sync;
-
-	uint8_t locked;
 
 	uint8_t trigq_down;
 	uint8_t triga_down;

@@ -11,10 +11,12 @@ void init_dig_inouts(void) {
 
 	//Configure outputs
 	gpio.Mode = GPIO_MODE_OUTPUT_PP;
-	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	gpio.Speed = GPIO_SPEED_FREQ_HIGH;
 	gpio.Pull = GPIO_NOPULL;
 	gpio.Pin = TRIGOUT_Pin;
 	HAL_GPIO_Init(TRIGOUT_GPIO_Port, &gpio);
+	gpio.Pin = DEBUG_Pin;
+	HAL_GPIO_Init(DEBUG_GPIO_Port, &gpio);
 
 	//Configure inputs with pullup
 	gpio.Mode = GPIO_MODE_INPUT;
@@ -24,9 +26,6 @@ void init_dig_inouts(void) {
 	HAL_GPIO_Init(PING_BUT_GPIO_Port, &gpio);
 	gpio.Pin = CYCLE_BUT_Pin;
 	HAL_GPIO_Init(CYCLE_BUT_GPIO_Port, &gpio);
-
-	gpio.Pin = LOCK_BUT_Pin;
-	HAL_GPIO_Init(LOCK_BUT_GPIO_Port, &gpio);
 
 	//Configure inputs with pulldown
 	gpio.Pull = GPIO_PULLDOWN;

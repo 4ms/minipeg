@@ -117,11 +117,6 @@ uint8_t sanity_check_calibration(void) {
 		return 0;
 	if (settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
 		return 0;
-	if (settings.auxtrigin_assignment > NUM_AUX_TRIG_JACK_ASSIGNMENTS)
-		return 0;
-	if (settings.auxtrigin_function > NUM_TRIGIN_FUNCTIONS)
-		return 0;
-
 	if ((settings.start_clk_time > 0x8000000) || (settings.start_clk_time < 100))
 		return 0;
 	if (settings.start_cycle_on > 1)

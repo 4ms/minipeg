@@ -15,12 +15,12 @@ enum CycleJackBehaviors {
 	NUM_CYCLEJACK_BEHAVIORS
 };
 
-enum AuxTrigJackAssignment {
-	AUX_ENV_TRIG,
-	CYCLE_TOGGLE,
+// enum AuxTrigJackAssignment {
+// 	AUX_ENV_TRIG,
+// 	CYCLE_TOGGLE,
 
-	NUM_AUX_TRIG_JACK_ASSIGNMENTS
-};
+// 	NUM_AUX_TRIG_JACK_ASSIGNMENTS
+// };
 
 enum TrigOutFunctions {
 	TRIGOUT_IS_ENDOFRISE,
@@ -60,8 +60,8 @@ struct SystemSettings {
 	enum TrigInFunctions trigin_function;
 	enum TrigOutFunctions trigout_function;
 
-	enum AuxTrigJackAssignment auxtrigin_assignment;
-	enum TrigInFunctions auxtrigin_function;
+	// enum AuxTrigJackAssignment auxtrigin_assignment;
+	// enum TrigInFunctions auxtrigin_function;
 	enum CycleJackBehaviors cycle_jack_behavior;
 
 	uint32_t start_clk_time;

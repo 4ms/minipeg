@@ -43,13 +43,10 @@ static void debounce_irq(void) {
 		else if (i == CYCLE_BUTTON)
 			pin_read = CYCLEBUT;
 
-		else if (i == LOCK_BUTTON)
-			pin_read = LOCKBUT;
-
 		else if (i == TRIGGER_JACK)
 			pin_read = TRIG_JACK_READ;
 
-		else if (i == AUXTRIG_JACK)
+		else if (i == CYCLE_JACK)
 			pin_read = AUXTRIG_JACK_READ;
 
 		else if (i == PING_JACK)

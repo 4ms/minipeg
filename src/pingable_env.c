@@ -30,22 +30,17 @@ void init_pingable_env(struct PingableEnvelope *e) {
 	e->transition_ctr = 0;
 	e->accum_endpoint = 0;
 	e->outta_sync = 0;
-	e->locked = 0;
 }
 
 void copy_skew_and_curves(struct PingableEnvelope *dst, struct PingableEnvelope *src) {
-	if (!dst->locked) {
-		dst->skew = src->skew;
-		dst->next_curve_rise = src->next_curve_rise;
-		dst->next_curve_fall = src->next_curve_fall;
-	}
+	dst->skew = src->skew;
+	dst->next_curve_rise = src->next_curve_rise;
+	dst->next_curve_fall = src->next_curve_fall;
 }
 
 void copy_rise_fall_incs(struct PingableEnvelope *dst, struct PingableEnvelope *src) {
-	if (!dst->locked) {
-		dst->fall_time = src->fall_time;
-		dst->rise_time = src->rise_time;
-		dst->rise_inc = src->rise_inc;
-		dst->fall_inc = src->fall_inc;
-	}
+	dst->fall_time = src->fall_time;
+	dst->rise_time = src->rise_time;
+	dst->rise_inc = src->rise_inc;
+	dst->fall_inc = src->fall_inc;
 }
