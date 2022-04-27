@@ -90,6 +90,7 @@ int main(void) {
   // }
 
   HAL_Delay(50);
+	read_settings();
   adjust_palette();
   check_calibration();
   adjust_palette();
