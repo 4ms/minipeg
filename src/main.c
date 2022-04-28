@@ -57,7 +57,7 @@ static void read_ping_clock(void);
 static void ping_led_off();
 static void ping_led_on();
 
-static const uint32_t kDacSampleRate = 22000;
+static const uint32_t kDacSampleRate = 40000;
 
 int main(void) {
 	system_init();
@@ -122,13 +122,13 @@ int main(void) {
 		// 4th loop G4: loops every ~2uS, with ~10us gaps
 		// p4 unit no-lock: 1.2uS fastest loop. Max 10us loop... average 530kHz
 
-		DEBUGON;
+		// DEBUGON;
 		read_ping_button();
 		read_trigjacks();
 		read_cycle_button();
 		check_reset_envelopes();
 
-		DEBUGOFF;
+		// DEBUGOFF;
 		update_tap_clock();
 		read_ping_clock();
 		update_adc_params(force_params_update);

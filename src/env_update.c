@@ -1,5 +1,6 @@
 #include "env_update.h"
 #include "dac.h"
+#include "dig_inouts.h"
 #include "env_transition.h"
 #include "flash_user.h"
 #include "leds.h"
@@ -25,11 +26,15 @@ static void start_envelope_in_sync(struct PingableEnvelope *e);
 static void start_envelope_immediate(struct PingableEnvelope *e);
 
 void update_all_envelopes(void) {
+	//@22kHz: 6.5us, every 45.5us, = 14.2%
+	//@40kHz: 6.5us, every 25.0us = 26.0%
+	// DEBUGON;
 	m.divpingtmr++;
 	inc_tmrs();
 
 	uint16_t envA = update_envelope(&m);
 	output_env_val(envA);
+	// DEBUGOFF;
 }
 
 const uint32_t k_accum_max = (0xFFF << 19);
