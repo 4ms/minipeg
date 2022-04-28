@@ -53,7 +53,7 @@ static void init_dac_update_tmr(uint32_t freq) {
 		return;
 	TimerITInitStruct dac_update_timer_config;
 
-	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq() * 2;
+	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq();
 	dac_update_timer_config.priority1 = 0;
 	dac_update_timer_config.priority2 = 1;
 	dac_update_timer_config.period = sysclockfreq / freq; // 168MHZ / 21kHz = 8000
