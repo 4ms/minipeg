@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "stm32g4xx_hal.h"
 
 extern struct SystemSettings settings;
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
@@ -49,6 +50,8 @@ void handle_system_mode(void) {
 	system_mode_cur = SET_TRIGOUT_FUNC;
 
 	while (1) {
+		now = HAL_GetTick();
+
 		if (digin[PING_BUTTON].state == 0)
 			ping_held_time = now;
 		else if ((now - ping_held_time) > (3000 * TICKS_PER_MS))
