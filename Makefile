@@ -1,13 +1,29 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
 BINARYNAME 		= main
 
-STARTUP 		= startup_stm32g431xx.s
-SYSTEM 			= system_stm32g4xx.c
-LOADFILE 		= STM32G431C8Tx_FLASH.ld
+ifeq ($(MAKECMDGOALS),g431)
+STARTUP 	:= startup_stm32g431xx.s
+SYSTEM 		:= system_stm32g4xx.c
+LOADFILE 	:= STM32G431C8Tx_FLASH.ld
+CHIP 		:= STM32G431xx
+CORTEXMATH	:= ARM_MATH_CM4
+HALDIR 		:= stm32g4
+CMSISDIR 	:= stm32g431
+else ifeq ($(MAKECMDGOALS),f746)
+STARTUP 	:= startup_stm32f746xx.s
+SYSTEM 		:= system_stm32f7xx.c
+LOADFILE 	:= STM32GF746x_FLASH.ld
+CHIP 		:= STM32G746xx
+CORTEXMATH	:= ARM_MATH_CM7
+HALDIR	 	:= stm32f7
+CMSISDIR 	:= stm32f746
+else
+$(error Build with `make g431` or `make f746`)
+endif
 
-DEVICE 			= stm32/device
+DEVICE 			= stm32/device/$(CMSISDIR)
 CORE 			= stm32/CMSIS
-PERIPH 			= stm32/HAL
+PERIPH 			= stm32/HAL/$(HALDIR)
 
 BUILDDIR 		= build
 
@@ -52,8 +68,8 @@ FLOAT-ABI = -mfloat-abi=hard
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
 
-ARCH_CFLAGS = -DARM_MATH_CM4 -D'__FPU_PRESENT=1' 
-ARCH_CFLAGS = -DSTM32G431xx -DUSE_HAL_DRIVER
+ARCH_CFLAGS = -D$(CORTEXMATH) -D'__FPU_PRESENT=1' 
+ARCH_CFLAGS = -D$(CHIP) -DUSE_HAL_DRIVER
 
 OPTFLAG = -O3
 
@@ -107,6 +123,10 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # build/src/flash_user.o: OPTFLAG = -O0
 # build/src/flash.o: OPTFLAG = -O0
 # $(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+
+g431: all
+
+f746: all
 
 all: Makefile $(BIN) $(HEX)
 
@@ -184,7 +204,7 @@ TEST_INC =  -I $(TESTFW_DIR) \
 			-I stm32/device/Include \
 			-I stm32/CMSIS/Include \
 
-TEST_CFLAGS = -DSTM32G431xx
+TEST_CFLAGS = -D$(CHIP)
 
 
 $(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
