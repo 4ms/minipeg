@@ -14,13 +14,7 @@
 #include "leds.h"
 #include "pwm.h"
 #include "settings.h"
+#include "stm32xx.h"
 #include "system.h"
 #include "system_mode.h"
 #include "trigout.h"
-#if defined(STM32G431xx)
-#include <stm32f7xx.h>
-#elif defined(STM32F746xx)
-#include <stm32f7xx.h>
-#else
-#error "No STM32xx defined. Please add the build flag -DSTM32G431xx or -DSTM32F746xx"
-#endif

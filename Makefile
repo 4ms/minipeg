@@ -199,10 +199,9 @@ TEST_OBJECTS = $(TESTFW_OBJ) \
 TESTEE_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TESTEE_SOURCES))))
 
 
-TEST_INC =  -I $(TESTFW_DIR) \
-			-I $(TEST_DIR) \
-			-I stm32/device/Include \
-			-I stm32/CMSIS/Include \
+TEST_INC =  -I$(TESTFW_DIR) \
+			-I$(TEST_DIR) \
+			-I$(DEVICE)/Include \
 
 TEST_CFLAGS = -D$(CHIP)
 
