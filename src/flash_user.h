@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stm32g4xx.h>
-
 #include "envelope_calcs.h"
+#include "stm32xx.h"
+#include <stdint.h>
+
 enum CycleJackBehaviors {
 	CYCLE_JACK_RISING_EDGE_TOGGLES,
 	CYCLE_JACK_BOTH_EDGES_TOGGLES,

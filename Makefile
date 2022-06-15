@@ -42,8 +42,8 @@ DEPS = $(OBJECTS:.o=.d)
 INCLUDES += -I$(DEVICE)/Include \
 			-I$(CORE)/Include \
 			-I$(PERIPH)/Inc \
-			-I inc \
-			-I inc/hardware_tests \
+			-I src \
+			-I src/hardware_tests \
 			-I libhwtests/inc \
 
 ELF 	= $(BUILDDIR)/$(BINARYNAME).elf

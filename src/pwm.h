@@ -6,8 +6,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "stm32xx.h"
 #include <stddef.h>
-#include <stm32g4xx.h>
 
 enum PwmOutputs {
 	PWM_ENVA_R,
