@@ -1,4 +1,12 @@
 #include "globals.h"
+#ifdef STM32G4
+#define FAST_SAMPLE ADC_SAMPLETIME_24CYCLES_5
+#define SLOW_SAMPLE ADC_SAMPLETIME_640CYCLES_5
+#elif defined(STM32F7)
+#define FAST_SAMPLE ADC_SAMPLETIME_28CYCLES
+#define SLOW_SAMPLE ADC_SAMPLETIME_480CYCLES
+#define ADC_OVERSAMPLING_RATIO_256 0
+#endif
 
 uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
 uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
@@ -33,32 +41,32 @@ void init_analog_conditioning(void) {
 	adc_cv_setup[ADC_CV_SHAPE].gpio = CV_SHAPE_GPIO_Port;
 	adc_cv_setup[ADC_CV_SHAPE].pin = CV_SHAPE_Pin;
 	adc_cv_setup[ADC_CV_SHAPE].channel = ADC_CHANNEL_15;
-	adc_cv_setup[ADC_CV_SHAPE].sample_time = ADC_SAMPLETIME_24CYCLES_5;
+	adc_cv_setup[ADC_CV_SHAPE].sample_time = FAST_SAMPLE;
 
 	adc_cv_setup[ADC_CV_DIVMULT].gpio = CV_DIVMULT_GPIO_Port;
 	adc_cv_setup[ADC_CV_DIVMULT].pin = CV_DIVMULT_Pin;
 	adc_cv_setup[ADC_CV_DIVMULT].channel = ADC_CHANNEL_11;
-	adc_cv_setup[ADC_CV_DIVMULT].sample_time = ADC_SAMPLETIME_24CYCLES_5;
+	adc_cv_setup[ADC_CV_DIVMULT].sample_time = FAST_SAMPLE;
 
 	adc_pot_setup[ADC_POT_SCALE].gpio = POT_SCALE_GPIO_Port;
 	adc_pot_setup[ADC_POT_SCALE].pin = POT_SCALE_Pin;
 	adc_pot_setup[ADC_POT_SCALE].channel = ADC_CHANNEL_4;
-	adc_pot_setup[ADC_POT_SCALE].sample_time = ADC_SAMPLETIME_640CYCLES_5;
+	adc_pot_setup[ADC_POT_SCALE].sample_time = SLOW_SAMPLE;
 
 	adc_pot_setup[ADC_POT_OFFSET].gpio = POT_OFFSET_GPIO_Port;
 	adc_pot_setup[ADC_POT_OFFSET].pin = POT_OFFSET_Pin;
 	adc_pot_setup[ADC_POT_OFFSET].channel = ADC_CHANNEL_3;
-	adc_pot_setup[ADC_POT_OFFSET].sample_time = ADC_SAMPLETIME_640CYCLES_5;
+	adc_pot_setup[ADC_POT_OFFSET].sample_time = SLOW_SAMPLE;
 
 	adc_pot_setup[ADC_POT_SHAPE].gpio = POT_SHAPE_GPIO_Port;
 	adc_pot_setup[ADC_POT_SHAPE].pin = POT_SHAPE_Pin;
 	adc_pot_setup[ADC_POT_SHAPE].channel = ADC_CHANNEL_12;
-	adc_pot_setup[ADC_POT_SHAPE].sample_time = ADC_SAMPLETIME_640CYCLES_5;
+	adc_pot_setup[ADC_POT_SHAPE].sample_time = SLOW_SAMPLE;
 
 	adc_pot_setup[ADC_POT_DIVMULT].gpio = POT_DIVMULT_GPIO_Port;
 	adc_pot_setup[ADC_POT_DIVMULT].pin = POT_DIVMULT_Pin;
 	adc_pot_setup[ADC_POT_DIVMULT].channel = ADC_CHANNEL_14;
-	adc_pot_setup[ADC_POT_DIVMULT].sample_time = ADC_SAMPLETIME_640CYCLES_5;
+	adc_pot_setup[ADC_POT_DIVMULT].sample_time = SLOW_SAMPLE;
 
 	ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, ADC_OVERSAMPLING_RATIO_256); //16
 	ADC_Init(ADC2, adc_pot_dma_buffer, NUM_POT_ADCS, adc_pot_setup, ADC_OVERSAMPLING_RATIO_256);
