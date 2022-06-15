@@ -1,54 +1,57 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
-BINARYNAME 		= main
+binaryname 		= main
 
 ifeq ($(MAKECMDGOALS),g431)
-STARTUP 	:= startup_stm32g431xx.s
-SYSTEM 		:= system_stm32g4xx.c
-LOADFILE 	:= STM32G431C8Tx_FLASH.ld
-CHIP 		:= STM32G431xx
-CORTEXMATH	:= ARM_MATH_CM4
-HALDIR 		:= stm32g4
-CMSISDIR 	:= stm32g431
+startup 	:= startup_stm32g431xx.s
+system 		:= system_stm32g4xx.c
+linkscript 	:= STM32G431C8Tx_FLASH.ld
+chip 		:= STM32G431xx
+shortchip	:= g431
+cortexmath	:= ARM_MATH_CM4
+devicefam 	:= stm32g4
+devicename 	:= stm32g431
 else ifeq ($(MAKECMDGOALS),f746)
-STARTUP 	:= startup_stm32f746xx.s
-SYSTEM 		:= system_stm32f7xx.c
-LOADFILE 	:= STM32F746ZGTx_FLASH.ld
-CHIP 		:= STM32F746xx
-CORTEXMATH	:= ARM_MATH_CM7
-HALDIR	 	:= stm32f7
-CMSISDIR 	:= stm32f746
+startup 	:= startup_stm32f746xx.s
+system 		:= system_stm32f7xx.c
+linkscript 	:= STM32F746ZGTx_FLASH.ld
+chip 		:= STM32F746xx
+shortchip	:= f746
+cortexmath	:= ARM_MATH_CM7
+devicefam	:= stm32f7
+devicename 	:= stm32f746
+else ifeq ($(MAKECMDGOALS),clean)
 else
 $(error Build with `make g431` or `make f746`)
 endif
 
-DEVICE 			= stm32/device/$(CMSISDIR)
-CORE 			= stm32/CMSIS
-PERIPH 			= stm32/HAL/$(HALDIR)
+cmsisdevicedir 	= stm32/device/$(devicename)
+periphdir 		= stm32/HAL/$(devicefam)
+coredir 		= stm32/CMSIS
 
-BUILDDIR 		= build
+builddir 		= build/$(shortchip)
 
 SOURCES  += $(wildcard src/*.c)
 SOURCES  += $(wildcard src/*.cc)
 SOURCES  += $(wildcard src/hardware_tests/*.cc)
 SOURCES  += $(wildcard libhwtests/src/*.cpp)
 SOURCES  += $(wildcard libhwtests/src/*.cc)
-SOURCES  += $(wildcard $(PERIPH)/Src/*.c)
-SOURCES  += $(DEVICE)/Source/Templates/gcc/$(STARTUP)
-SOURCES  += $(DEVICE)/Source/Templates/$(SYSTEM)
+SOURCES  += $(wildcard $(periphdir)/Src/*.c)
+SOURCES  += $(cmsisdevicedir)/Source/Templates/gcc/$(startup)
+SOURCES  += $(cmsisdevicedir)/Source/Templates/$(system)
 
-OBJECTS = $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(SOURCES))))
+OBJECTS = $(addprefix $(builddir)/, $(addsuffix .o, $(basename $(SOURCES))))
 DEPS = $(OBJECTS:.o=.d)
 
-INCLUDES += -I$(DEVICE)/Include \
-			-I$(CORE)/Include \
-			-I$(PERIPH)/Inc \
+INCLUDES += -I$(cmsisdevicedir)/Include \
+			-I$(coredir)/Include \
+			-I$(periphdir)/Inc \
 			-I src \
 			-I src/hardware_tests \
 			-I libhwtests/inc \
 
-ELF 	= $(BUILDDIR)/$(BINARYNAME).elf
-HEX 	= $(BUILDDIR)/$(BINARYNAME).hex
-BIN 	= $(BUILDDIR)/$(BINARYNAME).bin
+elf 	= $(builddir)/$(binaryname).elf
+hex 	= $(builddir)/$(binaryname).hex
+bin 	= $(builddir)/$(binaryname).bin
 
 ARCH 	= arm-none-eabi
 CC 		= $(ARCH)-gcc
@@ -60,27 +63,25 @@ OBJDMP 	= $(ARCH)-objdump
 GDB 	= $(ARCH)-gdb
 SZ 		= $(ARCH)-size
 
-SZOPTS 	= -d
-
-CPU = -mcpu=cortex-m4
-FPU = -mfpu=fpv4-sp-d16
-FLOAT-ABI = -mfloat-abi=hard
-MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
+cpu = -mcpu=cortex-m4
+fpu = -mfpu=fpv4-sp-d16
+floatabi = -mfloat-abi=hard
+mcu = $(cpu) -mthumb $(fpu) $(floatabi)
 
 
-ARCH_CFLAGS = -D$(CORTEXMATH) -D'__FPU_PRESENT=1' 
-ARCH_CFLAGS = -D$(CHIP) -DUSE_HAL_DRIVER
+arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
+arch_cflags = -D$(chip) -DUSE_HAL_DRIVER
 
-OPTFLAG = -O3
+optflag = -O3
 
 CFLAGS = -g3 \
-	$(ARCH_CFLAGS) $(MCU) \
+	$(arch_cflags) $(mcu) \
 	-I. $(INCLUDES) \
 	-fno-common \
 	-fdata-sections -ffunction-sections \
 	-specs=nano.specs \
 
-DEPFLAGS = -MMD -MP -MF $(BUILDDIR)/$(basename $<).d
+DEPFLAGS = -MMD -MP -MF $(builddir)/$(basename $<).d
 
 CXXFLAGS=$(CFLAGS) \
 	-std=c++17 \
@@ -92,83 +93,83 @@ CXXFLAGS=$(CFLAGS) \
 	-Wno-register \
 
 
-AFLAGS = $(MCU)
+AFLAGS = $(mcu)
 #	-x assembler-with-cpp
 
-LDSCRIPT = $(DEVICE)/$(LOADFILE)
+LDSCRIPT = $(cmsisdevicedir)/$(linkscript)
 
 LFLAGS =  -Wl,-Map,build/main.map,--cref \
 	-Wl,--gc-sections \
-	$(MCU) -specs=nano.specs  -T $(LDSCRIPT)
+	$(mcu) -specs=nano.specs  -T $(LDSCRIPT)
 
 #-----------------------------------
 # Uncomment to compile unoptimized:
 
-# build/src/main.o: OPTFLAG = -O0
-# build/src/params.o: OPTFLAG = -O0
-# build/src/envelope_calcs.o: OPTFLAG = -O0
-# build/src/envelope_out.o: OPTFLAG = -O0
-# build/src/dac.o: OPTFLAG = -O0
-# build/src/debounced_digins.o: OPTFLAG = -O0
-# build/src/dig_inouts.o: OPTFLAG = -O0
-# build/src/env_transition.o: OPTFLAG = -O0
-# build/src/analog_conditioning.o: OPTFLAG = -O0
-# build/src/adc.o: OPTFLAG = -O0
-# build/src/hardware_tests/%.o: OPTFLAG = -O0
-# build/src/dac.o: OPTFLAG = -O0
-# build/libhwtests/%.o: OPTFLAG = -O0
-# build/src/leds.o: OPTFLAG = -O0
-# build/src/pwm.o: OPTFLAG = -O0
-# build/src/debounced_digins.o: OPTFLAG = -O0
-# build/src/flash_user.o: OPTFLAG = -O0
-# build/src/flash.o: OPTFLAG = -O0
-# $(BUILDDIR)/$(PERIPH)/Src/%.o: OPTFLAG = -O0
+# $(builddir)/src/main.o: optflag = -O0
+# $(builddir)/src/params.o: optflag = -O0
+# $(builddir)/src/envelope_calcs.o: optflag = -O0
+# $(builddir)/src/envelope_out.o: optflag = -O0
+# $(builddir)/src/dac.o: optflag = -O0
+# $(builddir)/src/debounced_digins.o: optflag = -O0
+# $(builddir)/src/dig_inouts.o: optflag = -O0
+# $(builddir)/src/env_transition.o: optflag = -O0
+# $(builddir)/src/analog_conditioning.o: optflag = -O0
+# $(builddir)/src/adc.o: optflag = -O0
+# $(builddir)/src/hardware_tests/%.o: optflag = -O0
+# $(builddir)/src/dac.o: optflag = -O0
+# $(builddir)/libhwtests/%.o: optflag = -O0
+# $(builddir)/src/leds.o: optflag = -O0
+# $(builddir)/src/pwm.o: optflag = -O0
+# $(builddir)/src/debounced_digins.o: optflag = -O0
+# $(builddir)/src/flash_user.o: optflag = -O0
+# $(builddir)/src/flash.o: optflag = -O0
+# $(builddir)/$(periphdir)/Src/%.o: optflag = -O0
 
 g431: all
 
 f746: all
 
-all: Makefile $(BIN) $(HEX)
+all: Makefile $(bin) $(hex)
 
-$(BIN): $(ELF)
+$(bin): $(elf)
 	$(OBJCPY) -O binary $< $@
 	$(OBJDMP) -x --syms $< > $(addsuffix .dmp, $(basename $<))
 	ls -l $@ $<
 
-$(HEX): $(ELF)
+$(hex): $(elf)
 	$(OBJCPY) --output-target=ihex $< $@
-	$(SZ) $(SZOPTS) $(ELF)
+	$(SZ) -d $(elf)
 
-$(ELF): $(OBJECTS)
+$(elf): $(OBJECTS)
 	@echo "Linking..."
 	@$(LD) $(LFLAGS) -o $@ $(OBJECTS)
 
-$(BUILDDIR)/%.o: %.c $(BUILDDIR)/%.d
+$(builddir)/%.o: %.c $(builddir)/%.d
 	@mkdir -p $(dir $@)
-	@echo "Compiling $< at $(OPTFLAG)"
-	@$(CC) -c $(DEPFLAGS) $(OPTFLAG) $(CFLAGS) $< -o $@
+	@echo "Compiling $< at $(optflag)"
+	@$(CC) -c $(DEPFLAGS) $(optflag) $(CFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.cpp $(BUILDDIR)/%.d
+$(builddir)/%.o: %.cpp $(builddir)/%.d
 	@mkdir -p $(dir $@)
-	@echo "Compiling $< at $(OPTFLAG)"
-	@$(CXX) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
+	@echo "Compiling $< at $(optflag)"
+	@$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.cc $(BUILDDIR)/%.d
+$(builddir)/%.o: %.cc $(builddir)/%.d
 	@mkdir -p $(dir $@)
-	@echo "Compiling $< at $(OPTFLAG)"
-	@$(CXX) -c $(DEPFLAGS) $(OPTFLAG) $(CXXFLAGS) $< -o $@
+	@echo "Compiling $< at $(optflag)"
+	@$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
 
-$(BUILDDIR)/%.o: %.s
+$(builddir)/%.o: %.s
 	mkdir -p $(dir $@)
-	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(BUILDDIR)/, $(addsuffix .lst, $(basename $<)))
+	$(AS) $(AFLAGS) $< -o $@ > $(addprefix $(builddir)/, $(addsuffix .lst, $(basename $<)))
 
-flash: $(BIN)
-	st-flash write $(BIN) 0x8000000
+flash: $(bin)
+	st-flash write $(bin) 0x8000000
 
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(builddir)
 
-#-include $(wildcard $(BUILDDIR)/*.d)
+#-include $(wildcard $(builddir)/*.d)
 %.d: ;
 
 ifneq "$(MAKECMDGOALS)" "clean"
@@ -201,9 +202,9 @@ TESTEE_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TE
 
 TEST_INC =  -I$(TESTFW_DIR) \
 			-I$(TEST_DIR) \
-			-I$(DEVICE)/Include \
+			-I$(cmsisdevicedir)/Include \
 
-TEST_CFLAGS = -D$(CHIP)
+TEST_CFLAGS = -D$(chip)
 
 
 $(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
