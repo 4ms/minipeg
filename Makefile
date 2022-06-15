@@ -5,20 +5,34 @@ ifeq ($(MAKECMDGOALS),g431)
 startup 	:= startup_stm32g431xx.s
 system 		:= system_stm32g4xx.c
 linkscript 	:= STM32G431C8Tx_FLASH.ld
-chip 		:= STM32G431xx
+chip_define	:= STM32G431xx
+fam_define	:= STM32G4
 shortchip	:= g431
 cortexmath	:= ARM_MATH_CM4
 devicefam 	:= stm32g4
 devicename 	:= stm32g431
+SOURCES 	= $(wildcard src/g431-drivers/*.c) \
+			  $(wildcard src/g431-drivers/*.cc)
+
 else ifeq ($(MAKECMDGOALS),f746)
 startup 	:= startup_stm32f746xx.s
 system 		:= system_stm32f7xx.c
 linkscript 	:= STM32F746ZGTx_FLASH.ld
-chip 		:= STM32F746xx
+chip_define	:= STM32F746xx
+fam_define	:= STM32F7
 shortchip	:= f746
 cortexmath	:= ARM_MATH_CM7
 devicefam	:= stm32f7
 devicename 	:= stm32f746
+mdrivlibdir := lib/mdrivlib
+INCLUDES =  -I$(mdrivlibdir) \
+			-I$(mdrivlibdir)/drivers \
+			-I$(mdrivlibdir)/target/stm32f7xx \
+			-I$(mdrivlibdir)/target/stm32f7xx/drivers
+SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
+			$(wildcard src/f746-drivers/*.c) \
+			$(wildcard src/f746-drivers/*.cc)
+
 else ifeq ($(MAKECMDGOALS),clean)
 else
 $(error Build with `make g431` or `make f746`)
@@ -70,7 +84,7 @@ mcu = $(cpu) -mthumb $(fpu) $(floatabi)
 
 
 arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
-arch_cflags = -D$(chip) -DUSE_HAL_DRIVER
+arch_cflags = -D$(chip_define) -D$(fam_define) -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 
 optflag = -O3
 
@@ -204,7 +218,7 @@ TEST_INC =  -I$(TESTFW_DIR) \
 			-I$(TEST_DIR) \
 			-I$(cmsisdevicedir)/Include \
 
-TEST_CFLAGS = -D$(chip)
+TEST_CFLAGS = -D$(chip_define) -D$(fam_define)
 
 
 $(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
