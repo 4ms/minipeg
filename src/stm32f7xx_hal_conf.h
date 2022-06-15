@@ -272,6 +272,7 @@ extern "C" {
 /**
   * @brief Include module's header file 
   */
+#include "stm32f7xx_ll_gpio.h"
 
 #ifdef HAL_RCC_MODULE_ENABLED
 #include "stm32f7xx_hal_rcc.h"
