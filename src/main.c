@@ -6,9 +6,9 @@
 #include "math_util.h"
 #include "params.h"
 #include "pingable_env.h"
+#include "stm32xx.h"
 #include "timekeeper.h"
 #include "timers.h"
-#include <stm32g4xx.h>
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];

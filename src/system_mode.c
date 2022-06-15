@@ -1,5 +1,5 @@
 #include "globals.h"
-#include "stm32g4xx_hal.h"
+#include "stm32xx.h"
 
 extern struct SystemSettings settings;
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];

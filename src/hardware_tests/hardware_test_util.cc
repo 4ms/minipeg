@@ -3,7 +3,7 @@
 #include "pwm.h"
 
 #include "hardware_test_util.h"
-#include <stm32g4xx.h>
+#include "stm32xx.h"
 
 bool hardwaretest_continue_button(void) {
 	return PINGBUT ? true : false;

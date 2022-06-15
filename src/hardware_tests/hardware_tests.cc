@@ -1,27 +1,27 @@
-#include <stm32g4xx.h>
+#include "stm32xx.h"
 extern "C" {
 #include "adc.h"
+#include "analog_conditioning.h"
 #include "calibration.h"
+#include "debounced_digins.h"
 #include "dig_inouts.h"
-#include "envelope_calcs.h"
 #include "env_update.h"
+#include "envelope_calcs.h"
+#include "flash.h"
 #include "flash_user.h"
 #include "leds.h"
 #include "pwm.h"
-#include "trigout.h"
-#include "debounced_digins.h"
-#include "analog_conditioning.h"
-#include "system_mode.h"
-#include "flash.h"
 #include "system.h"
+#include "system_mode.h"
+#include "trigout.h"
 }
 #include "dac.h"
 
-#include "hardware_test_util.h"
-#include "hardware_test_leds_buttons.h"
-#include "hardware_test_dac.h"
 #include "hardware_test_adc.h"
+#include "hardware_test_dac.h"
 #include "hardware_test_gates.h"
+#include "hardware_test_leds_buttons.h"
+#include "hardware_test_util.h"
 
 static void animate_success();
 
@@ -46,8 +46,7 @@ static void animate_success() {
 
 	set_led(led, false);
 	led++;
-	if (led>PWM_EOF_LED)
+	if (led > PWM_EOF_LED)
 		led = 0;
 	set_led(led, true);
 }
-
