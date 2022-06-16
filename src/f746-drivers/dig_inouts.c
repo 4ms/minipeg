@@ -2,7 +2,7 @@
  * dig_inouts.c
  */
 #include "dig_inouts.h"
-#include <stm32g4xx.h>
+#include "stm32xx.h"
 
 void init_dig_inouts(void) {
 	GPIO_InitTypeDef gpio = {0};
