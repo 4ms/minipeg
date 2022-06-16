@@ -28,8 +28,13 @@ mdrivlibdir := lib/mdrivlib
 INCLUDES =  -I$(mdrivlibdir) \
 			-I$(mdrivlibdir)/drivers \
 			-I$(mdrivlibdir)/target/stm32f7xx \
-			-I$(mdrivlibdir)/target/stm32f7xx/drivers
+			-I$(mdrivlibdir)/target/stm32f7xx/drivers \
+			-Ilib/cpputil 
+
 SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
+			$(mdrivlibdir)/drivers/timekeeper.cc \
+			$(mdrivlibdir)/drivers/tim.cc \
+			$(mdrivlibdir)/target/stm32f7xx/drivers/interrupt_handler.cc \
 			$(wildcard src/f746-drivers/*.c) \
 			$(wildcard src/f746-drivers/*.cc)
 
@@ -50,7 +55,7 @@ SOURCES  += $(wildcard src/hardware_tests/*.cc)
 SOURCES  += $(wildcard libhwtests/src/*.cpp)
 SOURCES  += $(wildcard libhwtests/src/*.cc)
 SOURCES  += $(wildcard $(periphdir)/Src/*.c)
-SOURCES  += $(cmsisdevicedir)/Source/Templates/gcc/$(startup)
+SOURCES  += src/$(shortchip)-drivers/$(startup)
 SOURCES  += $(cmsisdevicedir)/Source/Templates/$(system)
 
 OBJECTS = $(addprefix $(builddir)/, $(addsuffix .o, $(basename $(SOURCES))))
@@ -60,6 +65,7 @@ INCLUDES += -I$(cmsisdevicedir)/Include \
 			-I$(coredir)/Include \
 			-I$(periphdir)/Inc \
 			-I src \
+			-I src/$(shortchip)-drivers \
 			-I src/hardware_tests \
 			-I libhwtests/inc \
 
