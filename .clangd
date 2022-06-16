@@ -4,6 +4,8 @@ CompileFlags:
 	Add: [
 		"-DSTM32F7",
 		"-DSTM32F746xx",
+		"-Isrc/f746-drivers",
+		"-Ilib/cpputil",
 		"-Ilib/mdrivlib",
 		"-Ilib/mdrivlib/drivers",
 		"-Ilib/mdrivlib/target/stm32f7xx",
