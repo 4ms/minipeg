@@ -28,17 +28,51 @@
 
 #include <globals.h>
 
-const uint32_t first_page = 0x08000000;
-const uint32_t page_size = 0x00000800; //2k
-const uint8_t num_pages = 64;
+const uint32_t F74xxEx_SECTORS[] = {
+	0x08000000,
+	0x08008000,
+	0x08010000,
+	0x08018000,
+	0x08020000,
+	0x08040000,
+	0,
+};
+const uint32_t F74xxGx_SECTORS[] = {
+	0x08000000,
+	0x08008000,
+	0x08010000,
+	0x08018000,
+	0x08020000,
+	0x08040000,
+	0x08080000,
+	0x080C0000,
+	0,
+};
+
+//config: use F746IEK6 which has 512kB FLASH
+const uint32_t *SECTORS = F74xxEx_SECTORS;
+
+uint32_t get_sector_num(uint32_t address) {
+	unsigned i = 0;
+	while (SECTORS[i]) {
+		if (address <= SECTORS[i])
+			return i;
+	}
+	return 0;
+}
+
+uint32_t get_sector_base_address(uint32_t sector_num) {
+	return SECTORS[sector_num];
+}
 
 HAL_StatusTypeDef _flash_erase(uint32_t address) {
 	HAL_StatusTypeDef status;
-	uint32_t page = (address - first_page) / page_size;
+	uint32_t page = get_sector_num(address);
 	FLASH_EraseInitTypeDef eraseInit;
-	eraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
-	eraseInit.Page = page;
-	eraseInit.NbPages = 1;
+	eraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
+	eraseInit.Sector = page;
+	eraseInit.NbSectors = 1;
+	eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_4;
 	status = HAL_FLASHEx_Erase(&eraseInit, &page);
 	if (page != 0xFFFFFFFF)
 		return HAL_ERROR;
