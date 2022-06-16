@@ -178,17 +178,11 @@ void init_pwm_out_pin(struct PWMOutput *p) {
 	gpio.Pull = GPIO_NOPULL;
 	gpio.Pin = p->pinnum;
 	gpio.Alternate = p->af;
-	enable_gpio_rcc(p->gpio);
+	mdrivlib::RCC_Enable::GPIO::enable(p->gpio);
 	HAL_GPIO_Init(p->gpio, &gpio);
 }
 
 void init_pwm_tim(struct PWMOutput *p) {
-	//Todo: turn on RCC for TIM automatically based on p->tim.Instance
-	__HAL_RCC_TIM1_CLK_ENABLE();
-	__HAL_RCC_TIM2_CLK_ENABLE();
-	__HAL_RCC_TIM3_CLK_ENABLE();
-	__HAL_RCC_TIM4_CLK_ENABLE();
-
 	mdrivlib::Clocks::TIM::enable(p->tim.Instance);
 	TIM_OC_InitTypeDef tim_oc;
 
@@ -201,7 +195,6 @@ void init_pwm_tim(struct PWMOutput *p) {
 	HAL_TIM_PWM_Init(&p->tim);
 
 	tim_oc.OCMode = TIM_OCMODE_PWM1;
-	//tim_oc.OCMode = (p->tim.Instance==TIM14) ? TIM_OCMODE_PWM2 : TIM_OCMODE_PWM1;
 	tim_oc.OCFastMode = TIM_OCFAST_DISABLE;
 	tim_oc.OCPolarity = TIM_OCPOLARITY_LOW;
 	tim_oc.OCNPolarity = TIM_OCNPOLARITY_HIGH;

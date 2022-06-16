@@ -7,7 +7,10 @@
 void init_dig_inouts(void) {
 	GPIO_InitTypeDef gpio = {0};
 
-	ALL_GPIO_RCC_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOE_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
 
 	//Configure outputs
 	gpio.Mode = GPIO_MODE_OUTPUT_PP;

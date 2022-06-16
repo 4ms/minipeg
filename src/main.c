@@ -83,7 +83,7 @@ int main(void) {
 
 	// if (LOCKBUT || !read_settings())
 	// {
-	// 	test_hardware();
+	test_hardware();
 	// 	write_settings();
 	// }
 
@@ -93,8 +93,7 @@ int main(void) {
 	check_calibration();
 	adjust_palette();
 
-	init_dac(kDacSampleRate);
-	assign_dac_update_callback(&update_all_envelopes);
+	init_dac(kDacSampleRate, &update_all_envelopes);
 
 	init_params();
 

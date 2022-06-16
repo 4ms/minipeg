@@ -38,11 +38,11 @@ DMA_HandleTypeDef hdma_adc2;
 
 static uint32_t HAL_RCC_ADC12_CLK_ENABLED = 0;
 
-void ADC_Init(ADC_TypeDef *ADCx,
-			  uint16_t *adc_buffer,
-			  uint32_t num_channels,
-			  builtinAdcSetup *adc_setup,
-			  uint32_t oversample_ratio) {
+extern "C" void ADC_Init(ADC_TypeDef *ADCx,
+						 uint16_t *adc_buffer,
+						 uint32_t num_channels,
+						 builtinAdcSetup *adc_setup,
+						 uint32_t oversample_ratio) {
 	GPIO_InitTypeDef gpio;
 	HAL_StatusTypeDef err;
 	uint8_t i;
@@ -51,8 +51,7 @@ void ADC_Init(ADC_TypeDef *ADCx,
 	if (!hadc)
 		return;
 
-	// __HAL_RCC_DMAMUX1_CLK_ENABLE();
-	// __HAL_RCC_DMA1_CLK_ENABLE();
+	__HAL_RCC_DMA2_CLK_ENABLE();
 
 	for (i = 0; i < num_channels; i++) {
 		gpio.Pin = adc_setup[i].pin;
@@ -121,10 +120,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *adcHandle) {
 		HAL_DMA_Init(&hdma_adc1);
 
 		__HAL_LINKDMA(adcHandle, DMA_Handle, hdma_adc1);
-	}
-
-	else if (adcHandle->Instance == ADC2)
-	{
+	} else if (adcHandle->Instance == ADC2) {
 		__HAL_RCC_ADC2_CLK_ENABLE();
 
 		hdma_adc2.Instance = DMA2_Stream2;
