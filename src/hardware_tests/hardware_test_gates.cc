@@ -1,11 +1,11 @@
-#include "dig_inouts.h"
-#include "pwm.h"
-#include "leds.h"
 #include "dac.h"
+#include "dig_inouts.h"
+#include "leds.h"
+#include "pwm.h"
 
-#include "hardware_test_util.h"
 #include "GateInChecker.h"
 #include "GateOutput.h"
+#include "hardware_test_util.h"
 
 //Test:
 //Patch ENVA to TRIGA, TRIGB, and PING jacks in that order
@@ -17,9 +17,10 @@
 //
 class SEGGateInChecker : public IGateInChecker {
 	const unsigned kNumRepeats = 100;
+
 public:
-	SEGGateInChecker() : IGateInChecker(3)
-	{
+	SEGGateInChecker()
+		: IGateInChecker(3) {
 		pause_dac_timer();
 		init_dac(0, [] {});
 		set_num_toggles(kNumRepeats);
@@ -34,26 +35,26 @@ protected:
 	}
 
 	virtual bool _read_gate(uint8_t gate_num) {
-		if (gate_num==0)
+		if (gate_num == 0)
 			return TRIG_JACK_READ ? true : false;
 
-		else if (gate_num==1)
+		else if (gate_num == 1)
 			return AUXTRIG_JACK_READ ? true : false;
 
-		else if (gate_num==2)
+		else if (gate_num == 2)
 			return PING_JACK_READ ? true : false;
 		else
 			return false;
 	}
 
 	virtual void _set_indicator(uint8_t indicator_num, bool newstate) {
-		if (indicator_num==0)
+		if (indicator_num == 0)
 			set_led(PWM_ENVA_G, !newstate);
 
-		else if (indicator_num==1)
+		else if (indicator_num == 1)
 			set_led(PWM_ENVB_G, !newstate);
 
-		else if (indicator_num==2)
+		else if (indicator_num == 2)
 			set_led(PWM_PINGBUT_G, !newstate);
 	}
 
@@ -128,8 +129,7 @@ static void set_trigout(bool state) {
 		TRIGOUT_ON;
 		DEBUGON;
 		set_led(PWM_EOF_LED, true);
-	}
-	else {
+	} else {
 		TRIGOUT_OFF;
 		DEBUGOFF;
 		set_led(PWM_EOF_LED, false);
