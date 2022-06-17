@@ -20,8 +20,8 @@ class SEGGateInChecker : public IGateInChecker {
 public:
 	SEGGateInChecker() : IGateInChecker(3)
 	{
-		init_dac(0);
 		pause_dac_timer();
+		init_dac(0, [] {});
 		set_num_toggles(kNumRepeats);
 	}
 
