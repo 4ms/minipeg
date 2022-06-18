@@ -57,6 +57,7 @@ uint32_t get_sector_num(uint32_t address) {
 	while (SECTORS[i]) {
 		if (address <= SECTORS[i])
 			return i;
+		i++;
 	}
 	return 0;
 }
