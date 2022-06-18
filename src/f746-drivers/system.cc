@@ -30,7 +30,7 @@ extern "C" void system_init() {
 		.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK,
 		.AHBCLKDivider = RCC_SYSCLK_DIV1,
 		.APB1CLKDivider = RCC_HCLK_DIV4,
-		.APB2CLKDivider = RCC_HCLK_DIV2,
+		.APB2CLKDivider = RCC_HCLK_DIV4, //Max is DIV2, but ADC reads too fast and bleeds with 1k impedance
 	};
 	RCC_PeriphCLKInitTypeDef noperiphclk{0};
 	mdrivlib::SystemClocks::init_clocks(RCC_OscInitStruct, RCC_ClkInitStruct, noperiphclk, 1000);

@@ -62,7 +62,7 @@ extern "C" void ADC_Init(ADC_TypeDef *ADCx,
 	}
 
 	hadc->Instance = ADCx;
-	hadc->Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+	hadc->Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
 	hadc->Init.Resolution = ADC_RESOLUTION_12B;
 	hadc->Init.DataAlign = ADC_DATAALIGN_RIGHT;
 	hadc->Init.NbrOfConversion = num_channels;
