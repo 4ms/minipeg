@@ -11,7 +11,7 @@ static mdrivlib::Timekeeper dactmr;
 
 void dac_out(enum DACs dac, uint16_t val) {
 	if (dac == DAC_ENVA) {
-		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, val);
+		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 4095 - val);
 	} else if (dac == DAC_ENVB) {
 		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, val);
 	}

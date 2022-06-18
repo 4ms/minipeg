@@ -25,8 +25,7 @@ void init_debouncer(void) {
 	debounce_timer_config.prescaler = 0;
 	debounce_timer_config.clock_division = 0;
 
-	init_timer_IRQ(DEBOUNCE_TIM_NUM, &debounce_timer_config);
-	start_timer_IRQ(DEBOUNCE_TIM_NUM, &debounce_irq);
+	init_timer_IRQ(DEBOUNCE_TIM_NUM, &debounce_timer_config, &debounce_irq);
 }
 
 extern volatile uint32_t pingtmr;

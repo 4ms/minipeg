@@ -1,9 +1,7 @@
-
+#include "flash_user_conf.h"
 #include "globals.h"
 
 struct SystemSettings settings;
-
-#define USER_FLASH_PAGE 0x0801F000
 
 HAL_StatusTypeDef write_settings(void) {
 	HAL_StatusTypeDef status;

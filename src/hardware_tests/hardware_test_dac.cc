@@ -1,5 +1,7 @@
 #include "dac.h"
+#include "dig_inouts.h"
 #include "hardware_test_util.h"
+#include "stm32xx.h"
 
 const uint32_t kNumSineWavePoints = 60;
 const uint16_t sinewave[kNumSineWavePoints] = {
@@ -25,9 +27,10 @@ static uint16_t interpolate(float phase) {
 }
 
 const float kDacSampleRate = 21000.0f;
+float freqHz_a = 40;
+float freqHz_b = 40;
+
 static void update_test_waves() {
-	const float freqHz_a = 30;
-	const float freqHz_b = 40;
 
 	static float phase_a = 0.0f;
 	static float phase_b = 0.0f;
@@ -49,6 +52,20 @@ void test_dac() {
 	init_dac((uint32_t)kDacSampleRate, &update_test_waves);
 	resume_dac_timer();
 
-	pause_until_button_pressed();
+	bool cycledown = false;
+	while (!hardwaretest_continue_button()) {
+		if (CYCLEBUT) {
+			if (!cycledown) {
+				cycledown = true;
+				freqHz_a *= 2;
+				freqHz_b *= 2;
+				if (freqHz_a > 20000)
+					freqHz_a = 1;
+				if (freqHz_b > 20000)
+					freqHz_b = 1;
+			}
+		} else
+			cycledown = false;
+	}
 	pause_until_button_released();
 }

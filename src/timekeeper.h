@@ -41,7 +41,6 @@ typedef struct TimerITInitStruct {
 } TimerITInitStruct;
 
 void init_timekeeper(void);
-void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit);
-void start_timer_IRQ(uint8_t tim_number, void *callbackfunc);
+void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit, void *callbackfunc);
 void pause_timer_IRQ(uint8_t tim_number);
 void resume_timer_IRQ(uint8_t tim_number);

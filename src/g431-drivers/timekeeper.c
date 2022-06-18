@@ -50,10 +50,6 @@ voidfunc_type cached_tim_callbacks[NUM_TIMERS + 1];
 
 TimerITInitStruct tim_timing[NUM_TIMERS + 1];
 
-void start_timer_IRQ(uint8_t tim_number, void *callbackfunc) {
-	tim_callbacks[tim_number] = callbackfunc;
-}
-
 void pause_timer_IRQ(uint8_t tim_number) {
 	cached_tim_callbacks[tim_number] = tim_callbacks[tim_number];
 	tim_callbacks[tim_number] = NULL;
@@ -77,7 +73,7 @@ void init_timekeeper(void) {
 	}
 }
 
-void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit) {
+void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit, void *callbackfunc) {
 	TIM_HandleTypeDef tim;
 	uint8_t IRQn = 0;
 
@@ -216,6 +212,8 @@ void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit) {
 	//Enable the interrupt
 	if (HAL_TIM_Base_Start_IT(&tim) != HAL_OK)
 		Error_Handler();
+
+	tim_callbacks[TIM_periph_number] = callbackfunc;
 }
 
 #if defined(TIM1) && defined(TIM10)

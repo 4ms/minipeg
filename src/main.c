@@ -81,11 +81,9 @@ int main(void) {
 	// Todo: figure out when to enter hardware test mode... check settings for
 	// passed_hw_test==1 ?
 
-	// if (LOCKBUT || !read_settings())
-	// {
-	test_hardware();
-	// 	write_settings();
-	// }
+	if (CYCLEBUT || !read_settings()) 	test_hardware();
+		write_settings();
+	}
 
 	HAL_Delay(50);
 	read_settings();

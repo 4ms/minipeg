@@ -1,5 +1,5 @@
-#include "dac.h"
 extern "C" {
+#include "dac.h"
 #include "timekeeper.h"
 }
 #include <stm32g4xx.h>
@@ -22,7 +22,7 @@ void dac_out(enum DACs dac, uint16_t val) {
 	}
 }
 
-void init_dac(uint32_t freq) {
+extern "C" void init_dac(uint32_t freq, void (*callbackfunc)(void)) {
 	hdac1.Instance = DAC1;
 	HAL_DAC_Init(&hdac1);
 
@@ -45,12 +45,9 @@ void init_dac(uint32_t freq) {
 	HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
 	HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
 
-	init_dac_update_tmr(freq);
-}
-
-static void init_dac_update_tmr(uint32_t freq) {
 	if (freq == 0)
 		return;
+
 	TimerITInitStruct dac_update_timer_config;
 
 	uint32_t sysclockfreq = HAL_RCC_GetSysClockFreq();
@@ -60,11 +57,7 @@ static void init_dac_update_tmr(uint32_t freq) {
 	dac_update_timer_config.prescaler = 0;
 	dac_update_timer_config.clock_division = 0;
 
-	init_timer_IRQ(DAC_UPDATE_TIMER_NUM, &dac_update_timer_config);
-}
-
-void assign_dac_update_callback(void (*callbackfunc)(void)) {
-	start_timer_IRQ(DAC_UPDATE_TIMER_NUM, reinterpret_cast<void *>(callbackfunc));
+	init_timer_IRQ(DAC_UPDATE_TIMER_NUM, &dac_update_timer_config, reinterpret_cast<void *>(callbackfunc));
 }
 
 void pause_dac_timer(void) {
