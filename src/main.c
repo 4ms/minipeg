@@ -78,12 +78,12 @@ int main(void) {
 
 	init_debouncer();
 
-	// Todo: figure out when to enter hardware test mode... check settings for
-	// passed_hw_test==1 ?
-
-	if (CYCLEBUT || !read_settings()) 	 {
+	if (!read_settings()) {
 		test_hardware();
 		write_settings();
+	}
+	if (CYCLEBUT) {
+		test_hardware();
 	}
 
 	HAL_Delay(50);
