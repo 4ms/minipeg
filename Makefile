@@ -9,6 +9,10 @@ chip_define	:= STM32G431xx
 fam_define	:= STM32G4
 shortchip	:= g431
 cortexmath	:= ARM_MATH_CM4
+mcuflags 	:= -mcpu=cortex-m4 \
+			   -mthumb \
+			   -mfpu=fpv4-sp-d16 \
+			   -mfloat-abi=hard
 devicefam 	:= stm32g4
 devicename 	:= stm32g431
 SOURCES 	= $(wildcard src/g431-drivers/*.c) \
@@ -22,6 +26,10 @@ chip_define	:= STM32F746xx
 fam_define	:= STM32F7
 shortchip	:= f746
 cortexmath	:= ARM_MATH_CM7
+mcuflags 	:= -mcpu=cortex-m7 \
+			   -mthumb \
+			   -mfpu=fpv5-sp-d16 \
+			   -mfloat-abi=hard
 devicefam	:= stm32f7
 devicename 	:= stm32f746
 mdrivlibdir := lib/mdrivlib
@@ -83,19 +91,14 @@ OBJDMP 	= $(ARCH)-objdump
 GDB 	= $(ARCH)-gdb
 SZ 		= $(ARCH)-size
 
-cpu = -mcpu=cortex-m4
-fpu = -mfpu=fpv4-sp-d16
-floatabi = -mfloat-abi=hard
-mcu = $(cpu) -mthumb $(fpu) $(floatabi)
-
 
 arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
 arch_cflags = -D$(chip_define) -D$(fam_define) -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 
-optflag = -O3
+optflag = -O0
 
 CFLAGS = -g3 \
-	$(arch_cflags) $(mcu) \
+	$(arch_cflags) $(mcuflags) \
 	-I. $(INCLUDES) \
 	-fno-common \
 	-fdata-sections -ffunction-sections \
@@ -113,14 +116,14 @@ CXXFLAGS=$(CFLAGS) \
 	-Wno-register \
 
 
-AFLAGS = $(mcu)
+AFLAGS = $(mcuflags)
 #	-x assembler-with-cpp
 
 LDSCRIPT = $(cmsisdevicedir)/$(linkscript)
 
 LFLAGS =  -Wl,-Map,build/main.map,--cref \
 	-Wl,--gc-sections \
-	$(mcu) -specs=nano.specs  -T $(LDSCRIPT)
+	$(mcuflags) -specs=nano.specs  -T $(LDSCRIPT)
 
 #-----------------------------------
 # Uncomment to compile unoptimized:
