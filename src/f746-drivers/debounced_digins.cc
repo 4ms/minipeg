@@ -24,6 +24,7 @@ extern "C" void init_debouncer() {
 		.priority2 = 2,
 	};
 	digintmr.init(conf, debounce_irq);
+	digintmr.start();
 }
 
 extern volatile uint32_t pingtmr;
@@ -33,11 +34,11 @@ extern volatile uint8_t using_tap_clock;
 static void debounce_irq(void) {
 	uint32_t pin_read;
 
-	debouncers[PING_BUTTON].register_state(PINGBUT ? 0 : 1);
-	debouncers[CYCLE_BUTTON].register_state(CYCLEBUT ? 0 : 1);
-	debouncers[TRIGGER_JACK].register_state(TRIG_JACK_READ ? 0 : 1);
-	debouncers[CYCLE_JACK].register_state(AUXTRIG_JACK_READ ? 0 : 1);
-	debouncers[PING_JACK].register_state(PING_JACK_READ ? 0 : 1);
+	debouncers[PING_BUTTON].register_state(PINGBUT ? 1 : 0);
+	debouncers[CYCLE_BUTTON].register_state(CYCLEBUT ? 1 : 0);
+	debouncers[TRIGGER_JACK].register_state(TRIG_JACK_READ ? 1 : 0);
+	debouncers[CYCLE_JACK].register_state(AUXTRIG_JACK_READ ? 1 : 0);
+	debouncers[PING_JACK].register_state(PING_JACK_READ ? 1 : 0);
 
 	for (unsigned i = 0; i < NUM_DEBOUNCED_DIGINS; i++) {
 		digin[i].state = debouncers[i].is_high() ? 1 : 0;
