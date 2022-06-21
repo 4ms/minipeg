@@ -4,8 +4,6 @@
 //stub for adapting to g431 C code
 extern "C" void init_timekeeper() {
 }
-extern "C" void init_debouncer() {
-}
 
 extern "C" void system_init() {
 	mdrivlib::System::SetVectorTable(0x08000000);

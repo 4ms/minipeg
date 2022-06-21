@@ -11,7 +11,7 @@ static mdrivlib::Timekeeper digintmr;
 
 static void debounce_irq(void);
 
-void init_debouncer(void) {
+extern "C" void init_debouncer() {
 	HAL_StatusTypeDef err;
 
 	for (auto &d : debouncers)
