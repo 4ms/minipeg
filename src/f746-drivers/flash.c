@@ -73,12 +73,13 @@ HAL_StatusTypeDef _flash_erase(uint32_t address) {
 	eraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
 	eraseInit.Sector = page;
 	eraseInit.NbSectors = 1;
-	eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_4;
+	eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
 	status = HAL_FLASHEx_Erase(&eraseInit, &page);
 	if (page != 0xFFFFFFFF)
 		return HAL_ERROR;
-	else
+	else {
 		return status;
+	}
 }
 
 HAL_StatusTypeDef flash_erase_page(uint32_t address) {
@@ -111,21 +112,10 @@ HAL_StatusTypeDef flash_open_program_doubleword(uint64_t doubleword, uint32_t ad
 }
 
 HAL_StatusTypeDef flash_open_program_word(uint32_t word, uint32_t address) {
-	uint64_t padded_word;
-	//address &= ~0b11; //align to word
+	if (address & 0b11)
+		return HAL_ERROR;
 
-	if (address & 0b100) {
-		padded_word = (uint64_t)word;
-		padded_word <<= 32;
-		padded_word |= 0x00000000FFFFFFFF;
-		// padded_word = ((uint64_t)word << 32) | 0x00000000FFFFFFFF;
-		address -= 4;
-	} else
-		padded_word = (0xFFFFFFFF00000000) | ((uint64_t)word);
-
-	// printf("requested: %08x. writing: %016x at %i\n", word, padded_word, address);
-
-	return HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address, padded_word);
+	return HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, word);
 }
 
 void flash_end_open_program(void) {
@@ -133,24 +123,15 @@ void flash_end_open_program(void) {
 }
 
 HAL_StatusTypeDef flash_open_program_byte_array(uint8_t *arr, uint32_t address, uint32_t num_bytes) {
-	HAL_StatusTypeDef status = HAL_ERROR; //Todo: implement this
-	// uint64_t doubleword;
+	HAL_StatusTypeDef status = HAL_OK;
 
-	// while(num_bytes) {
-	// 	doubleword = (uint16_t)(*arr++);
+	if (!num_bytes)
+		return HAL_ERROR;
 
-	// 	if (--num_bytes)
-	// 	{
-	// 		halfword = (uint16_t)(*arr++);
-	// 		halfword |= ((uint16_t)(*arr++) << 8);
-	// 		num_bytes--;
-	// 	}
-	// 	else //when we have an odd number of bytes, pad the last one with the existing FLASH contents
-	// 		halfword |= flash_read_halfword(address) & 0xFF00;
-
-	// 	status |= flash_open_program_halfword(halfword, address);
-	// 	address++;
-	// }
+	while (num_bytes--) {
+		status |= HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, *arr++);
+		address++;
+	}
 	return status;
 }
 
@@ -187,23 +168,9 @@ HAL_StatusTypeDef flash_open_program_word_array(uint32_t *arr, uint32_t address,
 	if (!num_words)
 		return HAL_ERROR;
 
-	//First word not doubleword aligned
-	if (address & 0b100) {
-		// printf("not doublword aligned: %x at %i\n", *arr, address);
-		flash_open_program_word((uint64_t)(*arr++), address);
+	while (num_words--) {
+		status |= flash_open_program_word(*arr++, address);
 		address += 4;
-		num_words--;
-	}
-
-	while (num_words) {
-		if (--num_words) {
-			doubleword = (uint64_t)(*arr++);
-			doubleword |= (uint64_t)(*arr++) << 32;
-			num_words--;
-			status |= flash_open_program_doubleword(doubleword, address);
-			address += 8;
-		} else //Last word not doubleword aligned
-			flash_open_program_word((uint64_t)(*arr++), address);
 	}
 	return status;
 }
