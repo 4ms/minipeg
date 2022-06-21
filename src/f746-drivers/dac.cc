@@ -50,6 +50,7 @@ void init_dac(uint32_t freq, void (*callbackfunc)(void)) {
 	};
 
 	dactmr.init(conf, callbackfunc);
+	dactmr.start();
 }
 
 void pause_dac_timer(void) {

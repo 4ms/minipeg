@@ -3,8 +3,6 @@
 #include "drivers/timekeeper.hh"
 #include "util/debouncer.hh"
 
-#define DEBOUNCE_TIM_NUM 7
-
 debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 static std::array<Debouncer<0x0001, 0xFFFE, 0xFFFF>, NUM_DEBOUNCED_DIGINS> debouncers;
 static mdrivlib::Timekeeper digintmr;
@@ -27,9 +25,9 @@ extern "C" void init_debouncer() {
 	digintmr.start();
 }
 
-extern volatile uint32_t pingtmr;
-extern volatile uint32_t ping_irq_timestamp;
-extern volatile uint8_t using_tap_clock;
+// extern volatile uint32_t pingtmr;
+// extern volatile uint32_t ping_irq_timestamp;
+// extern volatile uint8_t using_tap_clock;
 
 static void debounce_irq(void) {
 	uint32_t pin_read;
