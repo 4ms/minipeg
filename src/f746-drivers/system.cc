@@ -44,5 +44,11 @@ extern "C" void system_init() {
 	HAL_NVIC_SetPriority(PendSV_IRQn, 0, 0);
 	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 
+	HAL_MPU_Disable();
+
+	SCB_InvalidateDCache();
+	SCB_DisableDCache();
+	SCB_EnableICache();
+
 	__HAL_DBGMCU_FREEZE_TIM7();
 }
