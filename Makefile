@@ -44,11 +44,42 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f7xx/drivers/interrupt_handler.cc \
 			$(wildcard src/f746-drivers/*.c) \
-			$(wildcard src/f746-drivers/*.cc)
+			$(wildcard src/f746-drivers/*.cc) \
+			src/shareddrv/pwm.cc
+
+else ifeq ($(MAKECMDGOALS),f423)
+startup 	:= startup_stm32f423xx.s
+system 		:= system_stm32f4xx.c
+linkscript 	:= STM32F423VHHx_FLASH.ld
+chip_define	:= STM32F423xx
+fam_define	:= STM32F4
+shortchip	:= f423
+devicefam	:= stm32f4
+devicename 	:= stm32f423
+cortexmath	:= ARM_MATH_CM4
+mcuflags 	:= -mcpu=cortex-m4 \
+			   -mthumb \
+			   -mfpu=fpv4-sp-d16 \
+			   -mfloat-abi=hard
+mdrivlibdir := lib/mdrivlib
+INCLUDES =  -I$(mdrivlibdir) \
+			-I$(mdrivlibdir)/drivers \
+			-I$(mdrivlibdir)/target/stm32f4xx \
+			-I$(mdrivlibdir)/target/stm32f4xx/drivers \
+			-Ilib/cpputil 
+
+SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
+			$(mdrivlibdir)/drivers/timekeeper.cc \
+			$(mdrivlibdir)/drivers/tim.cc \
+			$(mdrivlibdir)/target/stm32f4xx/drivers/interrupt_handler.cc \
+			$(wildcard src/f423-drivers/*.c) \
+			$(wildcard src/f423-drivers/*.cc) \
+			src/shareddrv/pwm.cc
+
 
 else ifeq ($(MAKECMDGOALS),clean)
 else
-$(error Build with `make g431` or `make f746`)
+$(error Build with `make g431` or `make f746` or `make f423`)
 endif
 
 cmsisdevicedir 	= stm32/device/$(devicename)
@@ -152,6 +183,8 @@ g431: all
 
 f746: all
 
+f423: all
+
 all: Makefile $(bin) $(hex)
 
 $(bin): $(elf)
@@ -180,7 +213,7 @@ $(builddir)/%.o: %.cpp $(builddir)/%.d
 $(builddir)/%.o: %.cc $(builddir)/%.d
 	@mkdir -p $(dir $@)
 	@echo "Compiling $< at $(optflag)"
-	@$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
 
 $(builddir)/%.o: %.s
 	mkdir -p $(dir $@)

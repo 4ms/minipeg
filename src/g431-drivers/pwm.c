@@ -1,14 +1,5 @@
 #include "globals.h"
 
-struct PWMOutput {
-	GPIO_TypeDef *gpio;
-	uint32_t pinnum;
-	uint8_t af;
-	TIM_HandleTypeDef tim;
-	uint8_t timchan;
-	uint32_t period;
-};
-
 struct PWMOutput pwm[NUM_PWMS];
 
 //Private:

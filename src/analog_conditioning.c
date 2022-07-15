@@ -6,6 +6,10 @@ uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 analog_t analog[NUM_ADCS];
 
+#ifndef ADC2
+#define ADC2 ADC1
+#endif
+
 //Private:
 void setup_fir_lpf(void);
 

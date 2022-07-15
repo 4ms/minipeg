@@ -44,6 +44,15 @@ enum PwmOutputs {
 //PINGBUT_G_EN
 //CYCLE_BUT_B
 
+struct PWMOutput {
+	GPIO_TypeDef *gpio;
+	uint32_t pinnum;
+	uint8_t af;
+	TIM_HandleTypeDef tim;
+	uint8_t timchan;
+	uint32_t period;
+};
+
 void init_pwm(void);
 void update_pwm(uint32_t pwmval, enum PwmOutputs channel);
 
