@@ -1,8 +1,11 @@
 #include "adc_pins.h"
 #include "globals.h"
 
-uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
-uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
+uint16_t adc_dma_buffer[NUM_CV_ADCS + NUM_POT_ADCS];
+uint16_t *adc_cv_dma_buffer = &(adc_dma_buffer[0]);
+uint16_t *adc_pot_dma_buffer = &(adc_dma_buffer[NUM_CV_ADCS]);
+// uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
+// uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 analog_t analog[NUM_ADCS];
 
@@ -14,8 +17,11 @@ analog_t analog[NUM_ADCS];
 void setup_fir_lpf(void);
 
 void init_analog_conditioning(void) {
-	builtinAdcSetup adc_cv_setup[NUM_CV_ADCS];
-	builtinAdcSetup adc_pot_setup[NUM_POT_ADCS];
+	builtinAdcSetup adc_setup[NUM_CV_ADCS + NUM_POT_ADCS];
+	builtinAdcSetup *adc_cv_setup = &(adc_setup[0]);
+	builtinAdcSetup *adc_pot_setup = &(adc_setup[NUM_CV_ADCS]);
+	// builtinAdcSetup adc_cv_setup[NUM_CV_ADCS];
+	// builtinAdcSetup adc_pot_setup[NUM_POT_ADCS];
 
 	adc_cv_setup[ADC_CV_SHAPE].gpio = CV_SHAPE_GPIO_Port;
 	adc_cv_setup[ADC_CV_SHAPE].pin = CV_SHAPE_Pin;
@@ -47,8 +53,14 @@ void init_analog_conditioning(void) {
 	adc_pot_setup[ADC_POT_DIVMULT].channel = POT_DIVMULT_Channel;
 	adc_pot_setup[ADC_POT_DIVMULT].sample_time = SLOW_SAMPLE;
 
-	ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, OVERSAMPLE_RATIO); //16
-	ADC_Init(ADC2, adc_pot_dma_buffer, NUM_POT_ADCS, adc_pot_setup, OVERSAMPLE_RATIO);
+	if (ADC1 == ADC2) {
+		// F423 and units with 1 ADC
+		ADC_Init(ADC1, adc_dma_buffer, NUM_POT_ADCS + NUM_CV_ADCS, adc_setup, OVERSAMPLE_RATIO); //16
+	} else {
+		// F746, G431 and units with 2 ADC
+		ADC_Init(ADC1, adc_cv_dma_buffer, NUM_CV_ADCS, adc_cv_setup, OVERSAMPLE_RATIO); //16
+		ADC_Init(ADC2, adc_pot_dma_buffer, NUM_POT_ADCS, adc_pot_setup, OVERSAMPLE_RATIO);
+	}
 
 	analog[POT_DIVMULT].polarity = AP_UNIPOLAR;
 	analog[POT_SHAPE].polarity = AP_UNIPOLAR;

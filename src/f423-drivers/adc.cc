@@ -68,6 +68,7 @@ extern "C" void ADC_Init(ADC_TypeDef *ADCx,
 	hadc->Init.ContinuousConvMode = ENABLE;
 	hadc->Init.NbrOfConversion = num_channels;
 	hadc->Init.DiscontinuousConvMode = DISABLE;
+	hadc->Init.NbrOfDiscConversion = 0;
 	hadc->Init.ExternalTrigConv = ADC_SOFTWARE_START;
 	hadc->Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
 	hadc->Init.DMAContinuousRequests = ENABLE;
