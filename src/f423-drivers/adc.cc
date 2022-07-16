@@ -77,7 +77,7 @@ extern "C" void ADC_Init(ADC_TypeDef *ADCx,
 	ADC_ChannelConfTypeDef sConfig;
 	for (i = 0; i < num_channels; i++) {
 		sConfig.Channel = adc_setup[i].channel;
-		sConfig.Rank = i & 15;
+		sConfig.Rank = i + 1;
 		sConfig.SamplingTime = adc_setup[i].sample_time;
 		err = HAL_ADC_ConfigChannel(hadc, &sConfig);
 	}

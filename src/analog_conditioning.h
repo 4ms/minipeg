@@ -17,7 +17,11 @@ enum AdcChannels {
 	NUM_ADCS
 };
 
-enum AdcCVChannels { ADC_CV_SHAPE, ADC_CV_DIVMULT, NUM_CV_ADCS };
+enum AdcCVChannels {
+	ADC_CV_SHAPE,
+	ADC_CV_DIVMULT,
+	NUM_CV_ADCS,
+};
 
 enum AdcPotChannels {
 	ADC_POT_SCALE,

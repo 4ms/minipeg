@@ -1,5 +1,7 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
 binaryname 		= main
+#TODO: fancy funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
+# and merger as many of these strings as possible
 
 ifeq ($(MAKECMDGOALS),g431)
 startup 	:= startup_stm32g431xx.s
@@ -7,6 +9,7 @@ system 		:= system_stm32g4xx.c
 linkscript 	:= STM32G431C8Tx_FLASH.ld
 chip_define	:= STM32G431xx
 fam_define	:= STM32G4
+shortfam    := g4
 shortchip	:= g431
 cortexmath	:= ARM_MATH_CM4
 mcuflags 	:= -mcpu=cortex-m4 \
@@ -24,6 +27,7 @@ system 		:= system_stm32f7xx.c
 linkscript 	:= STM32F746ZGTx_FLASH.ld
 chip_define	:= STM32F746xx
 fam_define	:= STM32F7
+shortfam    := f7
 shortchip	:= f746
 cortexmath	:= ARM_MATH_CM7
 mcuflags 	:= -mcpu=cortex-m7 \
@@ -38,14 +42,16 @@ INCLUDES =  -I$(mdrivlibdir) \
 			-I$(mdrivlibdir)/target/stm32f7xx \
 			-I$(mdrivlibdir)/target/stm32f7xx/drivers \
 			-Ilib/cpputil 
-
 SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/timekeeper.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f7xx/drivers/interrupt_handler.cc \
-			$(wildcard src/f746-drivers/*.c) \
-			$(wildcard src/f746-drivers/*.cc) \
-			src/shareddrv/pwm.cc
+			src/f746-drivers/adc.cc \
+			src/f746-drivers/system.cc \
+			src/shareddrv/dac.cc \
+			src/shareddrv/debounced_digins.cc \
+			src/shareddrv/pwm.c \
+			src/shareddrv/flash.c
 
 else ifeq ($(MAKECMDGOALS),f423)
 startup 	:= startup_stm32f423xx.s
@@ -53,6 +59,7 @@ system 		:= system_stm32f4xx.c
 linkscript 	:= STM32F423VHHx_FLASH.ld
 chip_define	:= STM32F423xx
 fam_define	:= STM32F4
+shortfam    := f4
 shortchip	:= f423
 devicefam	:= stm32f4
 devicename 	:= stm32f423
@@ -67,14 +74,16 @@ INCLUDES =  -I$(mdrivlibdir) \
 			-I$(mdrivlibdir)/target/stm32f4xx \
 			-I$(mdrivlibdir)/target/stm32f4xx/drivers \
 			-Ilib/cpputil 
-
 SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/timekeeper.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f4xx/drivers/interrupt_handler.cc \
-			$(wildcard src/f423-drivers/*.c) \
-			$(wildcard src/f423-drivers/*.cc) \
-			src/shareddrv/pwm.cc
+			src/f423-drivers/adc.cc \
+			src/f423-drivers/system.cc \
+			src/shareddrv/dac.cc \
+			src/shareddrv/debounced_digins.cc \
+			src/shareddrv/pwm.cc \
+			src/shareddrv/flash.c
 
 
 else ifeq ($(MAKECMDGOALS),clean)
@@ -93,9 +102,24 @@ SOURCES  += $(wildcard src/*.cc)
 SOURCES  += $(wildcard src/hardware_tests/*.cc)
 SOURCES  += $(wildcard libhwtests/src/*.cpp)
 SOURCES  += $(wildcard libhwtests/src/*.cc)
-SOURCES  += $(wildcard $(periphdir)/Src/*.c)
 SOURCES  += src/$(shortchip)-drivers/$(startup)
 SOURCES  += $(cmsisdevicedir)/Source/Templates/$(system)
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc_ex.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_cortex.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_dac.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_dma.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_exti.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_flash.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_flash_ex.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_gpio.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_pwr.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_pwr_ex.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_rcc.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_rcc_ex.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_tim.c
+SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_ll_tim.c
 
 OBJECTS = $(addprefix $(builddir)/, $(addsuffix .o, $(basename $(SOURCES))))
 DEPS = $(OBJECTS:.o=.d)
@@ -179,6 +203,14 @@ LFLAGS =  -Wl,-Map,build/main.map,--cref \
 # $(builddir)/src/flash.o: optflag = -O0
 # $(builddir)/$(periphdir)/Src/%.o: optflag = -O0
 
+#TODO: change the g431 etc targets to build like this;
+# g431: $(g431-bin) $(g431-hex)
+#
+# all: g431 f746 f423
+#
+# %.bin: %.elf   #instead of $(bin): $(elf)
+# ...not sure how to handle OBJECTS
+
 g431: all
 
 f746: all
@@ -213,7 +245,7 @@ $(builddir)/%.o: %.cpp $(builddir)/%.d
 $(builddir)/%.o: %.cc $(builddir)/%.d
 	@mkdir -p $(dir $@)
 	@echo "Compiling $< at $(optflag)"
-	$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
+	@$(CXX) -c $(DEPFLAGS) $(optflag) $(CXXFLAGS) $< -o $@
 
 $(builddir)/%.o: %.s
 	mkdir -p $(dir $@)
