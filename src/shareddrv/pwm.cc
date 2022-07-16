@@ -10,10 +10,10 @@ void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 
 	//////////////////////////////////////////
 	//Fake it
-	if (pwmnum == PWM_EOF_LED)
-		pwmval = 4096 - pwmval;
-	HAL_GPIO_WritePin(pwm[pwmnum].gpio, pwm[pwmnum].pinnum, pwmval > 2048 ? GPIO_PIN_RESET : GPIO_PIN_SET);
-	return;
+	// if (pwmnum == PWM_EOF_LED)
+	// 	pwmval = 4096 - pwmval;
+	// HAL_GPIO_WritePin(pwm[pwmnum].gpio, pwm[pwmnum].pinnum, pwmval > 2048 ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	// return;
 	/////////////////////////////////////////
 
 	uint8_t channel;
@@ -45,11 +45,13 @@ void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 static void init_pwm_out_pin(PWMOutput *p) {
 	GPIO_InitTypeDef gpio;
 
-	gpio.Mode = GPIO_MODE_OUTPUT_PP; // GPIO_MODE_AF_PP;
+	// gpio.Mode = GPIO_MODE_OUTPUT_PP;
+	gpio.Mode = GPIO_MODE_AF_PP;
 	gpio.Speed = GPIO_SPEED_FREQ_HIGH;
 	gpio.Pull = GPIO_NOPULL;
 	gpio.Pin = p->pinnum;
-	gpio.Alternate = 0; //p->af;
+	// gpio.Alternate = 0;
+	gpio.Alternate = p->af;
 	mdrivlib::RCC_Enable::GPIO::enable(p->gpio);
 	HAL_GPIO_Init(p->gpio, &gpio);
 }
