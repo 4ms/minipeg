@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-const uint32_t SECTORS[] = {
+constexpr uint32_t SECTORS[] = {
 	0x08000000,
 	0x08004000,
 	0x08008000,
@@ -11,3 +11,5 @@ const uint32_t SECTORS[] = {
 	0x08060000,
 	0,
 };
+
+constexpr inline uint32_t USER_FLASH_PAGE = 0x08020000;

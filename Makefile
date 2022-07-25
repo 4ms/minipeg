@@ -51,7 +51,7 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			src/shareddrv/dac.cc \
 			src/shareddrv/debounced_digins.cc \
 			src/shareddrv/pwm.c \
-			src/shareddrv/flash.c
+			src/shareddrv/flash.cc
 
 else ifeq ($(MAKECMDGOALS),f423)
 startup 	:= startup_stm32f423xx.s
@@ -83,7 +83,7 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			src/shareddrv/dac.cc \
 			src/shareddrv/debounced_digins.cc \
 			src/shareddrv/pwm.cc \
-			src/shareddrv/flash.c
+			src/shareddrv/flash.cc
 
 
 else ifeq ($(MAKECMDGOALS),clean)

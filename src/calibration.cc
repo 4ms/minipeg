@@ -1,4 +1,7 @@
-#include "globals.h"
+#include "analog_conditioning.h"
+#include "dig_inouts.h"
+#include "flash_user.hh"
+#include "leds.h"
 
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];

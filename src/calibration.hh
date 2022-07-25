@@ -1,7 +1,3 @@
-/*
- * cal_detent.h
- */
-
 #pragma once
 
 #include <stdint.h>

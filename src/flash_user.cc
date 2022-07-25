@@ -1,5 +1,8 @@
-#include "flash_user_conf.h"
-#include "globals.h"
+#include "flash_user.hh"
+#include "calibration.h"
+#include "flash.h"
+#include "flash_layout.hh"
+#include "stm32xx.h"
 
 struct SystemSettings settings;
 

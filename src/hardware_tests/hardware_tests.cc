@@ -8,7 +8,7 @@ extern "C" {
 #include "env_update.h"
 #include "envelope_calcs.h"
 #include "flash.h"
-#include "flash_user.h"
+#include "flash_user.hh"
 #include "leds.h"
 #include "pwm.h"
 #include "system.h"

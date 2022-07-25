@@ -1,10 +1,10 @@
 #include "params.h"
 #include "analog_conditioning.h"
-#include "calibration.h"
+#include "calibration.hh"
 #include "debounced_digins.h"
 #include "env_transition.h"
 #include "envelope_calcs.h"
-#include "flash_user.h"
+#include "flash_user.hh"
 #include "math_util.h"
 #include "pingable_env.h"
 

@@ -2,7 +2,7 @@
 #include "dac.h"
 #include "dig_inouts.h"
 #include "env_transition.h"
-#include "flash_user.h"
+#include "flash_user.hh"
 #include "leds.h"
 #include "pingable_env.h"
 #include "timers.h"

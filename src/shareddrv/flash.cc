@@ -26,7 +26,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#include "flash_layout.h"
+#include "flash_layout.hh"
 #include "stm32xx.h"
 
 uint32_t get_sector_num(uint32_t address) {
@@ -106,7 +106,9 @@ HAL_StatusTypeDef flash_open_program_byte_array(uint8_t *arr, uint32_t address, 
 		return HAL_ERROR;
 
 	while (num_bytes--) {
-		status |= HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, *arr++);
+		status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, *arr++);
+		if (status != HAL_OK)
+			break;
 		address++;
 	}
 	return status;
@@ -124,7 +126,9 @@ HAL_StatusTypeDef flash_open_program_doubleword_array(uint64_t *arr, uint32_t ad
 		return HAL_ERROR;
 
 	while (num_doublewords--) {
-		status |= flash_open_program_doubleword(*arr++, address);
+		status = flash_open_program_doubleword(*arr++, address);
+		if (status != HAL_OK)
+			break;
 		address += 8;
 	}
 	return status;
@@ -146,7 +150,9 @@ HAL_StatusTypeDef flash_open_program_word_array(uint32_t *arr, uint32_t address,
 		return HAL_ERROR;
 
 	while (num_words--) {
-		status |= flash_open_program_word(*arr++, address);
+		status = flash_open_program_word(*arr++, address);
+		if (status != HAL_OK)
+			break;
 		address += 4;
 	}
 	return status;

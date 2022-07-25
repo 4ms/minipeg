@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-const uint32_t F74xxEx_SECTORS[] = {
+constexpr uint32_t F74xxEx_SECTORS[] = {
 	0x08000000,
 	0x08008000,
 	0x08010000,
@@ -9,7 +9,7 @@ const uint32_t F74xxEx_SECTORS[] = {
 	0x08040000,
 	0,
 };
-const uint32_t F74xxGx_SECTORS[] = {
+constexpr uint32_t F74xxGx_SECTORS[] = {
 	0x08000000,
 	0x08008000,
 	0x08010000,
@@ -21,4 +21,6 @@ const uint32_t F74xxGx_SECTORS[] = {
 	0,
 };
 
-const uint32_t *SECTORS = F74xxEx_SECTORS;
+const uint32_t *const SECTORS = F74xxEx_SECTORS;
+
+constexpr inline uint32_t USER_FLASH_PAGE = 0x08010000;
