@@ -131,7 +131,9 @@ HAL_StatusTypeDef flash_open_program_doubleword_array(uint64_t *arr, uint32_t ad
 		return HAL_ERROR;
 
 	while (num_doublewords--) {
-		status |= flash_open_program_doubleword(*arr++, address);
+		status = flash_open_program_doubleword(*arr++, address);
+		if (status != HAL_OK)
+			break;
 		address += 8;
 	}
 	return status;

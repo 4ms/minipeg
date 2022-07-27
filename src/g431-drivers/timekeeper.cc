@@ -70,7 +70,7 @@ void init_timekeeper(void) {
 	}
 }
 
-void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit, void *callbackfunc) {
+void init_timer_IRQ(uint8_t TIM_periph_number, TimerITInitStruct *timinit, void callbackfunc()) {
 	TIM_HandleTypeDef tim;
 	uint8_t IRQn = 0;
 

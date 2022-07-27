@@ -55,7 +55,7 @@ void init_dac(uint32_t freq, void (*callbackfunc)(void)) {
 	dac_update_timer_config.prescaler = 0;
 	dac_update_timer_config.clock_division = 0;
 
-	init_timer_IRQ(DAC_UPDATE_TIMER_NUM, &dac_update_timer_config, reinterpret_cast<void *>(callbackfunc));
+	init_timer_IRQ(DAC_UPDATE_TIMER_NUM, &dac_update_timer_config, callbackfunc);
 }
 
 void pause_dac_timer(void) {
