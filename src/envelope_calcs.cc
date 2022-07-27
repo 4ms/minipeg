@@ -1,8 +1,7 @@
-
 #include "globals.h"
 #include "log4096.h"
 
-extern const uint16_t log4096[4096];
+// extern const uint16_t log4096[4096];
 
 extern struct SystemSettings settings;
 
@@ -164,7 +163,7 @@ void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_ris
 //phase: 0..4095
 //cur_curve: 0..255, curve to use: 0=expo, 127/128=linear, 255=log (interpolates)
 //returns: 0..4095 dac value
-int16_t calc_curve(int16_t phase, char cur_curve) {
+int16_t calc_curve(int16_t phase, uint8_t cur_curve) {
 	if (phase > 4095)
 		phase = 4095;
 

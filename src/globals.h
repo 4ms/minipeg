@@ -4,9 +4,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "adc.h"
 #include "analog_conditioning.h"
 #include "calibration.hh"
@@ -22,6 +19,3 @@ extern "C" {
 #include "system.h"
 #include "system_mode.h"
 #include "trigout.h"
-#ifdef __cplusplus
-}
-#endif

@@ -3,9 +3,6 @@
  */
 
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "stm32xx.h"
 #include <stddef.h>
 
@@ -55,7 +52,3 @@ struct PWMOutput {
 
 void init_pwm(void);
 void update_pwm(uint32_t pwmval, enum PwmOutputs channel);
-
-#ifdef __cplusplus
-}
-#endif

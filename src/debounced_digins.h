@@ -3,9 +3,6 @@
  */
 
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdint.h>
 
@@ -26,6 +23,3 @@ typedef struct DebouncedDigin {
 } debounced_digin_t;
 
 void init_debouncer(void);
-#ifdef __cplusplus
-}
-#endif

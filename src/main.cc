@@ -59,7 +59,7 @@ static void ping_led_on();
 
 static const uint32_t kDacSampleRate = 40000;
 
-int main(void) {
+void main() {
 	system_init();
 	SysTick_Config(SystemCoreClock / (TICKS_PER_MS * 1000));
 

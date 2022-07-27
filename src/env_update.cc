@@ -2,6 +2,7 @@
 #include "dac.h"
 #include "dig_inouts.h"
 #include "env_transition.h"
+#include "envelope_calcs.h"
 #include "flash_user.hh"
 #include "leds.h"
 #include "pingable_env.h"
@@ -17,13 +18,13 @@ extern volatile uint8_t using_tap_clock;
 extern volatile uint32_t tapouttmr;
 extern volatile uint32_t pingtmr;
 
-static void do_reset_envelope(struct PingableEnvelope *e);
-static uint16_t update_envelope(struct PingableEnvelope *e);
+static void do_reset_envelope(PingableEnvelope *e);
+static uint16_t update_envelope(PingableEnvelope *e);
 static void output_env_val(uint16_t rawA);
-static void handle_env_segment_end(struct PingableEnvelope *e, uint8_t end_segment_flag);
-static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag);
-static void start_envelope_in_sync(struct PingableEnvelope *e);
-static void start_envelope_immediate(struct PingableEnvelope *e);
+static void handle_env_segment_end(PingableEnvelope *e, envelopeStates end_segment_flag);
+static void handle_env_end(PingableEnvelope *e, uint8_t end_env_flag);
+static void start_envelope_in_sync(PingableEnvelope *e);
+static void start_envelope_immediate(PingableEnvelope *e);
 
 void update_all_envelopes(void) {
 	//@22kHz: 6.5us, every 45.5us, = 14.2%
@@ -41,7 +42,7 @@ const uint32_t k_accum_max = (0xFFF << 19);
 const uint32_t k_accum_min = (0x001 << 19);
 
 static uint16_t update_envelope(struct PingableEnvelope *e) {
-	uint8_t end_segment_flag = 0;
+	envelopeStates end_segment_flag = WAIT;
 	uint8_t end_env_flag = 0;
 	uint16_t cur_val = 0;
 
@@ -162,7 +163,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 	return cur_val;
 }
 
-static void handle_env_segment_end(struct PingableEnvelope *e, uint8_t end_segment_flag) {
+static void handle_env_segment_end(struct PingableEnvelope *e, envelopeStates end_segment_flag) {
 	if (end_segment_flag) {
 		if (end_segment_flag == FALL)
 			e->curve_fall = e->next_curve_fall;

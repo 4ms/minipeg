@@ -30,8 +30,8 @@ struct PingableEnvelope {
 
 	//env state
 	char envelope_running;
-	enum envelopeStates env_state;
-	uint8_t next_env_state;
+	envelopeStates env_state;
+	envelopeStates next_env_state;
 
 	//envelope phase
 	uint32_t accum;

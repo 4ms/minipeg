@@ -157,7 +157,8 @@ CFLAGS = -g3 \
 	-I. $(INCLUDES) \
 	-fno-common \
 	-fdata-sections -ffunction-sections \
-	-specs=nano.specs \
+	-nostdlib \
+	# -specs=nano.specs \
 
 DEPFLAGS = -MMD -MP -MF $(builddir)/$(basename $<).d
 
@@ -176,9 +177,12 @@ AFLAGS = $(mcuflags)
 
 LDSCRIPT = $(cmsisdevicedir)/$(linkscript)
 
-LFLAGS =  -Wl,-Map,build/main.map,--cref \
-	-Wl,--gc-sections \
-	$(mcuflags) -specs=nano.specs  -T $(LDSCRIPT)
+LFLAGS =  	-Wl,-Map,build/main.map,--cref \
+			-Wl,--gc-sections \
+			$(mcuflags) \
+			-T $(LDSCRIPT) \
+			-nostdlib \
+			# -specs=nano.specs  
 
 #-----------------------------------
 # Uncomment to compile unoptimized:

@@ -57,12 +57,12 @@ struct SystemSettings {
 	uint8_t limit_skew;
 	uint8_t free_running_ping;
 	uint8_t trigout_is_trig;
-	enum TrigInFunctions trigin_function;
-	enum TrigOutFunctions trigout_function;
+	TrigInFunctions trigin_function;
+	TrigOutFunctions trigout_function;
 
 	// enum AuxTrigJackAssignment auxtrigin_assignment;
 	// enum TrigInFunctions auxtrigin_function;
-	enum CycleJackBehaviors cycle_jack_behavior;
+	CycleJackBehaviors cycle_jack_behavior;
 
 	uint32_t start_clk_time;
 	uint8_t start_cycle_on;

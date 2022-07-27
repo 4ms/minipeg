@@ -1,8 +1,7 @@
-#include "stm32xx.h"
-extern "C" {
 #include "adc.h"
 #include "analog_conditioning.h"
-#include "calibration.h"
+#include "calibration.hh"
+#include "dac.h"
 #include "debounced_digins.h"
 #include "dig_inouts.h"
 #include "env_update.h"
@@ -11,11 +10,10 @@ extern "C" {
 #include "flash_user.hh"
 #include "leds.h"
 #include "pwm.h"
+#include "stm32xx.h"
 #include "system.h"
 #include "system_mode.h"
 #include "trigout.h"
-}
-#include "dac.h"
 
 #include "hardware_test_adc.h"
 #include "hardware_test_dac.h"

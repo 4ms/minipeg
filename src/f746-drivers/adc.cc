@@ -38,11 +38,11 @@ DMA_HandleTypeDef hdma_adc2;
 
 static uint32_t HAL_RCC_ADC12_CLK_ENABLED = 0;
 
-extern "C" void ADC_Init(ADC_TypeDef *ADCx,
-						 uint16_t *adc_buffer,
-						 uint32_t num_channels,
-						 builtinAdcSetup *adc_setup,
-						 uint32_t oversample_ratio) {
+void ADC_Init(ADC_TypeDef *ADCx,
+			  uint16_t *adc_buffer,
+			  uint32_t num_channels,
+			  builtinAdcSetup *adc_setup,
+			  uint32_t oversample_ratio) {
 	GPIO_InitTypeDef gpio;
 	HAL_StatusTypeDef err;
 	uint8_t i;

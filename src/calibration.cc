@@ -159,12 +159,12 @@ enum CalRequests should_enter_calibration_mode(void) {
 
 void calibrate_center_detents(void) {
 	const uint16_t stab_delay = 15;
-	enum CenterDetentPots cur = DET_SCALE;
+	CenterDetentPots cur = DET_SCALE;
 	uint16_t read_tot;
 	uint16_t read_avg;
 	uint16_t read1, read2, read3, read4;
 	int16_t t;
-	enum Palette color;
+	Palette color;
 
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
@@ -223,7 +223,7 @@ void calibrate_center_detents(void) {
 
 		if (PINGBUT) {
 			wait_for_pingbut_downup();
-			cur++;
+			cur = static_cast<CenterDetentPots>(cur + 1);
 		}
 	}
 }

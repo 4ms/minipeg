@@ -30,9 +30,6 @@
 
 #include "timekeeper.h"
 #include "globals.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define TIM_IT_IS_SET(x, y) (((x)->SR & (y)) == (y))
 #define TIM_IT_IS_SOURCE(x, y) ((((x)->DIER & (y)) == (y)) ? SET : RESET)
@@ -457,6 +454,3 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void) {
 // 	HAL_IncTick();
 // 	HAL_SYSTICK_IRQHandler();
 // }
-#ifdef __cplusplus
-}
-#endif

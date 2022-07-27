@@ -2,10 +2,10 @@
 #include "stm32xx.h"
 
 //stub for adapting to g431 C code
-extern "C" void init_timekeeper() {
+void init_timekeeper() {
 }
 
-extern "C" void system_init() {
+void system_init() {
 	mdrivlib::System::SetVectorTable(0x08000000);
 	HAL_Init();
 

@@ -63,7 +63,7 @@ void handle_system_mode(void) {
 			break;
 
 		if (digin[PING_BUTTON].edge == -1) {
-			system_mode_cur++;
+			system_mode_cur = static_cast<SystemModeParams>(system_mode_cur + 1);
 			digin[PING_BUTTON].edge = 0;
 		}
 
@@ -163,8 +163,9 @@ void handle_system_mode(void) {
 
 			switch (system_mode_cur) {
 				case (SET_TRIGOUT_FUNC):
-					if (++settings.trigout_function >= NUM_TRIGOUT_FUNCTIONS)
-						settings.trigout_function = 0;
+					settings.trigout_function = static_cast<TrigOutFunctions>(settings.trigout_function + 1);
+					if (settings.trigout_function >= NUM_TRIGOUT_FUNCTIONS)
+						settings.trigout_function = TRIGOUT_IS_ENDOFRISE;
 					break;
 
 				case (SET_TRIGOUT_IS_TRIG):
@@ -180,13 +181,15 @@ void handle_system_mode(void) {
 					break;
 
 				case (SET_TRIGIN_FUNCTION):
-					if (++settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
-						settings.trigin_function = 0;
+					settings.trigin_function = static_cast<TrigInFunctions>(settings.trigin_function + 1);
+					if (settings.trigin_function >= NUM_TRIGIN_FUNCTIONS)
+						settings.trigin_function = TRIGIN_IS_ASYNC;
 					break;
 
 				case (SET_CYCLEJACK_FUNCTION):
-					if (++settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
-						settings.cycle_jack_behavior = 0;
+					settings.cycle_jack_behavior = static_cast<CycleJackBehaviors>(settings.cycle_jack_behavior + 1);
+					if (settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
+						settings.cycle_jack_behavior = CYCLE_JACK_RISING_EDGE_TOGGLES;
 					break;
 				default:
 					break;

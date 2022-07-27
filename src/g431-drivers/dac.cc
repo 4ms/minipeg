@@ -1,7 +1,5 @@
-extern "C" {
 #include "dac.h"
 #include "timekeeper.h"
-}
 #include <stm32g4xx.h>
 
 DAC_HandleTypeDef hdac1;
@@ -22,7 +20,7 @@ void dac_out(enum DACs dac, uint16_t val) {
 	}
 }
 
-extern "C" void init_dac(uint32_t freq, void (*callbackfunc)(void)) {
+void init_dac(uint32_t freq, void (*callbackfunc)(void)) {
 	hdac1.Instance = DAC1;
 	HAL_DAC_Init(&hdac1);
 
