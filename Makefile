@@ -4,38 +4,32 @@ binaryname 		= main
 # and merger as many of these strings as possible
 
 ifeq ($(MAKECMDGOALS),g431)
-startup 	:= startup_stm32g431xx.s
-system 		:= system_stm32g4xx.c
 linkscript 	:= STM32G431C8Tx_FLASH.ld
 chip_define	:= STM32G431xx
 fam_define	:= STM32G4
-shortfam    := g4
+devicefam 	:= stm32g4
 shortchip	:= g431
+shortfam    := g4
 cortexmath	:= ARM_MATH_CM4
 mcuflags 	:= -mcpu=cortex-m4 \
 			   -mthumb \
 			   -mfpu=fpv4-sp-d16 \
 			   -mfloat-abi=hard
-devicefam 	:= stm32g4
-devicename 	:= stm32g431
 SOURCES 	= $(wildcard src/g431-drivers/*.c) \
 			  $(wildcard src/g431-drivers/*.cc)
 
 else ifeq ($(MAKECMDGOALS),f746)
-startup 	:= startup_stm32f746xx.s
-system 		:= system_stm32f7xx.c
 linkscript 	:= STM32F746ZGTx_FLASH.ld
 chip_define	:= STM32F746xx
 fam_define	:= STM32F7
-shortfam    := f7
+devicefam	:= stm32f7
 shortchip	:= f746
+shortfam    := f7
 cortexmath	:= ARM_MATH_CM7
 mcuflags 	:= -mcpu=cortex-m7 \
 			   -mthumb \
 			   -mfpu=fpv5-sp-d16 \
 			   -mfloat-abi=hard
-devicefam	:= stm32f7
-devicename 	:= stm32f746
 mdrivlibdir := lib/mdrivlib
 INCLUDES =  -I$(mdrivlibdir) \
 			-I$(mdrivlibdir)/drivers \
@@ -54,15 +48,12 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			src/shareddrv/flash.cc
 
 else ifeq ($(MAKECMDGOALS),f423)
-startup 	:= startup_stm32f423xx.s
-system 		:= system_stm32f4xx.c
 linkscript 	:= STM32F423VHHx_FLASH.ld
 chip_define	:= STM32F423xx
 fam_define	:= STM32F4
-shortfam    := f4
-shortchip	:= f423
 devicefam	:= stm32f4
-devicename 	:= stm32f423
+shortchip	:= f423
+shortfam    := f4
 cortexmath	:= ARM_MATH_CM4
 mcuflags 	:= -mcpu=cortex-m4 \
 			   -mthumb \
@@ -91,7 +82,7 @@ else
 $(error Build with `make g431` or `make f746` or `make f423`)
 endif
 
-cmsisdevicedir 	= stm32/device/$(devicename)
+cmsisdevicedir 	= stm32/device/$(devicefam)
 periphdir 		= stm32/HAL/$(devicefam)
 coredir 		= stm32/CMSIS
 
@@ -100,10 +91,9 @@ builddir 		= build/$(shortchip)
 SOURCES  += $(wildcard src/*.c)
 SOURCES  += $(wildcard src/*.cc)
 SOURCES  += $(wildcard src/hardware_tests/*.cc)
-SOURCES  += $(wildcard libhwtests/src/*.cpp)
 SOURCES  += $(wildcard libhwtests/src/*.cc)
-SOURCES  += src/$(shortchip)-drivers/$(startup)
-SOURCES  += $(cmsisdevicedir)/Source/Templates/$(system)
+SOURCES  += src/$(shortchip)-drivers/startup_stm32$(shortchip)xx.s
+SOURCES  += $(cmsisdevicedir)/Source/Templates/system_$(devicefam)xx.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc_ex.c
@@ -222,6 +212,11 @@ f746: all
 f423: all
 
 all: Makefile $(bin) $(hex)
+
+bootloader:
+
+combo:
+
 
 $(bin): $(elf)
 	$(OBJCPY) -O binary $< $@
