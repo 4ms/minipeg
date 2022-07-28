@@ -12,4 +12,4 @@ constexpr uint32_t SECTORS[] = {
 	0,
 };
 
-constexpr inline uint32_t USER_FLASH_PAGE = 0x08020000;
+constexpr inline uint32_t SettingsFlashAddr = 0x08020000;

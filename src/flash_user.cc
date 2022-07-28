@@ -11,7 +11,7 @@ HAL_StatusTypeDef write_settings(void) {
 
 	flash_begin_open_program();
 
-	status = flash_open_erase_page(USER_FLASH_PAGE);
+	status = flash_open_erase_page(SettingsFlashAddr);
 	if (status != HAL_OK) {
 		flash_end_open_program();
 		return status;
@@ -19,7 +19,7 @@ HAL_StatusTypeDef write_settings(void) {
 
 	uint32_t sz = sizeof(struct SystemSettings);
 	settings.is_valid = VALID_SETTINGS;
-	status = flash_open_program_word_array((uint32_t *)(&settings), USER_FLASH_PAGE, sz);
+	status = flash_open_program_word_array((uint32_t *)(&settings), SettingsFlashAddr, sz);
 
 	flash_end_open_program();
 	return status;
@@ -27,7 +27,7 @@ HAL_StatusTypeDef write_settings(void) {
 
 uint8_t read_settings(void) {
 	uint32_t sz = sizeof(struct SystemSettings);
-	flash_read_word_array((uint32_t *)(&settings), USER_FLASH_PAGE, sz);
+	flash_read_word_array((uint32_t *)(&settings), SettingsFlashAddr, sz);
 
 	if (!check_settings_valid()) {
 		default_settings();

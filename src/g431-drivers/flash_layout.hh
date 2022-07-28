@@ -1,1 +1,1 @@
-#define USER_FLASH_PAGE 0x0801F000
+#define SettingsFlashAddr 0x0801F000

@@ -23,4 +23,4 @@ constexpr uint32_t F74xxGx_SECTORS[] = {
 
 const uint32_t *const SECTORS = F74xxEx_SECTORS;
 
-constexpr inline uint32_t USER_FLASH_PAGE = 0x08010000;
+constexpr inline uint32_t SettingsFlashAddr = 0x08010000;
