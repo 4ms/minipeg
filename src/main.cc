@@ -404,7 +404,7 @@ void read_ping_clock(void) {
 	}
 }
 
-void SysTick_Handler(void) {
+extern "C" void SysTick_Handler(void) {
 	HAL_IncTick();
 }
 
