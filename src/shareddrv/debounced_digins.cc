@@ -2,8 +2,9 @@
 #include "dig_inouts.h"
 #include "drivers/timekeeper.hh"
 #include "util/debouncer.hh"
+#include "util/zip.hh"
 
-debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
+std::array<DebouncedDigin, NUM_DEBOUNCED_DIGINS> digin;
 static std::array<Debouncer<0x0001, 0xFFFE, 0xFFFF>, NUM_DEBOUNCED_DIGINS> debouncers;
 static mdrivlib::Timekeeper digintmr;
 
@@ -25,10 +26,6 @@ void init_debouncer() {
 	digintmr.start();
 }
 
-// extern volatile uint32_t pingtmr;
-// extern volatile uint32_t ping_irq_timestamp;
-// extern volatile uint8_t using_tap_clock;
-
 static void debounce_irq(void) {
 	uint32_t pin_read;
 
@@ -38,8 +35,11 @@ static void debounce_irq(void) {
 	debouncers[CYCLE_JACK].register_state(AUXTRIG_JACK_READ ? 1 : 0);
 	debouncers[PING_JACK].register_state(PING_JACK_READ ? 1 : 0);
 
-	for (unsigned i = 0; i < NUM_DEBOUNCED_DIGINS; i++) {
-		digin[i].state = debouncers[i].is_high() ? 1 : 0;
-		digin[i].edge = debouncers[i].is_just_pressed() ? 1 : debouncers[i].is_just_released() ? -1 : 0;
+	for (auto [dig, deb] : zip(digin, debouncers)) {
+		dig.state = deb.is_high() ? 1 : 0;
+		if (deb.is_just_pressed())
+			dig.edge = 1;
+		if (deb.is_just_released())
+			dig.edge = -1;
 	}
 }
