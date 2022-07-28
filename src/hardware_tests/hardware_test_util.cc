@@ -27,9 +27,9 @@ void set_led(uint8_t led_num, bool newstate) {
 	uint16_t brightness = newstate ? max_pwm : min_pwm;
 
 	if (led_num == PWM_EOF_LED)
-		set_inverted_led(PWM_EOF_LED, brightness);
+		set_led_brightness(brightness, PWM_EOF_LED);
 	else if (led_num < NUM_PWMS)
-		update_pwm(brightness, static_cast<PwmOutputs>(led_num));
+		set_led_brightness(brightness, static_cast<PwmOutputs>(led_num));
 }
 
 bool read_button(uint8_t button_num) {

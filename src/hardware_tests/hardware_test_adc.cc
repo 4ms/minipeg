@@ -2,7 +2,7 @@
 #include "analog_conditioning.h"
 #include "pwm.h"
 
-#include "AdcRangeChecker.h"
+#include "AdcRangeChecker.hh"
 
 #include "hardware_test_util.h"
 
@@ -22,12 +22,6 @@ void test_adc() {
 	AdcRangeChecker adc_checker{init};
 
 	uint8_t adc_map[NUM_ADCS] = {
-		// ADC_POT_DIVMULT,
-		// ADC_POT_SHAPE,
-		// ADC_POT_SCALE,
-		// ADC_POT_OFFSET,
-		// ADC_CV_SHAPE,
-		// ADC_CV_DIVMULT,
 		POT_DIVMULT,
 		POT_SHAPE,
 		POT_SCALE,
@@ -35,6 +29,8 @@ void test_adc() {
 		CV_SHAPE,
 		CV_DIVMULT,
 	};
+
+	pause_until_button_released();
 
 	for (uint32_t adc_i = 0; adc_i < NUM_ADCS; adc_i++) {
 		bool done = false;
