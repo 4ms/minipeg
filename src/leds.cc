@@ -50,7 +50,7 @@ void adjust_palette(void) {
 	create_color(&palette[c_PURPLE], 3600, 0, 4095);
 }
 
-void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id) {
+void set_rgb_led(RgbLeds rgb_led_id, Palette color_id) {
 	if (rgb_led_id == LED_PING) {
 		update_pwm(palette[color_id].ping.r, PWM_PINGBUT_R);
 		update_pwm(palette[color_id].ping.b, PWM_PINGBUT_B);
@@ -75,26 +75,8 @@ void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id) {
 		return;
 }
 
-void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num) {
+void set_led_brightness(uint16_t brightness, PwmOutputs pwm_led_num) {
 	update_pwm(brightness, pwm_led_num);
-}
-
-void set_inverted_led(enum PwmOutputs pwm_led_num, uint16_t brightness) {
-	if (brightness >= kMaxBrightness)
-		update_pwm(0, pwm_led_num);
-	else if (kMaxBrightness == 4095)
-		update_pwm(log4096[4095 - brightness], pwm_led_num);
-	else {
-		if (kMaxBrightnessBits > 12)
-			brightness >>= (kMaxBrightnessBits - 12);
-		else
-			brightness <<= (12 - kMaxBrightnessBits);
-
-		if (brightness >= 4095)
-			update_pwm(0, pwm_led_num);
-		else
-			update_pwm(log4096[4095 - brightness], pwm_led_num);
-	}
 }
 
 void all_lights_off(void) {
@@ -118,5 +100,5 @@ void all_lights_off(void) {
 	update_pwm(0, PWM_ENVB_G);
 	update_pwm(0, PWM_ENVB_B);
 
-	set_inverted_led(PWM_EOF_LED, 0);
+	update_pwm(0, PWM_EOF_LED);
 }

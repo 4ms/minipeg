@@ -26,7 +26,7 @@ void handle_system_mode(void) {
 		set_rgb_led(LED_CYCLE, c_WHITE);
 		set_rgb_led(LED_ENVA, c_PURPLE);
 		set_rgb_led(LED_ENVB, c_PURPLE);
-		set_inverted_led(PWM_EOF_LED, 1024);
+		set_led_brightness(1024, PWM_EOF_LED);
 
 		HAL_Delay(100);
 		if (d == 4)
@@ -36,7 +36,7 @@ void handle_system_mode(void) {
 		set_rgb_led(LED_CYCLE, c_OFF);
 		set_rgb_led(LED_ENVA, c_OFF);
 		set_rgb_led(LED_ENVB, c_OFF);
-		set_inverted_led(PWM_EOF_LED, 0);
+		set_led_brightness(0, PWM_EOF_LED);
 
 		HAL_Delay(100);
 	}
@@ -71,7 +71,7 @@ void handle_system_mode(void) {
 			case (NUM_SYSMODE_PARAMS):
 				system_mode_cur = SET_TRIGOUT_FUNC;
 			case (SET_TRIGOUT_FUNC):
-				set_inverted_led(PWM_EOF_LED, 1024);
+				set_led_brightness(1024, PWM_EOF_LED);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
 					set_rgb_led(LED_CYCLE, c_RED);
 				else if (settings.trigout_function == TRIGOUT_IS_ENDOFFALL)
@@ -90,15 +90,15 @@ void handle_system_mode(void) {
 				if (settings.trigout_is_trig) {
 					set_rgb_led(LED_CYCLE, c_WHITE);
 					if (now & 0x0F00)
-						set_inverted_led(PWM_EOF_LED, 0);
+						set_led_brightness(0, PWM_EOF_LED);
 					else
-						set_inverted_led(PWM_EOF_LED, 1024);
+						set_led_brightness(1024, PWM_EOF_LED);
 				} else {
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 					if (now & 0x1000)
-						set_inverted_led(PWM_EOF_LED, 0);
+						set_led_brightness(0, PWM_EOF_LED);
 					else
-						set_inverted_led(PWM_EOF_LED, 1024);
+						set_led_brightness(1024, PWM_EOF_LED);
 				}
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
@@ -114,7 +114,7 @@ void handle_system_mode(void) {
 
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-				set_inverted_led(PWM_EOF_LED, 0);
+				set_led_brightness(0, PWM_EOF_LED);
 				break;
 
 			case (SET_FREE_RUNNING_PING):
@@ -127,11 +127,11 @@ void handle_system_mode(void) {
 				}
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-				set_inverted_led(PWM_EOF_LED, 0);
+				set_led_brightness(0, PWM_EOF_LED);
 				break;
 
 			case (SET_TRIGIN_FUNCTION):
-				set_inverted_led(PWM_EOF_LED, 1024);
+				set_led_brightness(1024, PWM_EOF_LED);
 				set_rgb_led(LED_ENVA, c_RED);
 				if (settings.trigin_function == TRIGIN_IS_QNT)
 					set_rgb_led(LED_CYCLE, c_GREEN);
@@ -153,7 +153,7 @@ void handle_system_mode(void) {
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
-				set_inverted_led(PWM_EOF_LED, 0);
+				set_led_brightness(0, PWM_EOF_LED);
 				break;
 		}
 
@@ -204,7 +204,7 @@ void handle_system_mode(void) {
 		set_rgb_led(LED_CYCLE, c_WHITE);
 		set_rgb_led(LED_ENVA, c_PURPLE);
 		set_rgb_led(LED_ENVB, c_PURPLE);
-		set_inverted_led(PWM_EOF_LED, 1024);
+		set_led_brightness(1024, PWM_EOF_LED);
 
 		HAL_Delay(50);
 
@@ -212,7 +212,7 @@ void handle_system_mode(void) {
 		set_rgb_led(LED_CYCLE, c_OFF);
 		set_rgb_led(LED_ENVA, c_OFF);
 		set_rgb_led(LED_ENVB, c_OFF);
-		set_inverted_led(PWM_EOF_LED, 0);
+		set_led_brightness(0, PWM_EOF_LED);
 
 		HAL_Delay(50);
 	}
