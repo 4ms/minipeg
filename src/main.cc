@@ -76,15 +76,16 @@ void main() {
 	init_pwm();
 	all_lights_off();
 
-	init_debouncer();
-
 	if (!read_settings()) {
 		test_hardware();
 		write_settings();
 	}
-	if (CYCLEBUT) {
+	HAL_Delay(10);
+	if (PINGBUT && CYCLEBUT) {
 		test_hardware();
 	}
+
+	init_debouncer();
 
 	HAL_Delay(50);
 	read_settings();
@@ -406,16 +407,4 @@ void read_ping_clock(void) {
 
 extern "C" void SysTick_Handler(void) {
 	HAL_IncTick();
-}
-
-void _exit(int status) {
-	while (1)
-		;
-}
-void _kill(void) {
-	while (1)
-		;
-}
-int _getpid(void) {
-	return 1;
 }
