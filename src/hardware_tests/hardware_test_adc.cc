@@ -7,8 +7,6 @@
 #include "hardware_test_util.h"
 
 extern uint16_t adc_dma_buffer[NUM_ADCS];
-extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
-extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 void test_adc() {
 	AdcRangeCheckerBounds init{
@@ -42,7 +40,6 @@ void test_adc() {
 		set_led(PWM_ENVB_R, true);
 
 		while (!done) {
-			// uint16_t adcval = (adc_i < NUM_POT_ADCS) ? adc_pot_dma_buffer[cur_adc] : adc_cv_dma_buffer[cur_adc];
 			uint16_t adcval = adc_dma_buffer[cur_adc];
 			adc_checker.set_adcval(adcval);
 			auto status = adc_checker.check();
@@ -74,9 +71,7 @@ void test_adc() {
 				done = true;
 		}
 		update_pwm(max_pwm, PWM_CYCLEBUT_G);
-		//update_pwm(max_pwm, PWM_LOCKBUT_G);
 		HAL_Delay(200);
 		update_pwm(min_pwm, PWM_CYCLEBUT_G);
-		//update_pwm(min_pwm, PWM_LOCKBUT_G);
 	}
 }

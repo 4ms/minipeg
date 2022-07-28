@@ -3,34 +3,57 @@
 #include "flash_user.hh"
 #include "leds.h"
 
-extern struct SystemSettings settings;
+extern SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
-extern uint16_t adc_cv_dma_buffer[NUM_CV_ADCS];
-extern uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
+extern uint16_t *adc_cv_dma_buffer;
+extern uint16_t *adc_pot_dma_buffer;
 
-//Private:
-#define FIRST_CD_POT ADC_POT_SCALE
+static constexpr uint32_t FIRST_CD_POT = ADC_POT_SCALE;
 
-enum CalRequests { CAL_REQUEST_NONE, CAL_REQUEST_ALL, CAL_REQUEST_CENTER_DET, CAL_REQUEST_LEDS };
+enum CalRequests {
+	CAL_REQUEST_NONE,
+	CAL_REQUEST_ALL,
+	CAL_REQUEST_CENTER_DET,
+	CAL_REQUEST_LEDS,
+};
 
-uint8_t sanity_check_calibration(void);
-void calibrate_divmult_pot(void);
-enum CalRequests should_enter_calibration_mode(void);
-void calibrate_center_detents(void);
-void calibrate_led_colors(void);
+static uint8_t sanity_check_calibration(void);
+static void calibrate_divmult_pot(void);
+static CalRequests should_enter_calibration_mode(void);
+static void calibrate_center_detents(void);
+static void calibrate_led_colors(void);
 static void wait_for_pingbut_downup(void);
 static void wait_for_cyclebut_downup(void);
+static void error_writing_settings(void);
 
-void error_writing_settings(void) {
-	int loops = 20;
-	while (loops--) {
-		set_rgb_led(LED_PING, c_WHITE);
-		set_rgb_led(LED_CYCLE, c_WHITE);
-		HAL_Delay(100);
-		set_rgb_led(LED_PING, c_RED);
-		set_rgb_led(LED_CYCLE, c_RED);
-		HAL_Delay(100);
-	}
+bool pot_centered(uint8_t pot_num) {
+	uint16_t adc = adc_pot_dma_buffer[pot_num];
+	return ((adc_pot_dma_buffer[pot_num] > 1800) && (adc_pot_dma_buffer[pot_num] < 2200));
+}
+
+CalRequests should_enter_calibration_mode(void) {
+	if (!CYCLEBUT)
+		return CAL_REQUEST_NONE;
+
+	if (!pot_centered(ADC_POT_SCALE))
+		return CAL_REQUEST_NONE;
+
+	if (!pot_centered(ADC_POT_OFFSET))
+		return CAL_REQUEST_NONE;
+
+	if (!pot_centered(ADC_POT_SHAPE))
+		return CAL_REQUEST_NONE;
+
+	if (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 70)
+		return CAL_REQUEST_ALL;
+
+	if (pot_centered(ADC_POT_DIVMULT))
+		return CAL_REQUEST_LEDS;
+
+	if (adc_pot_dma_buffer[ADC_POT_DIVMULT] > 4000)
+		return CAL_REQUEST_CENTER_DET;
+
+	return CAL_REQUEST_NONE;
 }
 
 void check_calibration(void) {
@@ -40,7 +63,7 @@ void check_calibration(void) {
 			error_writing_settings();
 	}
 
-	enum CalRequests c = should_enter_calibration_mode();
+	CalRequests c = should_enter_calibration_mode();
 	if (c != CAL_REQUEST_NONE) {
 		if (c == CAL_REQUEST_ALL)
 			calibrate_divmult_pot();
@@ -139,24 +162,6 @@ uint8_t sanity_check_calibration(void) {
 	return 1; //pass
 }
 
-enum CalRequests should_enter_calibration_mode(void) {
-	if (CYCLEBUT && (adc_pot_dma_buffer[ADC_POT_SCALE] > 1800) && (adc_pot_dma_buffer[ADC_POT_SCALE] < 2200) &&
-		(adc_pot_dma_buffer[ADC_POT_OFFSET] > 1800) && (adc_pot_dma_buffer[ADC_POT_OFFSET] < 2200) &&
-		(adc_pot_dma_buffer[ADC_POT_SHAPE] > 1800) && (adc_pot_dma_buffer[ADC_POT_SHAPE] < 2200))
-	{
-		if (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 70)
-			return CAL_REQUEST_ALL;
-
-		else if ((adc_pot_dma_buffer[ADC_POT_DIVMULT] > 1800) && (adc_pot_dma_buffer[ADC_POT_DIVMULT] < 2200))
-			return CAL_REQUEST_LEDS;
-
-		else if (adc_pot_dma_buffer[ADC_POT_DIVMULT] > 4000)
-			return CAL_REQUEST_CENTER_DET;
-	}
-
-	return CAL_REQUEST_NONE;
-}
-
 void calibrate_center_detents(void) {
 	const uint16_t stab_delay = 15;
 	CenterDetentPots cur = DET_SCALE;
@@ -228,6 +233,9 @@ void calibrate_center_detents(void) {
 	}
 }
 
+// First, Cycle is red, press it to start
+// When Cycle but is green, turn Div/Mult knob up a click
+// Then Cycle will turn white, press it.
 void calibrate_divmult_pot(void) {
 	const uint16_t stab_delay = 15;
 	uint16_t calib_array[NUM_DIVMULTS];
@@ -363,4 +371,16 @@ static void wait_for_cyclebut_downup(void) {
 	t = 0;
 	while (t < 100)
 		t = !CYCLEBUT ? t + 1 : 0;
+}
+
+void error_writing_settings(void) {
+	int loops = 20;
+	while (loops--) {
+		set_rgb_led(LED_PING, c_WHITE);
+		set_rgb_led(LED_CYCLE, c_WHITE);
+		HAL_Delay(100);
+		set_rgb_led(LED_PING, c_RED);
+		set_rgb_led(LED_CYCLE, c_RED);
+		HAL_Delay(100);
+	}
 }
