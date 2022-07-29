@@ -1,3 +1,4 @@
+#include "drivers/pin.hh"
 #include "pwm.h"
 #include "stm32xx.h"
 
@@ -19,6 +20,27 @@ PWMOutput pwm[NUM_PWMS] = {
 	{GPIOE, GPIO_PIN_5, GPIO_AF2_TIM4, {.Instance = TIM4}, 2, kTimPeriod},	// PWM_PINGBUT_B,
 	{GPIOB, GPIO_PIN_10, GPIO_AF1_TIM1, {.Instance = TIM1}, 1, kTimPeriod}, // PWM_EOF_LED,
 };
+
+namespace LEDPins
+{
+using PinNoInit = mdrivlib::PinNoInit;
+using GPIO = mdrivlib::GPIO;
+using PinNum = mdrivlib::PinNum;
+using PinAF = mdrivlib::PinAF;
+constexpr inline PinNoInit EnvA_r{GPIO::B, PinNum::_11, PinAF::AltFunc2};
+constexpr inline PinNoInit EnvA_g{GPIO::B, PinNum::_15, PinAF::AltFunc1};
+constexpr inline PinNoInit EnvA_b{GPIO::B, PinNum::_14, PinAF::AltFunc2};
+constexpr inline PinNoInit EnvB_r{GPIO::B, PinNum::_9, PinAF::AltFunc1};
+constexpr inline PinNoInit EnvB_g{GPIO::B, PinNum::_7, PinAF::AltFunc1};
+constexpr inline PinNoInit EnvB_b{GPIO::B, PinNum::_8, PinAF::AltFunc2};
+constexpr inline PinNoInit Cyclebut_r{GPIO::I, PinNum::_5, PinAF::AltFunc2};
+constexpr inline PinNoInit Cyclebut_g{GPIO::B, PinNum::_5, PinAF::AltFunc1};
+constexpr inline PinNoInit Cyclebut_b{GPIO::B, PinNum::_6, PinAF::AltFunc1};
+constexpr inline PinNoInit Pingbut_r{GPIO::I, PinNum::_7, PinAF::AltFunc2};
+constexpr inline PinNoInit Pingbut_g{GPIO::E, PinNum::_6, PinAF::AltFunc2};
+constexpr inline PinNoInit Pingbut_b{GPIO::E, PinNum::_5, PinAF::AltFunc2};
+constexpr inline PinNoInit Eof_led{GPIO::B, PinNum::_10, PinAF::AltFunc1};
+} // namespace LEDPins
 
 #define LED_EOF_Pin GPIO_PIN_10
 #define LED_EOF_GPIO_Port GPIOB
