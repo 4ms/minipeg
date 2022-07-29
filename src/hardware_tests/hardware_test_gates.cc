@@ -1,5 +1,5 @@
 #include "dac.h"
-#include "dig_inouts.h"
+#include "dig_inouts.hh"
 #include "leds.h"
 #include "pwm.h"
 

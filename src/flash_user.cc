@@ -1,6 +1,6 @@
 #include "flash_user.hh"
 #include "calibration.hh"
-#include "flash.h"
+#include "flash.hh"
 #include "flash_layout.hh"
 #include "stm32xx.h"
 

@@ -1,4 +1,4 @@
-#include "dig_inout_pins.h"
+#include "dig_inout_pins.hh"
 #include "stm32xx.h"
 
 void init_dig_inouts(void) {

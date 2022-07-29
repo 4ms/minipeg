@@ -23,19 +23,19 @@ enum MonoLeds {
 	NUM_MONO_LEDS
 };
 
-typedef struct Color {
+struct Color {
 	uint16_t r;
 	uint16_t g;
 	uint16_t b;
-} Color;
+};
 
-typedef struct AdjustedColor {
+struct AdjustedColor {
 	Color ping;
 	Color cycle;
 	Color lock;
 	Color envA;
 	Color envB;
-} AdjustedColor;
+};
 
 enum Palette {
 	c_OFF,
@@ -54,12 +54,11 @@ enum Palette {
 	NUM_COLORS
 };
 
-// const uint16_t kMaxBrightness = 4095;
-#define kMaxBrightness 4095
-#define kMaxBrightnessBits 12
+constexpr inline uint32_t kMaxBrightness = 4095;
+constexpr inline uint32_t kMaxBrightnessBits = 12;
 
-void set_led_brightness(uint16_t brightness, enum PwmOutputs pwm_led_num);
-void set_rgb_led(enum RgbLeds rgb_led_id, enum Palette color_id);
+void set_led_brightness(uint16_t brightness, PwmOutputs pwm_led_num);
+void set_rgb_led(RgbLeds rgb_led_id, Palette color_id);
 void adjust_palette(void);
 uint16_t adjust_hue(uint16_t base, uint16_t adj);
 void all_lights_off(void);

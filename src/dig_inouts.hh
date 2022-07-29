@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dig_inout_pins.h"
+#include "dig_inout_pins.hh"
 
 #define PIN_IS_HIGH(x, y) ((x)->IDR & (y))
 #define PIN_IS_LOW(x, y) (!((x)->IDR & (y)))

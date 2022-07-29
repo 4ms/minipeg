@@ -1,6 +1,6 @@
 #include "env_update.h"
 #include "dac.h"
-#include "dig_inouts.h"
+#include "dig_inouts.hh"
 #include "env_transition.h"
 #include "envelope_calcs.h"
 #include "flash_user.hh"

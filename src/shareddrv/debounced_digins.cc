@@ -1,5 +1,5 @@
 #include "debounced_digins.h"
-#include "dig_inouts.h"
+#include "dig_inouts.hh"
 #include "drivers/timekeeper.hh"
 #include "util/debouncer.hh"
 #include "util/zip.hh"

@@ -27,9 +27,10 @@
  * -----------------------------------------------------------------------------
  */
 
+#include "adc.h"
 #include "drivers/rcc.hh"
-#include "globals.h"
-#include "system.h"
+#include "system.hh"
+
 
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;

@@ -1,5 +1,5 @@
 #include "analog_conditioning.h"
-#include "dig_inouts.h"
+#include "dig_inouts.hh"
 #include "flash_user.hh"
 #include "leds.h"
 

@@ -1,14 +1,28 @@
+#include "adc.h"
+#include "analog_conditioning.h"
+#include "calibration.hh"
 #include "dac.h"
+#include "debounced_digins.h"
+#include "dig_inouts.hh"
 #include "env_transition.h"
 #include "env_update.h"
-#include "globals.h"
+// #include "flash.hh"
+#include "drivers/system.hh"
+#include "flash_layout.hh"
+#include "flash_user.hh"
 #include "hardware_tests.h"
+#include "leds.h"
 #include "math_util.h"
 #include "params.h"
 #include "pingable_env.h"
+#include "pwm.h"
+#include "settings.h"
 #include "stm32xx.h"
+#include "system.hh"
+#include "system_mode.h"
 #include "timekeeper.h"
 #include "timers.h"
+#include "trigout.h"
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
@@ -60,6 +74,8 @@ static void ping_led_on();
 static const uint32_t kDacSampleRate = 40000;
 
 void main() {
+
+	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	system_init();
 	SysTick_Config(SystemCoreClock / (TICKS_PER_MS * 1000));
 

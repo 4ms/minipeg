@@ -1,5 +1,5 @@
 #include "dac.h"
-#include "dig_inouts.h"
+#include "dig_inouts.hh"
 #include "hardware_test_util.h"
 #include "stm32xx.h"
 

@@ -28,7 +28,7 @@
  */
 
 #include "globals.h"
-#include "system.h"
+#include "system.hh"
 
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
