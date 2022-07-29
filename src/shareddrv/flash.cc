@@ -29,10 +29,11 @@
 #include "flash_layout.hh"
 #include "stm32xx.h"
 
+//Does this work?
 uint32_t get_sector_num(uint32_t address) {
 	unsigned i = 0;
-	while (SECTORS[i]) {
-		if (address <= SECTORS[i])
+	while (get_sector_addr(i)) {
+		if (address <= get_sector_addr(i))
 			return i;
 		i++;
 	}
@@ -40,7 +41,7 @@ uint32_t get_sector_num(uint32_t address) {
 }
 
 uint32_t get_sector_base_address(uint32_t sector_num) {
-	return SECTORS[sector_num];
+	return get_sector_num(sector_num);
 }
 
 HAL_StatusTypeDef _flash_erase(uint32_t address) {
@@ -156,6 +157,27 @@ HAL_StatusTypeDef flash_open_program_word_array(uint32_t *arr, uint32_t address,
 		address += 4;
 	}
 	return status;
+}
+
+HAL_StatusTypeDef flash_write_page(const uint8_t *data, uint32_t dst_addr, uint32_t bytes_to_write) {
+
+	flash_begin_open_program();
+
+	//Erase sector if dst_addr is a sector start
+	auto err = flash_open_erase_page(dst_addr);
+	if (err != HAL_OK) {
+		flash_end_open_program();
+		return err;
+	}
+
+	err = flash_open_program_word_array((uint32_t *)data, dst_addr, bytes_to_write >> 2);
+	if (err != HAL_OK) {
+		flash_end_open_program();
+		return err;
+	}
+
+	flash_end_open_program();
+	return HAL_OK;
 }
 
 HAL_StatusTypeDef flash_read_byte_array(uint8_t *arr, uint32_t address, uint32_t num_bytes) {

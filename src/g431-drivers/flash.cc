@@ -26,8 +26,10 @@
  * -----------------------------------------------------------------------------
  */
 
-#include <globals.h>
+#include "globals.h"
 
+//TODO use this:
+// #include "flash_layout.hh"
 const uint32_t first_page = 0x08000000;
 const uint32_t page_size = 0x00000800; //2k
 const uint8_t num_pages = 64;
@@ -167,12 +169,35 @@ HAL_StatusTypeDef flash_open_program_word_array(uint32_t *arr, uint32_t address,
 			doubleword = (uint64_t)(*arr++);
 			doubleword |= (uint64_t)(*arr++) << 32;
 			num_words--;
-			status |= flash_open_program_doubleword(doubleword, address);
+			status = flash_open_program_doubleword(doubleword, address);
+			if (status != HAL_OK)
+				break;
 			address += 8;
 		} else //Last word not doubleword aligned
 			flash_open_program_word((uint64_t)(*arr++), address);
 	}
 	return status;
+}
+
+HAL_StatusTypeDef flash_write_page(const uint8_t *data, uint32_t dst_addr, uint32_t bytes_to_write) {
+
+	flash_begin_open_program();
+
+	//Erase sector if dst_addr is a sector start
+	auto err = flash_open_erase_page(dst_addr);
+	if (err != HAL_OK) {
+		flash_end_open_program();
+		return err;
+	}
+
+	err = flash_open_program_word_array((uint32_t *)data, dst_addr, bytes_to_write >> 2);
+	if (err != HAL_OK) {
+		flash_end_open_program();
+		return err;
+	}
+
+	flash_end_open_program();
+	return HAL_OK;
 }
 
 HAL_StatusTypeDef flash_read_byte_array(uint8_t *arr, uint32_t address, uint32_t num_bytes) {
