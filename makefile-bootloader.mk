@@ -1,10 +1,8 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
-binaryname 		= main
-#TODO: fancy funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
-# and merger as many of these strings as possible
+binaryname 		= bootloader
 
 ifeq ($(MAKECMDGOALS),g431)
-linkscript 	:= STM32G431C8Tx_FLASH.ld
+linkscript 	:= STM32G431C8Tx_FLASH_BOOTLOADER.ld
 chip_define	:= STM32G431xx
 fam_define	:= STM32G4
 devicefam 	:= stm32g4
@@ -19,7 +17,7 @@ SOURCES 	= $(wildcard src/g431-drivers/*.c) \
 			  $(wildcard src/g431-drivers/*.cc)
 
 else ifeq ($(MAKECMDGOALS),f746)
-linkscript 	:= STM32F746ZGTx_FLASH.ld
+linkscript 	:= STM32F746ZGTx_FLASH_BOOTLOADER.ld
 chip_define	:= STM32F746xx
 fam_define	:= STM32F7
 devicefam	:= stm32f7
@@ -40,15 +38,11 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/timekeeper.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f7xx/drivers/interrupt_handler.cc \
-			src/f746-drivers/adc.cc \
 			src/f746-drivers/system.cc \
-			src/shareddrv/dac.cc \
-			src/shareddrv/debounced_digins.cc \
-			src/shareddrv/pwm.c \
 			src/shareddrv/flash.cc
 
 else ifeq ($(MAKECMDGOALS),f423)
-linkscript 	:= STM32F423VHHx_FLASH.ld
+linkscript 	:= STM32F423VHHx_FLASH_BOOTLOADER.ld
 chip_define	:= STM32F423xx
 fam_define	:= STM32F4
 devicefam	:= stm32f4
@@ -69,11 +63,7 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/timekeeper.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f4xx/drivers/interrupt_handler.cc \
-			src/f423-drivers/adc.cc \
 			src/f423-drivers/system.cc \
-			src/shareddrv/dac.cc \
-			src/shareddrv/debounced_digins.cc \
-			src/shareddrv/pwm.cc \
 			src/shareddrv/flash.cc
 else ifeq ($(MAKECMDGOALS),clean)
 else
@@ -85,19 +75,16 @@ periphdir 		= stm32/HAL/$(devicefam)
 coredir 		= stm32/CMSIS
 builddir 		= build/$(shortchip)
 
-SOURCES  += $(wildcard src/*.c)
-SOURCES  += $(wildcard src/*.cc)
-SOURCES  += $(wildcard src/hardware_tests/*.cc)
-SOURCES  += $(wildcard libhwtests/src/*.cc)
+SOURCES  += src/bootloader/bootloader.cc
+SOURCES  += src/bootloader/leds.cc
+SOURCES  += src/bootloader/animation.cc
+SOURCES  += src/bootloader/bl_utils.cc
+SOURCES  += src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
+
 SOURCES  += src/$(shortchip)-drivers/startup_stm32$(shortchip)xx.s
 SOURCES  += $(cmsisdevicedir)/Source/Templates/system_$(devicefam)xx.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal.c
-SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc.c
-SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_adc_ex.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_cortex.c
-SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_dac.c
-SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_dma.c
-SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_exti.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_flash.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_flash_ex.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_gpio.c
@@ -107,6 +94,8 @@ SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_rcc.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_rcc_ex.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_hal_tim.c
 SOURCES  += $(periphdir)/Src/stm32$(shortfam)xx_ll_tim.c
+SOURCES  += src/libc_stub.c
+SOURCES  += src/libcpp_stub.cc
 
 OBJECTS = $(addprefix $(builddir)/, $(addsuffix .o, $(basename $(SOURCES))))
 DEPS = $(OBJECTS:.o=.d)
@@ -115,9 +104,9 @@ INCLUDES += -I$(cmsisdevicedir)/Include \
 			-I$(coredir)/Include \
 			-I$(periphdir)/Inc \
 			-I src \
+			-I src/bootloader \
 			-I src/$(shortchip)-drivers \
-			-I src/hardware_tests \
-			-I libhwtests/inc \
+			-I src/bootloader/stmlib \
 
 elf 	= $(builddir)/$(binaryname).elf
 hex 	= $(builddir)/$(binaryname).hex
@@ -137,7 +126,7 @@ SZ 		= $(ARCH)-size
 arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
 arch_cflags = -D$(chip_define) -D$(fam_define) -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 
-optflag = -O0
+optflag = -O3
 
 CFLAGS = -g3 \
 	$(arch_cflags) $(mcuflags) \
@@ -145,7 +134,6 @@ CFLAGS = -g3 \
 	-fno-common \
 	-fdata-sections -ffunction-sections \
 	-nostdlib \
-	# -specs=nano.specs \
 
 DEPFLAGS = -MMD -MP -MF $(builddir)/$(basename $<).d
 
@@ -169,30 +157,11 @@ LFLAGS =  	-Wl,-Map,build/main.map,--cref \
 			$(mcuflags) \
 			-T $(LDSCRIPT) \
 			-nostdlib \
-			# -specs=nano.specs  
 
 #-----------------------------------
 # Uncomment to compile unoptimized:
 
-# $(builddir)/src/main.o: optflag = -O0
-# $(builddir)/src/params.o: optflag = -O0
-# $(builddir)/src/envelope_calcs.o: optflag = -O0
-# $(builddir)/src/envelope_out.o: optflag = -O0
-# $(builddir)/src/dac.o: optflag = -O0
-# $(builddir)/src/debounced_digins.o: optflag = -O0
-# $(builddir)/src/dig_inouts.o: optflag = -O0
-# $(builddir)/src/env_transition.o: optflag = -O0
-# $(builddir)/src/analog_conditioning.o: optflag = -O0
-# $(builddir)/src/adc.o: optflag = -O0
-# $(builddir)/src/hardware_tests/%.o: optflag = -O0
-# $(builddir)/src/dac.o: optflag = -O0
-# $(builddir)/libhwtests/%.o: optflag = -O0
-# $(builddir)/src/leds.o: optflag = -O0
-# $(builddir)/src/pwm.o: optflag = -O0
-# $(builddir)/src/debounced_digins.o: optflag = -O0
-# $(builddir)/src/flash_user.o: optflag = -O0
-# $(builddir)/src/flash.o: optflag = -O0
-# $(builddir)/$(periphdir)/Src/%.o: optflag = -O0
+# $(builddir)/src/bootloader/bootloader.o: optflag = -O0
 
 #TODO: change the g431 etc targets to build like this;
 # g431: $(g431-bin) $(g431-hex)
