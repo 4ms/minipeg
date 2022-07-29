@@ -5,9 +5,17 @@
 #define USING_QPSK
 #endif
 
+#include "../system.hh"
+#include "bootloader/animation.hh"
+#include "bootloader/buttons.hh"
+#include "bootloader/gate_input.hh"
+#include "bootloader/leds.hh"
+#include "dig_inouts.hh"
+#include "drivers/system.hh"
+#include "flash.hh"
 #include "flash_layout.hh"
 
-// #include "bl_ui.hh"
+#include "bl_utils.hh"
 
 #ifdef USING_QPSK
 #include "stm_audio_bootloader/qpsk/demodulator.h"
@@ -20,18 +28,6 @@
 using namespace stmlib;
 using namespace stm_audio_bootloader;
 
-// extern "C" {
-// #include "periodic_func.h"
-// #include "flash.h"
-// #include "leds.h"
-// #include "buttons.h"
-// #include "hardware_test.h"
-// #include "bl_utils.h"
-// #include "lib/stm32f7xx_ll_rcc.h"
-// #include "lib/stm32f7xx_ll_pwr.h"
-// #include "lib/stm32f7xx_ll_gpio.h"
-// #include "stm32f7xx_ll_bus.h"
-
 #ifdef USING_QPSK
 const float kModulationRate = 6000.0;
 const float kBitRate = 12000.0;
@@ -39,10 +35,9 @@ const float kSampleRate = 48000.0;
 #else
 const uint32_t kSampleRate = 22050;
 #endif
-uint32_t kStartExecutionAddress = 0x08004000;
-uint32_t kStartReceiveAddress = 0x08004000;
+uint32_t kStartExecutionAddress = AppFlashAddr;
+uint32_t kStartReceiveAddress = BootloaderReceiveAddr;
 
-extern const uint32_t FLASH_SECTOR_ADDRESSES[];
 const uint32_t kBlkSize = 16384;
 const uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
 uint8_t recv_buffer[kBlkSize];
@@ -58,50 +53,25 @@ uint32_t current_address;
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
 volatile UiState ui_state;
 
-void read_gate_input(void);
-void init_gate_input(void);
-
-void update_LEDs(void) {
-	if (ui_state == UI_STATE_RECEIVING)
-		animate(ANI_RECEIVING);
-
-	else if (ui_state == UI_STATE_WRITING)
-		animate(ANI_WRITING);
-
-	else if (ui_state == UI_STATE_WAITING)
-		animate(ANI_WAITING);
-
-	else //if (ui_state == UI_STATE_DONE)
-	{}
+void read_gate_input(void) {
+	// DEBUG1_ON;
+	bool sample = gate_in_read();
+	// if (sample) DEBUG1_ON;
+	// else DEBUG1_OFF;
+	if (!discard_samples) {
+		demodulator.PushSample(sample ? 1 : 0);
+	} else {
+		--discard_samples;
+	}
+	// DEBUG1_OFF;
 }
 
-void InitializeReception(void) {
-#ifdef USING_QPSK
-	//QPSK
-	decoder.Init((uint16_t)20000);
-	demodulator.Init(
-		kModulationRate / kSampleRate * 4294967296.0, kSampleRate / kModulationRate, 2.0 * kSampleRate / kBitRate);
-	demodulator.SyncCarrier(true);
-	decoder.Reset();
-#else
-	//FSK
-	decoder.Init();
-	decoder.Reset();
-	demodulator.Init(16, 8, 4); //pause, one, zero. pause_thresh = 24. one_thresh = 6.
-	demodulator.Sync();
-#endif
+static void animate_until_button_pushed(Animations animation_type, Button button);
+static void update_LEDs();
+static void InitializeReception();
+static void delay(uint32_t tm);
 
-	current_address = kStartReceiveAddress;
-	packet_index = 0;
-	ui_state = UI_STATE_WAITING;
-}
-
-void SysTick_Handler(void) {
-	systmr++;
-	update_LEDs();
-}
-
-void main(void) {
+void main() {
 	uint32_t symbols_processed = 0;
 	uint32_t dly = 0, button_debounce = 0;
 	uint8_t do_bootloader;
@@ -110,7 +80,7 @@ void main(void) {
 	bool rcv_err;
 	uint8_t exit_updater = false;
 
-	SetVectorTable(0x08000000);
+	mdrivlib::System::SetVectorTable(BootloaderFlashAddr);
 
 	// SCB_EnableICache();
 	// SCB_EnableDCache();
@@ -122,19 +92,19 @@ void main(void) {
 	NVIC_SetPriority(PendSV_IRQn, 0);
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
-	SystemClock_Config();
+	system_init();
 
 	delay(3000);
 
-	init_debug();
 	init_leds();
 	init_buttons();
+	init_gate_in();
 
 	animate(ANI_RESET);
 
 	dly = 32000;
 	while (dly--) {
-		if (button_pushed(BUTTON_LEARN) && button_pushed(BUTTON_FREEZE))
+		if (button_pushed(Button::Ping) && button_pushed(Button::Cycle))
 			button_debounce++;
 		else
 			button_debounce = 0;
@@ -154,40 +124,11 @@ void main(void) {
 		InitializeReception(); //FSK
 #endif
 
-		uint32_t hwtest_entry = 0;
-		uint32_t factory_reset = 0;
-		while (button_pushed(BUTTON_LEARN) || button_pushed(BUTTON_FREEZE)) {
-			if (button_pushed(BUTTON_LEARN) && !button_pushed(BUTTON_FREEZE)) {
-				hwtest_entry++;
-				if (hwtest_entry > 1000000) {
-					ui_state = UI_STATE_DONE;
-					do_hardware_test();
-				}
-			} else
-				hwtest_entry = 0;
-
-			if (!button_pushed(BUTTON_LEARN) && button_pushed(BUTTON_FREEZE)) {
-				factory_reset++;
-				if (factory_reset > 4000000) {
-					ui_state = UI_STATE_DONE;
-					test_QSPI();
-					while (1) {
-						animate(ANI_SUCCESS);
-						delay(100);
-					}
-				}
-			} else
-				factory_reset = 0;
-		}
-
-		init_gate_input();
-		const uint32_t period = F_CPU / 2 / kSampleRate;
-		init_periodic_function(period, 0, read_gate_input);
-		start_periodic_func();
-
+		start_reception(kSampleRate, read_gate_input);
 		delay(100);
 
-		uint32_t learn_exit_armed = 0, freeze_exit_armed = 0;
+		uint32_t button1_exit_armed = 0;
+		uint32_t button2_exit_armed = 0;
 
 		while (!exit_updater) {
 			rcv_err = false;
@@ -208,8 +149,8 @@ void main(void) {
 							ui_state = UI_STATE_WRITING;
 
 							//Check for valid flash address before writing to flash
-							if ((current_address + kBlkSize) <= FLASH_SECTOR_ADDRESSES[NUM_FLASH_SECTORS]) {
-								write_flash_page(recv_buffer, current_address, kBlkSize);
+							if ((current_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
+								flash_write_page(recv_buffer, current_address, kBlkSize);
 								current_address += kBlkSize;
 							} else {
 								ui_state = UI_STATE_ERROR;
@@ -243,7 +184,7 @@ void main(void) {
 					case PACKET_DECODER_STATE_END_OF_TRANSMISSION:
 						exit_updater = true;
 						ui_state = UI_STATE_DONE;
-						animate_until_button_pushed(ANI_SUCCESS, BUTTON_LEARN);
+						animate_until_button_pushed(ANI_SUCCESS, Button::Ping);
 						animate(ANI_RESET);
 						delay(100);
 						break;
@@ -254,7 +195,7 @@ void main(void) {
 			}
 			if (rcv_err) {
 				ui_state = UI_STATE_ERROR;
-				animate_until_button_pushed(ANI_FAIL_ERR, BUTTON_LEARN);
+				animate_until_button_pushed(ANI_FAIL_ERR, Button::Ping);
 				animate(ANI_RESET);
 				delay(100);
 				InitializeReception();
@@ -262,58 +203,92 @@ void main(void) {
 				exit_updater = false;
 			}
 
-			if (button_pushed(BUTTON_FREEZE)) {
-				if (freeze_exit_armed) {
+			if (button_pushed(Button::Cycle)) {
+				if (button2_exit_armed) {
 					if (packet_index == 0)
 						exit_updater = true;
 				}
-				freeze_exit_armed = 0;
+				button2_exit_armed = 0;
 			} else
-				freeze_exit_armed = 1;
+				button2_exit_armed = 1;
 
-			if (button_pushed(BUTTON_LEARN)) {
-				if (learn_exit_armed) {
-					if ((ui_state == UI_STATE_WAITING))
+			if (button_pushed(Button::Ping)) {
+				if (button1_exit_armed) {
+					if (ui_state == UI_STATE_WAITING)
 						exit_updater = true;
 				}
-				learn_exit_armed = 0;
+				button1_exit_armed = 0;
 			} else
-				learn_exit_armed = 1;
+				button1_exit_armed = 1;
 		}
 		ui_state = UI_STATE_DONE;
-		while (button_pushed(BUTTON_LEARN) || button_pushed(BUTTON_FREEZE)) {
+		while (button_pushed(Button::Ping) || button_pushed(Button::Cycle)) {
 			;
 		}
 	}
 
 	reset_buses();
 	reset_RCC();
-	JumpTo(kStartExecutionAddress);
+	jump_to(kStartExecutionAddress);
 }
 
-void init_gate_input(void) {
-	LL_AHB1_GRP1_EnableClock(BOOTLOADER_INPUT_RCC);
-	LL_GPIO_SetPinMode(BOOTLOADER_INPUT_GPIO, BOOTLOADER_INPUT_PIN, LL_GPIO_MODE_INPUT);
-	LL_GPIO_SetPinPull(BOOTLOADER_INPUT_GPIO, BOOTLOADER_INPUT_PIN, LL_GPIO_PULL_DOWN);
-}
-
-void read_gate_input(void) {
-	// DEBUG1_ON;
-	bool sample = ((BOOTLOADER_INPUT_GPIO->IDR & BOOTLOADER_INPUT_PIN) != 0);
-
-	// if (sample) DEBUG1_ON;
-	// else DEBUG1_OFF;
-
-	if (!discard_samples) {
-#ifdef USING_FSK
-		demodulator.PushSample(sample ? 1 : 0);
+void InitializeReception() {
+#ifdef USING_QPSK
+	//QPSK
+	decoder.Init((uint16_t)20000);
+	demodulator.Init(
+		kModulationRate / kSampleRate * 4294967296.0, kSampleRate / kModulationRate, 2.0 * kSampleRate / kBitRate);
+	demodulator.SyncCarrier(true);
+	decoder.Reset();
 #else
-		demodulator.PushSample(sample ? 0x7FFF : 0);
+	//FSK
+	decoder.Init();
+	decoder.Reset();
+	demodulator.Init(16, 8, 4); //pause, one, zero. pause_thresh = 24. one_thresh = 6.
+	demodulator.Sync();
 #endif
-	} else {
-		--discard_samples;
+
+	current_address = kStartReceiveAddress;
+	packet_index = 0;
+	ui_state = UI_STATE_WAITING;
+}
+
+void update_LEDs() {
+	if (ui_state == UI_STATE_RECEIVING)
+		animate(ANI_RECEIVING);
+
+	else if (ui_state == UI_STATE_WRITING)
+		animate(ANI_WRITING);
+
+	else if (ui_state == UI_STATE_WAITING)
+		animate(ANI_WAITING);
+
+	else //if (ui_state == UI_STATE_DONE)
+	{}
+}
+
+void animate_until_button_pushed(Animations animation_type, Button button) {
+	animate(ANI_RESET);
+
+	while (!button_pushed(button)) {
+		delay(1);
+		animate(animation_type);
 	}
-	// DEBUG1_OFF;
+	while (button_pushed(button)) {
+		delay(1);
+	}
+}
+
+void delay(uint32_t ticks) {
+	uint32_t i = systmr;
+	while ((systmr - i) < ticks) {
+		;
+	}
+}
+
+extern "C" void SysTick_Handler(void) {
+	systmr++;
+	update_LEDs();
 }
 
 // } //extern "C"
