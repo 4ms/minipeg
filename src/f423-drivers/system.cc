@@ -2,6 +2,7 @@
 #include "../system.hh"
 #include "drivers/rcc.hh"
 #include "flash_layout.hh"
+#include "settings.h"
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32xx.h"
 
@@ -36,7 +37,7 @@ void system_init() {
 		.APB2CLKDivider = RCC_HCLK_DIV1,
 	};
 	RCC_PeriphCLKInitTypeDef noperiphclk{0};
-	mdrivlib::SystemClocks::init_clocks(RCC_OscInitStruct, RCC_ClkInitStruct, noperiphclk, 1000);
+	mdrivlib::SystemClocks::init_clocks(RCC_OscInitStruct, RCC_ClkInitStruct, noperiphclk, TICKS_PER_MS * 1000);
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);

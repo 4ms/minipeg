@@ -53,7 +53,8 @@ uint32_t current_address;
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
 volatile UiState ui_state;
 
-void read_gate_input(void) {
+//FIXME: use this
+void read_gate_input() {
 	// DEBUG1_ON;
 	bool sample = gate_in_read();
 	// if (sample) DEBUG1_ON;
@@ -68,7 +69,7 @@ void read_gate_input(void) {
 
 static void animate_until_button_pushed(Animations animation_type, Button button);
 static void update_LEDs();
-static void InitializeReception();
+static void init_fsk();
 static void delay(uint32_t tm);
 
 void main() {
@@ -81,20 +82,9 @@ void main() {
 	uint8_t exit_updater = false;
 
 	mdrivlib::System::SetVectorTable(BootloaderFlashAddr);
-
-	// SCB_EnableICache();
-	// SCB_EnableDCache();
-	NVIC_SetPriority(MemoryManagement_IRQn, 0);
-	NVIC_SetPriority(BusFault_IRQn, 0);
-	NVIC_SetPriority(UsageFault_IRQn, 0);
-	NVIC_SetPriority(SVCall_IRQn, 0);
-	NVIC_SetPriority(DebugMonitor_IRQn, 0);
-	NVIC_SetPriority(PendSV_IRQn, 0);
-	NVIC_SetPriority(SysTick_IRQn, 0);
-
 	system_init();
 
-	delay(3000);
+	delay(300);
 
 	init_leds();
 	init_buttons();
@@ -113,18 +103,20 @@ void main() {
 
 	delay(100);
 
-	// //////////
-	// //Just test the hardware test:
-	// ui_state = UI_STATE_DONE;
-	// do_hardware_test();
-	// ////////
-
 	if (do_bootloader) {
 #ifdef USING_FSK
-		InitializeReception(); //FSK
+		init_fsk(); //FSK
 #endif
 
-		start_reception(kSampleRate, read_gate_input);
+		start_reception(kSampleRate, [&]() {
+			bool sample = gate_in_read();
+			if (!discard_samples) {
+				demodulator.PushSample(sample ? 1 : 0);
+			} else {
+				--discard_samples;
+			}
+		});
+
 		delay(100);
 
 		uint32_t button1_exit_armed = 0;
@@ -198,7 +190,7 @@ void main() {
 				animate_until_button_pushed(ANI_FAIL_ERR, Button::Ping);
 				animate(ANI_RESET);
 				delay(100);
-				InitializeReception();
+				init_fsk();
 
 				exit_updater = false;
 			}
@@ -232,7 +224,7 @@ void main() {
 	jump_to(kStartExecutionAddress);
 }
 
-void InitializeReception() {
+void init_fsk() {
 #ifdef USING_QPSK
 	//QPSK
 	decoder.Init((uint16_t)20000);
@@ -287,8 +279,33 @@ void delay(uint32_t ticks) {
 }
 
 extern "C" void SysTick_Handler(void) {
-	systmr++;
+	systmr = systmr + 1;
 	update_LEDs();
+}
+
+extern "C" void NMI_Handler() {
+	__BKPT();
+}
+extern "C" void HardFault_Handler() {
+	__BKPT();
+}
+extern "C" void MemManage_Handler() {
+	__BKPT();
+}
+extern "C" void BusFault_Handler() {
+	__BKPT();
+}
+extern "C" void UsageFault_Handler() {
+	__BKPT();
+}
+extern "C" void SVC_Handler() {
+	__BKPT();
+}
+extern "C" void DebugMon_Handler() {
+	__BKPT();
+}
+extern "C" void PendSV_Handler() {
+	__BKPT();
 }
 
 // } //extern "C"

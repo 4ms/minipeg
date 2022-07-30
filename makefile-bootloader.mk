@@ -77,6 +77,7 @@ builddir 		= build/$(shortchip)
 
 SOURCES  += src/bootloader/bootloader.cc
 SOURCES  += src/bootloader/leds.cc
+SOURCES  += src/bootloader/gate_input.cc
 SOURCES  += src/bootloader/animation.cc
 SOURCES  += src/bootloader/bl_utils.cc
 SOURCES  += src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
@@ -126,7 +127,7 @@ SZ 		= $(ARCH)-size
 arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
 arch_cflags = -D$(chip_define) -D$(fam_define) -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 
-optflag = -O3
+optflag = -O0
 
 CFLAGS = -g3 \
 	$(arch_cflags) $(mcuflags) \
@@ -138,7 +139,7 @@ CFLAGS = -g3 \
 DEPFLAGS = -MMD -MP -MF $(builddir)/$(basename $<).d
 
 CXXFLAGS=$(CFLAGS) \
-	-std=c++17 \
+	-std=c++20 \
 	-fno-rtti \
 	-fno-exceptions \
 	-ffreestanding \
@@ -152,7 +153,7 @@ AFLAGS = $(mcuflags)
 
 LDSCRIPT = $(cmsisdevicedir)/$(linkscript)
 
-LFLAGS =  	-Wl,-Map,build/main.map,--cref \
+LFLAGS =  	-Wl,-Map,build/$(binaryname).map,--cref \
 			-Wl,--gc-sections \
 			$(mcuflags) \
 			-T $(LDSCRIPT) \

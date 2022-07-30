@@ -1,22 +1,24 @@
 #include "bootloader/leds.hh"
 #include "pwm_pins.hh"
-#include "stm32xx.h"
 
-using PingR = mdrivlib::FPin<LEDPins::Pingbut_r.gpio, LEDPins::Pingbut_r.pin>;
-using PingG = mdrivlib::FPin<LEDPins::Pingbut_g.gpio, LEDPins::Pingbut_g.pin>;
-using PingB = mdrivlib::FPin<LEDPins::Pingbut_b.gpio, LEDPins::Pingbut_b.pin>;
+template<mdrivlib::PinNoInit LedPin>
+using LEDPin = mdrivlib::FPin<LedPin.gpio, LedPin.pin, mdrivlib::PinMode::Output, mdrivlib::PinPolarity::Inverted>;
 
-using CycleR = mdrivlib::FPin<LEDPins::Cyclebut_r.gpio, LEDPins::Cyclebut_r.pin>;
-using CycleG = mdrivlib::FPin<LEDPins::Cyclebut_g.gpio, LEDPins::Cyclebut_g.pin>;
-using CycleB = mdrivlib::FPin<LEDPins::Cyclebut_b.gpio, LEDPins::Cyclebut_b.pin>;
+using PingR = LEDPin<LEDPins::Pingbut_r>;
+using PingG = LEDPin<LEDPins::Pingbut_g>;
+using PingB = LEDPin<LEDPins::Pingbut_b>;
 
-using EnvAR = mdrivlib::FPin<LEDPins::EnvA_r.gpio, LEDPins::EnvA_r.pin>;
-using EnvAG = mdrivlib::FPin<LEDPins::EnvA_g.gpio, LEDPins::EnvA_g.pin>;
-using EnvAB = mdrivlib::FPin<LEDPins::EnvA_b.gpio, LEDPins::EnvA_b.pin>;
+using CycleR = LEDPin<LEDPins::Cyclebut_r>;
+using CycleG = LEDPin<LEDPins::Cyclebut_g>;
+using CycleB = LEDPin<LEDPins::Cyclebut_b>;
 
-using EnvBR = mdrivlib::FPin<LEDPins::EnvB_r.gpio, LEDPins::EnvB_r.pin>;
-using EnvBG = mdrivlib::FPin<LEDPins::EnvB_g.gpio, LEDPins::EnvB_g.pin>;
-using EnvBB = mdrivlib::FPin<LEDPins::EnvB_b.gpio, LEDPins::EnvB_b.pin>;
+using EnvAR = LEDPin<LEDPins::EnvA_r>;
+using EnvAG = LEDPin<LEDPins::EnvA_g>;
+using EnvAB = LEDPin<LEDPins::EnvA_b>;
+
+using EnvBR = LEDPin<LEDPins::EnvB_r>;
+using EnvBG = LEDPin<LEDPins::EnvB_g>;
+using EnvBB = LEDPin<LEDPins::EnvB_b>;
 
 void init_leds() {
 	PingR pingr;
