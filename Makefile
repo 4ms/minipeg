@@ -1,7 +1,6 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
 binaryname 		= main
-#TODO: fancy funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
-# and merger as many of these strings as possible
+#TODO: sheel funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
 
 ifeq ($(MAKECMDGOALS),g431)
 linkscript 	:= STM32G431C8Tx_FLASH.ld
@@ -251,54 +250,4 @@ clean:
 ifneq "$(MAKECMDGOALS)" "clean"
 -include $(DEPS)
 endif
-
-TESTFW_DIR = ../Unity/src
-TEST_DIR = tests
-TEST_BUILD_DIR_NAME = build
-TEST_BUILD_DIR = $(TEST_DIR)/$(TEST_BUILD_DIR_NAME)
-
-TESTFW_SRC = unity.c
-
-TEST_SOURCES =  \
-				tests_main.c \
-				test_flash_user.c \
-				mocks/mock_flash.c \
-
-
-TESTEE_DIR = src
-TESTEE_SOURCES = flash.c \
-
-TESTFW_OBJ = $(TEST_BUILD_DIR)/$(addsuffix .o, $(basename $(TESTFW_SRC)))
-
-TEST_OBJECTS = $(TESTFW_OBJ) \
-				$(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TEST_SOURCES))))
-
-TESTEE_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(TESTEE_SOURCES))))
-
-
-TEST_INC =  -I$(TESTFW_DIR) \
-			-I$(TEST_DIR) \
-			-I$(cmsisdevicedir)/Include \
-
-TEST_CFLAGS = -D$(chip_define) -D$(fam_define)
-
-
-$(TESTFW_OBJ): $(TESTFW_DIR)/$(TESTFW_SRC)
-	mkdir -p $(dir $@)
-	gcc $(TEST_INC) -c $< -o $@
-
-$(TEST_BUILD_DIR)/%.o: $(TEST_DIR)/%.c $(TESTFW_OBJ)
-	mkdir -p $(dir $@)
-	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
-
-$(TESTEE_OBJECTS): $(TESTEE_DIR)/$(TESTEE_SOURCES)
-	mkdir -p $(dir $@)
-	gcc $(TEST_INC) $(TEST_CFLAGS) -c $< -o $@
-
-
-# TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/, $(addsuffix .o, $(basename $(SOURCES))))
-
-test: $(TEST_OBJECTS) $(TESTEE_OBJECTS)
-	gcc -o $(TEST_BUILD_DIR)/do_test $(TEST_OBJECTS) $(TESTEE_OBJECTS)
-	$(TEST_BUILD_DIR)/do_test
 
