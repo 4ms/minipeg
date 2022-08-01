@@ -81,23 +81,25 @@ set(COMMON_DEFINES
 
 set(COMMON_COMPILE_OPTIONS
 	-g3
-	-std=c++2a
 	-fdata-sections
 	-ffunction-sections
 	-fno-common
 	-ffreestanding
-	-fno-exceptions
-	-fno-rtti
 	-fno-unwind-tables
-	-fno-threadsafe-statics
 	-mfloat-abi=hard
 	-mthumb
 	-nostartfiles
 	-nostdlib
 	-Wdouble-promotion
 	-Werror=return-type
-	-Wno-register
-	-Wno-volatile
+	$<$<COMPILE_LANGUAGE:CXX>:
+		-std=c++2a
+		-fno-rtti
+		-fno-threadsafe-statics
+		-fno-exceptions
+		-Wno-register
+		-Wno-volatile
+		>
 	$<$<CONFIG:Debug>:-O0>
 	$<$<CONFIG:Release>:-O3>
 	)
