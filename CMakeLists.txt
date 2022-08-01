@@ -151,8 +151,8 @@ target_link_options(f423.elf PRIVATE
 	${COMMON_LINK_OPTS}
 	-mcpu=cortex-m4
 	-mfpu=fpv4-sp-d16
-	-Wl,-Map,build/f423.map,--cref
-	-T stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
+	-Wl,-Map,${CMAKE_BINARY_DIR}/f423.map,--cref
+	-T ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
 	)
 
 add_custom_command(TARGET f423.elf 
