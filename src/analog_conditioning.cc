@@ -1,5 +1,8 @@
+#include "analog_conditioning.h"
+#include "adc.h"
 #include "adc_pins.h"
-#include "globals.h"
+#include "drivers/stm32xx.h"
+// #include "globals.h"
 
 uint16_t adc_dma_buffer[NUM_ADCS];
 uint16_t *adc_cv_dma_buffer = &(adc_dma_buffer[0]);
@@ -8,10 +11,6 @@ uint16_t *adc_pot_dma_buffer = &(adc_dma_buffer[NUM_CV_ADCS]);
 // uint16_t adc_pot_dma_buffer[NUM_POT_ADCS];
 
 analog_t analog[NUM_ADCS];
-
-#ifndef ADC2
-#define ADC2 ADC1
-#endif
 
 //Private:
 void setup_fir_lpf(void);
@@ -53,7 +52,7 @@ void init_analog_conditioning(void) {
 	adc_pot_setup[ADC_POT_DIVMULT].channel = POT_DIVMULT_Channel;
 	adc_pot_setup[ADC_POT_DIVMULT].sample_time = SLOW_SAMPLE;
 
-	if (ADC1 == ADC2) {
+	if (ADC2 == nullptr) {
 		// F423 and units with 1 ADC
 		ADC_Init(ADC1, adc_dma_buffer, NUM_ADCS, adc_setup, OVERSAMPLE_RATIO); //16
 	} else {
