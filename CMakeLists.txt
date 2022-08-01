@@ -109,6 +109,8 @@ set(COMMON_LINK_OPTS
 	-mfloat-abi=hard
 	)
 
+############ f423 ##############
+
 add_executable(f423.elf
 	${COMMON_SOURCES}
 	./lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
@@ -124,6 +126,12 @@ target_include_directories(f423.elf PRIVATE
 	./stm32/device/stm32f4/Include
 	./stm32/HAL/stm32f4/Inc
 	./src/f423-drivers
+	./
+	./lib/mdrivlib
+	./lib/mdrivlib/drivers
+	./lib/mdrivlib/target/stm32f4xx
+	./lib/mdrivlib/target/stm32f4xx/drivers
+	./lib/cpputil 
 	)
 
 target_compile_definitions(f423.elf PRIVATE
