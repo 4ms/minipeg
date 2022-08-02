@@ -110,9 +110,9 @@ void main() {
 	DigIO::EOJack::low();
 
 	if (do_bootloader) {
-#ifdef USING_FSK
-		init_fsk(); //FSK
-#endif
+		while (button_pushed(Button::Ping) || button_pushed(Button::Cycle))
+			;
+
 
 		start_reception(kSampleRate, [&]() {
 			DigIO::ClockBusOut::high();
