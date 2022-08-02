@@ -26,8 +26,8 @@
  * -----------------------------------------------------------------------------
  */
 
+#include "drivers/stm32xx.h"
 #include "flash_layout.hh"
-#include "stm32xx.h"
 
 //Does this work?
 uint32_t get_sector_num(uint32_t address) {

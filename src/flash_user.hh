@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include "drivers/stm32xx.h"
 #include "envelope_calcs.h"
-#include "stm32xx.h"
 #include <stdint.h>
 
 enum CycleJackBehaviors {

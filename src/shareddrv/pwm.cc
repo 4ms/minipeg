@@ -1,8 +1,8 @@
 #include "drivers/clocks.hh"
+#include "drivers/stm32xx.h"
 #include "drivers/tim_pwm.hh"
 #include "globals.h"
 #include "pwm_pins.hh"
-#include "stm32xx.h"
 
 void update_pwm(uint32_t pwmval, enum PwmOutputs pwmnum) {
 	if (pwmnum >= NUM_PWMS)
