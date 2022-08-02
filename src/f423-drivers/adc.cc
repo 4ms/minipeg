@@ -31,7 +31,6 @@
 #include "drivers/rcc.hh"
 #include "system.hh"
 
-
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 

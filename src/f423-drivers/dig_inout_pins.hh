@@ -15,8 +15,8 @@ struct DigIO {
 	using CycleJack = mdrivlib::FPin<GPIO::E, PinNum::_4, PinMode::Input, PinPolarity::Normal>;
 	using TrigJack = mdrivlib::FPin<GPIO::D, PinNum::_5, PinMode::Input, PinPolarity::Normal>;
 
-	using EOJack = mdrivlib::FPin<GPIO::D, PinNum::_7, PinMode::Input, PinPolarity::Normal>;
-	using ClockBusOut = mdrivlib::FPin<GPIO::A, PinNum::_12, PinMode::Input, PinPolarity::Normal>;
+	using EOJack = mdrivlib::FPin<GPIO::D, PinNum::_7, PinMode::Output, PinPolarity::Normal>;
+	using ClockBusOut = mdrivlib::FPin<GPIO::A, PinNum::_12, PinMode::Output, PinPolarity::Normal>;
 };
 ////////////
 
