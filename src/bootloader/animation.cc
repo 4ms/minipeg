@@ -56,13 +56,10 @@ void animate(Animations animation_type) {
 
 		case ANI_RECEIVING:
 			step_time = 200 * TICKS_PER_MS;
-			if (ctr < 3) {
-				set_rgb_led(RgbLeds::Ping, Palette::Blue);
-				set_rgb_led(RgbLeds::Cycle, Palette::Blue);
-			} else if (ctr == 3) {
+			if (ctr == 0) {
 				set_rgb_led(RgbLeds::Ping, Palette::Blue);
 				set_rgb_led(RgbLeds::Cycle, Palette::White);
-			} else if (ctr == 4) {
+			} else if (ctr == 1) {
 				set_rgb_led(RgbLeds::Ping, Palette::White);
 				set_rgb_led(RgbLeds::Cycle, Palette::Blue);
 			} else
