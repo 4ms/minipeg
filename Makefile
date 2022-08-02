@@ -1,6 +1,6 @@
 # Makefile by Dan Green <danngreen1@gmail.com>
 binaryname 		= main
-#TODO: sheel funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
+#TODO: shell funcs that turn STM32F423xx into STM32F4, f4, f423, stm32f4, stm32f423
 
 ifeq ($(MAKECMDGOALS),g431)
 linkscript 	:= STM32G431C8Tx_FLASH.ld
@@ -75,8 +75,9 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			src/shareddrv/pwm.cc \
 			src/shareddrv/flash.cc
 else ifeq ($(MAKECMDGOALS),clean)
+else ifeq ($(MAKECMDGOALS),wav)
 else
-$(error Build with `make g431` or `make f746` or `make f423`)
+$(error Build with `make g431` or `make f746` or `make f423` or wav or clean)
 endif
 
 cmsisdevicedir 	= stm32/device/$(devicefam)
@@ -156,6 +157,7 @@ CXXFLAGS=$(CFLAGS) \
 	-Werror=return-type \
 	-Wdouble-promotion \
 	-Wno-register \
+	-Wno-volatile \
 
 
 AFLAGS = $(mcuflags)
@@ -240,6 +242,9 @@ $(builddir)/%.o: %.s
 
 flash: $(bin)
 	st-flash write $(bin) 0x8000000
+
+wav: $(bin)
+	PYTHONPATH="src/bootloader" && python src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 16384 -k 1800 $(builddir)/f423.bin
 
 clean:
 	rm -rf $(builddir)
