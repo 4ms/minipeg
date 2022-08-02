@@ -64,7 +64,11 @@ SOURCES = 	$(mdrivlibdir)/drivers/pin.cc \
 			$(mdrivlibdir)/drivers/tim.cc \
 			$(mdrivlibdir)/target/stm32f4xx/drivers/interrupt_handler.cc \
 			src/f423-drivers/system.cc \
-			src/shareddrv/flash.cc
+			src/f423-drivers/adc.cc \
+			src/shareddrv/flash.cc \
+			src/analog_conditioning.cc \
+			$(periphdir)/Src/stm32$(shortfam)xx_hal_adc.c \
+			$(periphdir)/Src/stm32$(shortfam)xx_hal_dma.c
 else ifeq ($(MAKECMDGOALS),clean)
 else
 $(error Build with `make g431` or `make f746` or `make f423`)
@@ -127,7 +131,7 @@ SZ 		= $(ARCH)-size
 arch_cflags = -D$(cortexmath) -D'__FPU_PRESENT=1' 
 arch_cflags = -D$(chip_define) -D$(fam_define) -DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER
 
-optflag = -O0
+optflag = -O3
 
 CFLAGS = -g3 \
 	$(arch_cflags) $(mcuflags) \
@@ -146,6 +150,7 @@ CXXFLAGS=$(CFLAGS) \
 	-Werror=return-type \
 	-Wdouble-promotion \
 	-Wno-register \
+	-Wno-volatile \
 
 
 AFLAGS = $(mcuflags)
