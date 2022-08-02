@@ -103,18 +103,26 @@ void main() {
 
 	delay(100);
 
+	DigIO::ClockBusOut init;
+	DigIO::ClockBusOut::high();
+	DigIO::ClockBusOut::low();
+	DigIO::EOJack::high();
+	DigIO::EOJack::low();
+
 	if (do_bootloader) {
 #ifdef USING_FSK
 		init_fsk(); //FSK
 #endif
 
 		start_reception(kSampleRate, [&]() {
+			DigIO::ClockBusOut::high();
 			bool sample = gate_in_read();
 			if (!discard_samples) {
 				demodulator.PushSample(sample ? 1 : 0);
 			} else {
 				--discard_samples;
 			}
+			DigIO::ClockBusOut::low();
 		});
 
 		delay(100);
