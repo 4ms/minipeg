@@ -1,9 +1,7 @@
 #include "stm32xx.h"
 
 #define USING_FSK
-#ifndef USING_FSK
-#define USING_QPSK
-#endif
+// #define USING_QPSK
 
 #include "../system.hh"
 #include "bootloader/animation.hh"
@@ -69,7 +67,7 @@ void read_gate_input() {
 
 static void animate_until_button_pushed(Animations animation_type, Button button);
 static void update_LEDs();
-static void init_fsk();
+static void init_reception();
 static void delay(uint32_t tm);
 
 void main() {
@@ -113,6 +111,7 @@ void main() {
 		while (button_pushed(Button::Ping) || button_pushed(Button::Cycle))
 			;
 
+		init_reception();
 
 		start_reception(kSampleRate, [&]() {
 			DigIO::ClockBusOut::high();
@@ -198,7 +197,7 @@ void main() {
 				animate_until_button_pushed(ANI_FAIL_ERR, Button::Ping);
 				animate(ANI_RESET);
 				delay(100);
-				init_fsk();
+				init_reception();
 
 				exit_updater = false;
 			}
@@ -232,12 +231,12 @@ void main() {
 	jump_to(kStartExecutionAddress);
 }
 
-void init_fsk() {
+void init_reception() {
 #ifdef USING_QPSK
 	//QPSK
 	decoder.Init((uint16_t)20000);
 	demodulator.Init(
-		kModulationRate / kSampleRate * 4294967296.0, kSampleRate / kModulationRate, 2.0 * kSampleRate / kBitRate);
+		kModulationRate / kSampleRate * 4294967296.0f, kSampleRate / kModulationRate, 2.f * kSampleRate / kBitRate);
 	demodulator.SyncCarrier(true);
 	decoder.Reset();
 #else
@@ -315,5 +314,3 @@ extern "C" void DebugMon_Handler() {
 extern "C" void PendSV_Handler() {
 	__BKPT();
 }
-
-// } //extern "C"
