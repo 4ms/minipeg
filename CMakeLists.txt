@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.15.3)
-set(CMAKE_TOOLCHAIN_FILE
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/arm-none-eabi-gcc.cmake)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/cmake/arm-none-eabi-gcc.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(minipeg C CXX ASM)
 
@@ -41,10 +40,10 @@ set(COMMON_SOURCES
     ./src/shareddrv/dac.cc
     ./src/shareddrv/debounced_digins.cc
     ./src/shareddrv/flash.cc
-    ./src/shareddrv/pwm.cc)
+    ./src/shareddrv/pwm.cc
+)
 
-set(COMMON_INCLUDES ./src ./src/hardware_tests ./libhwtests/inc
-                    ./stm32/CMSIS/Include)
+set(COMMON_INCLUDES ./src ./src/hardware_tests ./libhwtests/inc ./stm32/CMSIS/Include)
 
 function(hal_sources sources family)
   set(${sources}
@@ -64,7 +63,8 @@ function(hal_sources sources family)
       ./stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_rcc_ex.c
       ./stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_tim.c
       ./stm32/HAL/stm32${family}/Src/stm32${family}xx_ll_tim.c
-      PARENT_SCOPE)
+      PARENT_SCOPE
+  )
 endfunction()
 hal_sources(F4_HAL_SOURCES f4)
 hal_sources(F7_HAL_SOURCES f7)
@@ -93,19 +93,18 @@ set(COMMON_COMPILE_OPTIONS
     -Wno-register
     -Wno-volatile
     $<$<CONFIG:Debug>:-O0>
-    $<$<CONFIG:Release>:-O3>)
+    $<$<CONFIG:Release>:-O3>
+)
 
 set(COMMON_LINK_OPTS -Wl,--gc-sections -nostdlib -mthumb -mfloat-abi=hard)
 
 # ########### f423 ##############
 
 add_library(f423 INTERFACE)
-target_compile_definitions(f423 INTERFACE ${COMMON_DEFINES} STM32F423xx STM32F4
-                                          ARM_MATH_CM4)
+target_compile_definitions(f423 INTERFACE ${COMMON_DEFINES} STM32F423xx STM32F4 ARM_MATH_CM4)
 
 set(F423_ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
-target_compile_options(f423 INTERFACE ${COMMON_COMPILE_OPTIONS}
-                                      ${F423_ARCH_FLAGS})
+target_compile_options(f423 INTERFACE ${COMMON_COMPILE_OPTIONS} ${F423_ARCH_FLAGS})
 
 add_executable(
   f423.elf
@@ -116,7 +115,8 @@ add_executable(
   ./src/f423-drivers/system.cc
   ./src/f423-drivers/startup_stm32f423xx.s
   ./stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
-  ${F4_HAL_SOURCES})
+  ${F4_HAL_SOURCES}
+)
 
 target_link_libraries(f423.elf PRIVATE f423)
 
@@ -131,7 +131,8 @@ target_include_directories(
           ./lib/mdrivlib/drivers
           ./lib/mdrivlib/target/stm32f4xx
           ./lib/mdrivlib/target/stm32f4xx/drivers
-          ./lib/cpputil)
+          ./lib/cpputil
+)
 
 target_link_options(
   f423.elf
@@ -140,7 +141,8 @@ target_link_options(
   ${F423_ARCH_FLAGS}
   -Wl,-Map,${CMAKE_BINARY_DIR}/f423.map,--cref
   -T
-  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld)
+  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
+)
 
 add_executable(
   f423-bootloader.elf
@@ -176,7 +178,8 @@ add_executable(
   ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_rcc.c
   ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_rcc_ex.c
   ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_tim.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_ll_tim.c)
+  ./stm32/HAL/stm32f4/Src/stm32f4xx_ll_tim.c
+)
 
 target_link_libraries(f423-bootloader.elf PRIVATE f423)
 
@@ -194,7 +197,8 @@ target_include_directories(
           ./src
           ./lib/mdrivlib
           ./lib/mdrivlib/drivers
-          ./lib/cpputil)
+          ./lib/cpputil
+)
 
 target_link_options(
   f423-bootloader.elf
@@ -203,7 +207,8 @@ target_link_options(
   ${F423_ARCH_FLAGS}
   -Wl,-Map,${CMAKE_BINARY_DIR}/f423-bootloader.map,--cref
   -T
-  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH_BOOTLOADER.ld)
+  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH_BOOTLOADER.ld
+)
 
 # ############### Common commands #####################
 
@@ -215,9 +220,9 @@ function(add_bin_hex_command target_base)
     COMMAND echo "Target filename is $<TARGET_FILE:${target_base}.elf>"
     COMMAND arm-none-eabi-objcopy -O ihex $<TARGET_FILE_NAME:${target_base}.elf>
             $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.hex
-    COMMAND
-      arm-none-eabi-objcopy -O binary $<TARGET_FILE_NAME:${target_base}.elf>
-      $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.bin)
+    COMMAND arm-none-eabi-objcopy -O binary $<TARGET_FILE_NAME:${target_base}.elf>
+            $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.bin
+  )
   set_target_properties(
     ${target_base}.elf
     PROPERTIES
@@ -231,14 +236,12 @@ function(add_fsk_wav_command target_base)
     ${target_base}.wav
     COMMAND
       export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && python
-      ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s
-      22050 -b 16 -n 8 -z 4 -p 256 -g 16384 -k 1800
-      $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.bin)
+      ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 16384
+      -k 1800 $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.bin
+  )
 endfunction()
 
-add_custom_target(
-  make_compdb COMMAND ln -snf ${CMAKE_BINARY_DIR}/compile_commands.json
-                      ${CMAKE_SOURCE_DIR}/.)
+add_custom_target(make_compdb COMMAND ln -snf ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/.)
 
 add_bin_hex_command(f423)
 add_fsk_wav_command(f423)
