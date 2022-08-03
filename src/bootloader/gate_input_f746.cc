@@ -2,9 +2,10 @@
 #include "adc_pins.h"
 #include "analog_conditioning.h"
 #include "dig_inout_pins.hh"
+#include "drivers/arch.hh"
 #include "drivers/pin.hh"
 #include "drivers/timekeeper.hh"
-#include "stm32f423xx.h"
+#include <functional>
 
 namespace
 {
@@ -15,19 +16,10 @@ uint16_t buf;
 void init_gate_in() {
 	DigIO::TrigJack init;
 	DigIO::EOJack debug_out_init;
-
-	builtinAdcSetup adc_setup = {
-		.gpio = CV_SHAPE_GPIO_Port,
-		.pin = CV_SHAPE_Pin,
-		.channel = CV_SHAPE_Channel,
-		.sample_time = ADC_SAMPLETIME_56CYCLES,
-	};
-	ADC_Init(ADC1, &buf, 1, &adc_setup, 1);
 }
 
 bool gate_in_read() {
-	// auto j = DigIO::TrigJack::read();
-	bool j = buf < 2200;
+	bool j = DigIO::TrigJack::read();
 	if (j)
 		DigIO::EOJack::high();
 	else
