@@ -67,13 +67,13 @@ void animate(Animations animation_type) {
 			break;
 
 		case ANI_SYNC:
-			step_time = 50 * TICKS_PER_MS;
+			step_time = 100 * TICKS_PER_MS;
 			if (ctr == 0) {
-				set_rgb_led(RgbLeds::Ping, Palette::Magenta);
-				set_rgb_led(RgbLeds::Cycle, Palette::Cyan);
+				set_rgb_led(RgbLeds::Ping, Palette::Black);
+				set_rgb_led(RgbLeds::Cycle, Palette::Black);
 			} else if (ctr == 1) {
-				set_rgb_led(RgbLeds::Ping, Palette::Cyan);
-				set_rgb_led(RgbLeds::Cycle, Palette::Magenta);
+				set_rgb_led(RgbLeds::Ping, Palette::Magenta);
+				set_rgb_led(RgbLeds::Cycle, Palette::Black);
 			} else
 				ctr = 0;
 			break;
