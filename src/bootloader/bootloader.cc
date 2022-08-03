@@ -60,6 +60,9 @@ static void animate_until_button_pushed(Animations animation_type, Button button
 static void update_LEDs();
 static void init_reception();
 static void delay(uint32_t tm);
+static bool write_buffer();
+static void new_block();
+static void new_packet();
 
 void main() {
 	uint32_t symbols_processed = 0;
@@ -141,29 +144,14 @@ void main() {
 						++packet_index;
 						if ((packet_index % kPacketsPerBlock) == 0) {
 							ui_state = UI_STATE_WRITING;
-
-							//Check for valid flash address before writing to flash
-							if ((current_flash_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
-								flash_write_page(recv_buffer, current_flash_address, kBlkSize);
-								current_flash_address += kBlkSize;
-							} else {
+							bool write_ok = write_buffer();
+							if (!write_ok) {
 								ui_state = UI_STATE_ERROR;
 								rcv_err = true;
 							}
-							decoder.Reset();
-
-#ifndef USING_QPSK
-							demodulator.Sync(); //FSK
-#else
-							demodulator.SyncCarrier(false); //QPSK
-#endif
-
+							new_block();
 						} else {
-#ifndef USING_QPSK
-							decoder.Reset(); //FSK
-#else
-							demodulator.SyncDecision();		//QPSK
-#endif
+							new_packet();
 						}
 						break;
 
@@ -176,6 +164,14 @@ void main() {
 						break;
 
 					case PACKET_DECODER_STATE_END_OF_TRANSMISSION:
+						if (current_flash_address == kStartReceiveAddress) {
+							if (!write_buffer()) {
+								ui_state = UI_STATE_ERROR;
+								rcv_err = true;
+								new_block();
+								break;
+							}
+						}
 						exit_updater = true;
 						ui_state = UI_STATE_DONE;
 						animate_until_button_pushed(ANI_SUCCESS, Button::Ping);
@@ -193,23 +189,30 @@ void main() {
 				animate(ANI_RESET);
 				delay(100);
 				init_reception();
-
 				exit_updater = false;
 			}
 
 			if (button_pushed(Button::Cycle)) {
-				if (button2_exit_armed) {
-					if (packet_index == 0)
-						exit_updater = true;
+				if (cycle_but_armed) {
+					if (packet_index == 0) {
+						gatein_threshold += thresh_stepsize;
+						if (gatein_threshold >= (thresh_min + thresh_steps * thresh_stepsize))
+							gatein_threshold = thresh_min;
+						set_threshold_led();
+					} else {
+						delay(100);
+						init_reception();
+					}
 				}
-				button2_exit_armed = 0;
+				cycle_but_armed = 0;
 			} else
-				button2_exit_armed = 1;
+				cycle_but_armed = 1;
 
 			if (button_pushed(Button::Ping)) {
 				if (button1_exit_armed) {
-					if (ui_state == UI_STATE_WAITING)
+					if (ui_state == UI_STATE_WAITING) {
 						exit_updater = true;
+					}
 				}
 				button1_exit_armed = 0;
 			} else
@@ -247,6 +250,16 @@ void init_reception() {
 	ui_state = UI_STATE_WAITING;
 }
 
+bool write_buffer() {
+	if ((current_flash_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
+		flash_write_page(recv_buffer, current_flash_address, kBlkSize);
+		current_flash_address += kBlkSize;
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void update_LEDs() {
 	if (ui_state == UI_STATE_RECEIVING)
 		animate(ANI_RECEIVING);
@@ -259,6 +272,23 @@ void update_LEDs() {
 
 	else //if (ui_state == UI_STATE_DONE)
 	{}
+}
+
+void new_block() {
+	decoder.Reset();
+#ifdef USING_FSK
+	demodulator.Sync(); //FSK
+#else
+	demodulator.SyncCarrier(false); //QPSK
+#endif
+}
+
+void new_packet() {
+#ifdef USING_FSK
+	decoder.Reset(); //FSK
+#else
+	demodulator.SyncDecision();		//QPSK
+#endif
 }
 
 void animate_until_button_pushed(Animations animation_type, Button button) {
