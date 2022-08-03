@@ -25,8 +25,8 @@ void init_gate_in() {
 	ADC_Init(ADC1, &buf, 1, &adc_setup, 1);
 }
 
-bool gate_in_read() {
-	bool j = buf < 2200;
+bool gate_in_read(uint32_t threshold) {
+	bool j = buf < threshold;
 
 	if (j)
 		DigIO::EOJack::high();

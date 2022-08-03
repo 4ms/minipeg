@@ -31,11 +31,11 @@ constexpr float kModulationRate = 6000.0;
 constexpr float kBitRate = 12000.0;
 constexpr float kSampleRate = 48000.0;
 #else
-constexpr uint32_t kSampleRate = 22050;						//-s
-constexpr uint32_t kPausePeriod = 16;						//-b
-constexpr uint32_t kOnePeriod = 8;							//-n
-constexpr uint32_t kZeroPeriod = 4;							//-z
-															//-p must be 256 (set in fsk/packet_decoder.h)
+constexpr uint32_t kSampleRate = 22050; //-s
+constexpr uint32_t kPausePeriod = 16;	//-b
+constexpr uint32_t kOnePeriod = 8;		//-n
+constexpr uint32_t kZeroPeriod = 4;		//-z
+										//-p must be 256 (set in fsk/packet_decoder.h)
 #endif
 
 constexpr uint32_t kStartExecutionAddress = AppFlashAddr;
@@ -53,6 +53,11 @@ uint16_t packet_index;
 uint16_t discard_samples = 8000;
 uint32_t current_flash_address;
 
+constexpr uint32_t thresh_stepsize = 10;
+constexpr uint32_t thresh_min = 2080;
+constexpr uint32_t thresh_steps = 25;
+uint32_t gatein_threshold = 2200;
+
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
 UiState ui_state;
 
@@ -63,6 +68,7 @@ static void delay(uint32_t tm);
 static bool write_buffer();
 static void new_block();
 static void new_packet();
+static void set_threshold_led();
 
 void main() {
 	uint32_t symbols_processed = 0;
@@ -95,33 +101,32 @@ void main() {
 
 	delay(100);
 
-	DigIO::ClockBusOut init;
-	DigIO::ClockBusOut::high();
-	DigIO::ClockBusOut::low();
-	DigIO::EOJack::high();
-	DigIO::EOJack::low();
+	//Debug:
+	// DigIO::ClockBusOut init;
+	// mdrivlib::FPin<mdrivlib::GPIO::E, mdrivlib::PinNum::_3, mdrivlib::PinMode::Output> debug2;
+	// debug2.low();
+	// DigIO::ClockBusOut::low();
 
 	if (do_bootloader) {
-		while (button_pushed(Button::Ping) || button_pushed(Button::Cycle))
-			;
-
 		init_reception();
 
 		start_reception(kSampleRate, [&]() {
-			DigIO::ClockBusOut::high();
-			bool sample = gate_in_read();
+			bool sample = gate_in_read(gatein_threshold);
 			if (!discard_samples) {
 				demodulator.PushSample(sample ? 1 : 0);
 			} else {
 				--discard_samples;
 			}
-			DigIO::ClockBusOut::low();
 		});
 
-		delay(100);
-
 		uint32_t button1_exit_armed = 0;
-		uint32_t button2_exit_armed = 0;
+		uint32_t cycle_but_armed = 0;
+
+		while (button_pushed(Button::Ping) || button_pushed(Button::Cycle))
+			;
+
+		delay(300);
+		set_threshold_led();
 
 		while (!exit_updater) {
 			rcv_err = false;
@@ -227,6 +232,23 @@ void main() {
 	reset_buses();
 	reset_RCC();
 	jump_to(kStartExecutionAddress);
+}
+
+void set_threshold_led() {
+	// 25 possible levels
+	uint8_t seq = (gatein_threshold - thresh_min) / thresh_stepsize;
+	Palette Acolor = (seq / 5) == 0 ? Palette::Black
+				   : (seq / 5) == 1 ? Palette::Blue
+				   : (seq / 5) == 2 ? Palette::Magenta
+				   : (seq / 5) == 3 ? Palette::Red
+									: Palette::White;
+	Palette Bcolor = (seq % 5) == 0 ? Palette::Black
+				   : (seq % 5) == 1 ? Palette::Blue
+				   : (seq % 5) == 2 ? Palette::Magenta
+				   : (seq % 5) == 3 ? Palette::Red
+									: Palette::White;
+	set_rgb_led(RgbLeds::EnvA, Acolor);
+	set_rgb_led(RgbLeds::EnvB, Bcolor);
 }
 
 void init_reception() {
