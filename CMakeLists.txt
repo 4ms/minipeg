@@ -92,6 +92,7 @@ set(COMMON_COMPILE_OPTIONS
     -fno-exceptions
     -Wno-register
     -Wno-volatile
+  >
     $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O3>
 )
