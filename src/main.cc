@@ -4,10 +4,9 @@
 #include "dac.h"
 #include "debounced_digins.h"
 #include "dig_inouts.hh"
+#include "drivers/system.hh"
 #include "env_transition.h"
 #include "env_update.h"
-// #include "flash.hh"
-#include "drivers/system.hh"
 #include "flash_layout.hh"
 #include "flash_user.hh"
 #include "hardware_tests.h"
@@ -23,6 +22,7 @@
 #include "timekeeper.h"
 #include "timers.h"
 #include "trigout.h"
+#include "version.hh"
 
 extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
@@ -108,6 +108,8 @@ void main() {
 	adjust_palette();
 	check_calibration();
 	adjust_palette();
+
+	Version::show_version();
 
 	init_dac(kDacSampleRate, &update_all_envelopes);
 
