@@ -45,7 +45,7 @@ constexpr uint32_t kBlkSize = BootloaderReceiveSectorSize; //Flash page size, -g
 constexpr uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
 uint8_t recv_buffer[kBlkSize];
 
-uint32_t systmr = 0;
+volatile uint32_t systmr = 0;
 PacketDecoder decoder;
 Demodulator demodulator;
 
