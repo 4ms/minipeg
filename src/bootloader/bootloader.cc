@@ -27,17 +27,22 @@ using namespace stmlib;
 using namespace stm_audio_bootloader;
 
 #ifdef USING_QPSK
-const float kModulationRate = 6000.0;
-const float kBitRate = 12000.0;
-const float kSampleRate = 48000.0;
+constexpr float kModulationRate = 6000.0;
+constexpr float kBitRate = 12000.0;
+constexpr float kSampleRate = 48000.0;
 #else
-const uint32_t kSampleRate = 22050;
+constexpr uint32_t kSampleRate = 22050;						//-s
+constexpr uint32_t kPausePeriod = 16;						//-b
+constexpr uint32_t kOnePeriod = 8;							//-n
+constexpr uint32_t kZeroPeriod = 4;							//-z
+															//-p must be 256 (set in fsk/packet_decoder.h)
 #endif
-uint32_t kStartExecutionAddress = AppFlashAddr;
-uint32_t kStartReceiveAddress = BootloaderReceiveAddr;
 
-const uint32_t kBlkSize = 16384;
-const uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
+constexpr uint32_t kStartExecutionAddress = AppFlashAddr;
+constexpr uint32_t kStartReceiveAddress = BootloaderReceiveAddr;
+constexpr uint32_t kBlkSize = BootloaderReceiveSectorSize; //Flash page size, -g
+
+constexpr uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
 uint8_t recv_buffer[kBlkSize];
 
 volatile uint32_t systmr = 0;
@@ -46,7 +51,7 @@ Demodulator demodulator;
 
 uint16_t packet_index;
 uint16_t discard_samples = 8000;
-uint32_t current_address;
+uint32_t current_flash_address;
 
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
 volatile UiState ui_state;
@@ -148,9 +153,9 @@ void main() {
 							ui_state = UI_STATE_WRITING;
 
 							//Check for valid flash address before writing to flash
-							if ((current_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
-								flash_write_page(recv_buffer, current_address, kBlkSize);
-								current_address += kBlkSize;
+							if ((current_flash_address + kBlkSize) <= get_sector_addr(NumFlashSectors)) {
+								flash_write_page(recv_buffer, current_flash_address, kBlkSize);
+								current_flash_address += kBlkSize;
 							} else {
 								ui_state = UI_STATE_ERROR;
 								rcv_err = true;
@@ -243,11 +248,11 @@ void init_reception() {
 	//FSK
 	decoder.Init();
 	decoder.Reset();
-	demodulator.Init(16, 8, 4); //pause, one, zero. pause_thresh = 24. one_thresh = 6.
+	demodulator.Init(kPausePeriod, kOnePeriod, kZeroPeriod); // pause_thresh = 24. one_thresh = 6.
 	demodulator.Sync();
 #endif
 
-	current_address = kStartReceiveAddress;
+	current_flash_address = kStartReceiveAddress;
 	packet_index = 0;
 	ui_state = UI_STATE_WAITING;
 }
