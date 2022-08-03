@@ -45,7 +45,7 @@ constexpr uint32_t kBlkSize = BootloaderReceiveSectorSize; //Flash page size, -g
 constexpr uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
 uint8_t recv_buffer[kBlkSize];
 
-volatile uint32_t systmr = 0;
+uint32_t systmr = 0;
 PacketDecoder decoder;
 Demodulator demodulator;
 
@@ -54,7 +54,7 @@ uint16_t discard_samples = 8000;
 uint32_t current_flash_address;
 
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
-volatile UiState ui_state;
+UiState ui_state;
 
 //FIXME: use this
 void read_gate_input() {
