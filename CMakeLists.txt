@@ -50,7 +50,17 @@ set(
   src/trigout.cc
 )
 
-set(COMMON_INCLUDES ./src ./src/hardware_tests ./libhwtests/inc ./stm32/CMSIS/Include)
+set(
+  COMMON_INCLUDES
+  src
+  src/hardware_tests
+  libhwtests/inc
+  stm32/CMSIS/Include
+  ./
+  lib/mdrivlib
+  lib/mdrivlib/drivers
+  lib/cpputil
+)
 
 function(hal_sources sources family)
   set(
@@ -74,9 +84,51 @@ function(hal_sources sources family)
     PARENT_SCOPE
   )
 endfunction()
-hal_sources(F4_HAL_SOURCES f4)
-hal_sources(F7_HAL_SOURCES f7)
-hal_sources(G4_HAL_SOURCES g4)
+
+function(bootloader_hal_sources sources family)
+  set(
+    ${sources}
+    stm32/HAL/stm32${family}/Src/stm32f4xx_hal.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_cortex.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_flash.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_flash_ex.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_gpio.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_pwr.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_pwr_ex.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_rcc.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_rcc_ex.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_tim.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_ll_tim.c
+    PARENT_SCOPE
+  )
+endfunction()
+
+set(
+  BOOTLOADER_COMMON_SOURCES
+  src/bootloader/bootloader.cc
+  src/bootloader/leds.cc
+  src/bootloader/gate_input.cc
+  src/bootloader/animation.cc
+  src/bootloader/bl_utils.cc
+  src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
+  src/libc_stub.c
+  src/libcpp_stub.cc
+  src/shareddrv/flash.cc
+  lib/mdrivlib/drivers/pin.cc
+  lib/mdrivlib/drivers/timekeeper.cc
+  lib/mdrivlib/drivers/tim.cc
+)
+
+set(
+  BOOTLOADER_COMMON_INCLUDES
+  ./stm32/CMSIS/Include
+  ./src/bootloader
+  ./src/bootloader/stmlib
+  ./src
+  ./lib/mdrivlib
+  ./lib/mdrivlib/drivers
+  ./lib/cpputil
+)
 
 set(COMMON_DEFINES USE_HAL_DRIVER USE_FULL_LL_DRIVER)
 
@@ -143,117 +195,88 @@ endfunction()
 
 # ########### f423 ##############
 
-set(F423_ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
 
 # Common f423 settings are in the f423 interface library
+#TODO: this for each target:
+set(F423_ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
 add_library(f423 INTERFACE)
 target_compile_definitions(f423 INTERFACE ${COMMON_DEFINES} STM32F423xx STM32F4 ARM_MATH_CM4)
 target_compile_options(f423 INTERFACE ${COMMON_COMPILE_OPTIONS} ${F423_ARCH_FLAGS})
 target_link_options(f423 INTERFACE ${COMMON_LINK_OPTS} ${F423_ARCH_FLAGS})
 
-# F423 Main app
-add_executable(
-  f423.elf
-  ${COMMON_SOURCES}
-  ./lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
-  ./src/f423-drivers/adc.cc
-  ./src/f423-drivers/system.cc
-  ./src/f423-drivers/startup_stm32f423xx.s
-  ./stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
-  ${F4_HAL_SOURCES}
-)
+if(${TARGET} STREQUAL "f423")
+  message("Target is F423")
 
-target_include_directories(
-  f423.elf
-  PRIVATE ${COMMON_INCLUDES}
-  ./stm32/device/stm32f4/Include
-  ./stm32/HAL/stm32f4/Inc
-  ./src/f423-drivers
-  ./
-  ./lib/mdrivlib
-  ./lib/mdrivlib/drivers
-  ./lib/mdrivlib/target/stm32f4xx
-  ./lib/mdrivlib/target/stm32f4xx/drivers
-  ./lib/cpputil
-)
+  hal_sources(F4_HAL_SOURCES f4)
+  set(
+    TARGET_SOURCES
+    lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
+    src/f423-drivers/adc.cc
+    src/f423-drivers/system.cc
+    src/f423-drivers/startup_stm32f423xx.s
+    stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
+    ${F4_HAL_SOURCES}
+  )
+  set(
+    TARGET_INCLUDES
+    stm32/device/stm32f4/Include
+    stm32/HAL/stm32f4/Inc
+    src/f423-drivers
+    lib/mdrivlib/target/stm32f4xx
+    lib/mdrivlib/target/stm32f4xx/drivers
+  )
+  set(
+    TARGET_LINK_SCRIPT
+    ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
+  )
 
-target_link_script(
-  f423
-  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
-)
+  bootloader_hal_sources(F4_BOOTLOADER_HAL_SOURCES f4)
+  set(
+    TARGET_BOOTLOADER_SOURCES
+    lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
+    src/f423-drivers/system.cc
+    src/f423-drivers/adc.cc
+    src/analog_conditioning.cc
+    stm32/HAL/stm32f4/Src/stm32f4xx_hal_adc.c
+    stm32/HAL/stm32f4/Src/stm32f4xx_hal_dma.c
+    src/f423-drivers/startup_stm32f423xx.s
+    stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
+    ${F4_BOOTLOADER_HAL_SOURCES}
+  )
+  set(
+    TARGET_BOOTLOADER_INCLUDES
+    stm32/device/stm32f4/Include
+    stm32/HAL/stm32f4/Inc
+    src/f423-drivers
+    lib/mdrivlib/target/stm32f4xx
+    lib/mdrivlib/target/stm32f4xx/drivers
+  )
+  set(
+    TARGET_BOOTLOADER_LINK_SCRIPT
+    ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH_BOOTLOADER.ld
+  )
+else()
+  message("Unknown TARGET ${TARGET}, run with `cmake -B build -DTARGET=f423` or other valid target")
+endif()
 
-target_link_libraries(f423.elf PRIVATE f423)
-add_bin_hex_command(f423)
+add_executable(${TARGET}.elf ${COMMON_SOURCES} ${TARGET_SOURCES})
+target_include_directories(${TARGET}.elf PRIVATE ${COMMON_INCLUDES} ${TARGET_INCLUDES})
+target_link_script(${TARGET} ${TARGET_LINK_SCRIPT})
+target_link_libraries(${TARGET}.elf PRIVATE ${TARGET})
+add_bin_hex_command(${TARGET})
 
-# F423 Bootloader
-add_executable(
-  f423-bootloader.elf
-  ./lib/mdrivlib/drivers/pin.cc
-  ./lib/mdrivlib/drivers/timekeeper.cc
-  ./lib/mdrivlib/drivers/tim.cc
-  ./lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
-  ./src/f423-drivers/system.cc
-  ./src/f423-drivers/adc.cc
-  ./src/shareddrv/flash.cc
-  ./src/analog_conditioning.cc
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_adc.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_dma.c
-  ./src/f423-drivers/startup_stm32f423xx.s
-  ./stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
-  # COMMON:
-  ./src/bootloader/bootloader.cc
-  ./src/bootloader/leds.cc
-  ./src/bootloader/gate_input.cc
-  ./src/bootloader/animation.cc
-  ./src/bootloader/bl_utils.cc
-  ./src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
-  ./src/libc_stub.c
-  ./src/libcpp_stub.cc
-  # HAL:
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_cortex.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_flash.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_flash_ex.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_gpio.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_pwr.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_pwr_ex.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_rcc.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_rcc_ex.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_hal_tim.c
-  ./stm32/HAL/stm32f4/Src/stm32f4xx_ll_tim.c
-)
-
-target_include_directories(
-  f423-bootloader.elf
-  PRIVATE
-  ./stm32/device/stm32f4/Include
-  ./stm32/HAL/stm32f4/Inc
-  ./src/f423-drivers
-  ./lib/mdrivlib/target/stm32f4xx
-  ./lib/mdrivlib/target/stm32f4xx/drivers
-  # Bootloader COMMON:
-  ./stm32/CMSIS/Include
-  ./src/bootloader
-  ./src/bootloader/stmlib
-  ./src
-  ./lib/mdrivlib
-  ./lib/mdrivlib/drivers
-  ./lib/cpputil
-)
-
-target_link_script(
-  f423-bootloader
-  ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH_BOOTLOADER.ld
-)
-
+add_executable(${TARGET}-bootloader.elf ${BOOTLOADER_COMMON_SOURCES} ${TARGET_BOOTLOADER_SOURCES})
+target_include_directories(${TARGET}-bootloader.elf PRIVATE ${BOOTLOADER_COMMON_INCLUDES} ${TARGET_BOOTLOADER_INCLUDES})
+target_link_script(${TARGET}-bootloader.elf ${TARGET_BOOTLOADER_LINK_SCRIPT})
 target_link_libraries(f423-bootloader.elf PRIVATE f423)
 
+# TODO: different parameters for each target?
 add_custom_target(
-  f423.wav
+  ${TARGET}.wav
   COMMAND
   export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && python
   ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 65536
-  -k 1000 $<TARGET_FILE_DIR:f423.elf>/f423.bin
+  -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
   #Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the wave file shorter
 )
 
