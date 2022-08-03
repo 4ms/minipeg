@@ -170,7 +170,7 @@ HAL_StatusTypeDef flash_write_page(const uint8_t *data, uint32_t dst_addr, uint3
 		return err;
 	}
 
-	err = flash_open_program_word_array((uint32_t *)data, dst_addr, bytes_to_write >> 2);
+	err = flash_open_program_word_array((uint32_t *)data, dst_addr, bytes_to_write);
 	if (err != HAL_OK) {
 		flash_end_open_program();
 		return err;
