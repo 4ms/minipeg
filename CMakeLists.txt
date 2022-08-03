@@ -3,12 +3,6 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/cmake/arm-none-eabi-gcc.cmake
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(minipeg C CXX ASM)
 
-## TODO: Consider this method
-# cmake -B build -DTARGET=f423
-# Then we use ${TARGET} everywhere instead of f423.elf
-# and we use if(${TARGET} EQUAL f423) \ set(arch_sources f423-drivers/system.cc etc..
-
-
 set(
   COMMON_SOURCES
   lib/mdrivlib/drivers/pin.cc
@@ -62,7 +56,7 @@ set(
   lib/cpputil
 )
 
-function(hal_sources sources family)
+function(set_hal_sources sources family)
   set(
     ${sources}
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal.c
@@ -85,7 +79,7 @@ function(hal_sources sources family)
   )
 endfunction()
 
-function(bootloader_hal_sources sources family)
+function(set_bootloader_hal_sources sources family)
   set(
     ${sources}
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal.c
@@ -107,7 +101,6 @@ set(
   BOOTLOADER_COMMON_SOURCES
   src/bootloader/bootloader.cc
   src/bootloader/leds.cc
-  src/bootloader/gate_input.cc
   src/bootloader/animation.cc
   src/bootloader/bl_utils.cc
   src/bootloader/stm_audio_bootloader/fsk/packet_decoder.cc
@@ -192,92 +185,114 @@ function(add_bin_hex_command target_base)
   )
 endfunction()
 
-
-# ########### f423 ##############
-
-
-# Common f423 settings are in the f423 interface library
-#TODO: this for each target:
-set(F423_ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
-add_library(f423 INTERFACE)
-target_compile_definitions(f423 INTERFACE ${COMMON_DEFINES} STM32F423xx STM32F4 ARM_MATH_CM4)
-target_compile_options(f423 INTERFACE ${COMMON_COMPILE_OPTIONS} ${F423_ARCH_FLAGS})
-target_link_options(f423 INTERFACE ${COMMON_LINK_OPTS} ${F423_ARCH_FLAGS})
+### Target-specific 
 
 if(${TARGET} STREQUAL "f423")
-  message("Target is F423")
+  message("Target is STM32F423")
+  
+  set_hal_sources(HAL_SOURCES f4)
+  set(PROJECT_DRIVER_DIR src/f423-drivers)
+  set(MDRIVLIB_TARGET_DIR lib/mdrivlib/target/stm32f4xx)
+  set(FAMILY_NAME stm32f4)
+  set(TARGET_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F423VHHx_FLASH.ld)
 
-  hal_sources(F4_HAL_SOURCES f4)
-  set(
-    TARGET_SOURCES
-    lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
-    src/f423-drivers/adc.cc
-    src/f423-drivers/system.cc
-    src/f423-drivers/startup_stm32f423xx.s
-    stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
-    ${F4_HAL_SOURCES}
-  )
-  set(
-    TARGET_INCLUDES
-    stm32/device/stm32f4/Include
-    stm32/HAL/stm32f4/Inc
-    src/f423-drivers
-    lib/mdrivlib/target/stm32f4xx
-    lib/mdrivlib/target/stm32f4xx/drivers
-  )
-  set(
-    TARGET_LINK_SCRIPT
-    ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH.ld
-  )
+  set(ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
+  set(ARCH_DEFINES STM32F423xx STM32F4 ARM_MATH_CM4) 
 
-  bootloader_hal_sources(F4_BOOTLOADER_HAL_SOURCES f4)
+  set_bootloader_hal_sources(BOOTLOADER_HAL_SOURCES f4)
   set(
-    TARGET_BOOTLOADER_SOURCES
-    lib/mdrivlib/target/stm32f4xx/drivers/interrupt_handler.cc
-    src/f423-drivers/system.cc
+    TARGET_BOOTLOADER_SOURCES 
+    src/bootloader/gate_input_f423.cc
     src/f423-drivers/adc.cc
-    src/analog_conditioning.cc
     stm32/HAL/stm32f4/Src/stm32f4xx_hal_adc.c
     stm32/HAL/stm32f4/Src/stm32f4xx_hal_dma.c
-    src/f423-drivers/startup_stm32f423xx.s
-    stm32/device/stm32f4/Source/Templates/system_stm32f4xx.c
-    ${F4_BOOTLOADER_HAL_SOURCES}
   )
+  set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F423VHHx_FLASH_BOOTLOADER.ld)
   set(
-    TARGET_BOOTLOADER_INCLUDES
-    stm32/device/stm32f4/Include
-    stm32/HAL/stm32f4/Inc
-    src/f423-drivers
-    lib/mdrivlib/target/stm32f4xx
-    lib/mdrivlib/target/stm32f4xx/drivers
+    WAV_ENCODE_PYTHON_CMD
+    #Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the wave file shorter
+    ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 65536 -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
   )
+
+elseif(${TARGET} STREQUAL "f746")
+  message("Target is STM32F746")
+
+  set_hal_sources(HAL_SOURCES f7)
+  set(PROJECT_DRIVER_DIR src/f746-drivers)
+  set(MDRIVLIB_TARGET_DIR lib/mdrivlib/target/stm32f7xx)
+  set(FAMILY_NAME stm32f7)
+  set(TARGET_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F746IEKx_FLASH.ld)
+
+  set(ARCH_FLAGS -mcpu=cortex-m7 -mfpu=fpv5-sp-d16)
+  set(ARCH_DEFINES STM32F746xx STM32F7 ARM_MATH_CM7) 
+
+  set_bootloader_hal_sources(BOOTLOADER_HAL_SOURCES f7)
   set(
-    TARGET_BOOTLOADER_LINK_SCRIPT
-    ${CMAKE_SOURCE_DIR}/stm32/device/stm32f4/STM32F423VHHx_FLASH_BOOTLOADER.ld
+    TARGET_BOOTLOADER_SOURCES 
+    src/bootloader/gate_input_f746.cc
   )
+  set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F746IEKx_FLASH_BOOTLOADER.ld)
+  set(
+    WAV_ENCODE_PYTHON_CMD
+    ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 65536 -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
+    #Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the wave file shorter
+  )
+
 else()
-  message("Unknown TARGET ${TARGET}, run with `cmake -B build -DTARGET=f423` or other valid target")
+  message("Unknown TARGET ${TARGET}, run with `cmake -B build -DTARGET=[f423 | f746]`")
 endif()
 
-add_executable(${TARGET}.elf ${COMMON_SOURCES} ${TARGET_SOURCES})
+# Add target-specific project files and paths:
+set(
+  TARGET_SOURCES ${TARGET_SOURCES}
+  ${PROJECT_DRIVER_DIR}/cmsis_system.c
+  ${PROJECT_DRIVER_DIR}/startup.s
+  ${PROJECT_DRIVER_DIR}/adc.cc
+  ${PROJECT_DRIVER_DIR}/system.cc
+  ${MDRIVLIB_TARGET_DIR}/drivers/interrupt_handler.cc
+)
+set(
+  TARGET_INCLUDES ${TARGET_INCLUDES}
+  ${PROJECT_DRIVER_DIR}
+  ${MDRIVLIB_TARGET_DIR}
+  ${MDRIVLIB_TARGET_DIR}/drivers
+  stm32/device/${FAMILY_NAME}/Include
+  stm32/HAL/${FAMILY_NAME}/Inc
+)
+set(
+  TARGET_BOOTLOADER_SOURCES ${TARGET_BOOTLOADER_SOURCES}
+  ${PROJECT_DRIVER_DIR}/cmsis_system.c
+  ${PROJECT_DRIVER_DIR}/startup.s
+  ${PROJECT_DRIVER_DIR}/system.cc
+  ${MDRIVLIB_TARGET_DIR}/drivers/interrupt_handler.cc
+)
+
+# Create <TARGET>_ARCH: Interface library for defs/options common to all builds on this architecture
+add_library(${TARGET}_ARCH INTERFACE)
+target_compile_definitions(${TARGET}_ARCH INTERFACE ${COMMON_DEFINES} ${ARCH_DEFINES})
+target_compile_options(${TARGET}_ARCH INTERFACE ${COMMON_COMPILE_OPTIONS} ${ARCH_FLAGS})
+target_link_options(${TARGET}_ARCH INTERFACE ${COMMON_LINK_OPTS} ${ARCH_FLAGS})
+
+# Create main app elf file build target
+add_executable(${TARGET}.elf ${COMMON_SOURCES} ${TARGET_SOURCES} ${HAL_SOURCES})
 target_include_directories(${TARGET}.elf PRIVATE ${COMMON_INCLUDES} ${TARGET_INCLUDES})
 target_link_script(${TARGET} ${TARGET_LINK_SCRIPT})
-target_link_libraries(${TARGET}.elf PRIVATE ${TARGET})
+target_link_libraries(${TARGET}.elf PRIVATE ${TARGET}_ARCH)
 add_bin_hex_command(${TARGET})
 
-add_executable(${TARGET}-bootloader.elf ${BOOTLOADER_COMMON_SOURCES} ${TARGET_BOOTLOADER_SOURCES})
-target_include_directories(${TARGET}-bootloader.elf PRIVATE ${BOOTLOADER_COMMON_INCLUDES} ${TARGET_BOOTLOADER_INCLUDES})
-target_link_script(${TARGET}-bootloader.elf ${TARGET_BOOTLOADER_LINK_SCRIPT})
-target_link_libraries(f423-bootloader.elf PRIVATE f423)
+# Create bootloader elf file build target
+add_executable(${TARGET}-bootloader.elf ${BOOTLOADER_COMMON_SOURCES} ${TARGET_BOOTLOADER_SOURCES} ${BOOTLOADER_HAL_SOURCES})
+target_include_directories(${TARGET}-bootloader.elf PRIVATE ${BOOTLOADER_COMMON_INCLUDES} ${TARGET_INCLUDES})
+target_link_script(${TARGET}-bootloader ${TARGET_BOOTLOADER_LINK_SCRIPT})
+target_link_libraries(${TARGET}-bootloader.elf PRIVATE ${TARGET}_ARCH)
+add_bin_hex_command(${TARGET}-bootloader)
 
-# TODO: different parameters for each target?
+# Create .wav file target for firmware upgrades
 add_custom_target(
   ${TARGET}.wav
   COMMAND
-  export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && python
-  ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 65536
-  -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
-  #Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the wave file shorter
+  export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && python ${WAV_ENCODE_PYTHON_CMD}
 )
 
-add_custom_target(make_compdb COMMAND ln -snf ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/.)
+# Helper for letting lsp servers know what target we're using
+add_custom_target(compdb COMMAND ln -snf ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/.)
