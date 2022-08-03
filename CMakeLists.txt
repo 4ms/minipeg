@@ -65,7 +65,7 @@ set(
 function(hal_sources sources family)
   set(
     ${sources}
-    stm32/HAL/stm32${family}/Src/stm32f4xx_hal.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_adc.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_adc_ex.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_cortex.c
@@ -88,7 +88,7 @@ endfunction()
 function(bootloader_hal_sources sources family)
   set(
     ${sources}
-    stm32/HAL/stm32${family}/Src/stm32f4xx_hal.c
+    stm32/HAL/stm32${family}/Src/stm32${family}xx_hal.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_cortex.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_flash.c
     stm32/HAL/stm32${family}/Src/stm32${family}xx_hal_flash_ex.c
