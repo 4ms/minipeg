@@ -66,6 +66,18 @@ void animate(Animations animation_type) {
 				ctr = 0;
 			break;
 
+		case ANI_SYNC:
+			step_time = 50 * TICKS_PER_MS;
+			if (ctr == 0) {
+				set_rgb_led(RgbLeds::Ping, Palette::Magenta);
+				set_rgb_led(RgbLeds::Cycle, Palette::Cyan);
+			} else if (ctr == 1) {
+				set_rgb_led(RgbLeds::Ping, Palette::Cyan);
+				set_rgb_led(RgbLeds::Cycle, Palette::Magenta);
+			} else
+				ctr = 0;
+			break;
+
 		case ANI_WRITING:
 			step_time = 100 * TICKS_PER_MS;
 			if (ctr == 0) {

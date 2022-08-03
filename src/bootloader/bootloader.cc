@@ -56,20 +56,6 @@ uint32_t current_flash_address;
 enum UiState { UI_STATE_WAITING, UI_STATE_RECEIVING, UI_STATE_ERROR, UI_STATE_WRITING, UI_STATE_DONE };
 UiState ui_state;
 
-//FIXME: use this
-void read_gate_input() {
-	// DEBUG1_ON;
-	bool sample = gate_in_read();
-	// if (sample) DEBUG1_ON;
-	// else DEBUG1_OFF;
-	if (!discard_samples) {
-		demodulator.PushSample(sample ? 1 : 0);
-	} else {
-		--discard_samples;
-	}
-	// DEBUG1_OFF;
-}
-
 static void animate_until_button_pushed(Animations animation_type, Button button);
 static void update_LEDs();
 static void init_reception();
@@ -143,6 +129,10 @@ void main() {
 				symbols_processed++;
 
 				switch (state) {
+					case PACKET_DECODER_STATE_SYNCING:
+						animate(ANI_SYNC);
+						break;
+
 					case PACKET_DECODER_STATE_OK:
 						ui_state = UI_STATE_RECEIVING;
 						memcpy(recv_buffer + (packet_index % kPacketsPerBlock) * kPacketSize,
