@@ -34,6 +34,8 @@ struct Version {
 	static void show_version() {
 		set_rgb_led(RgbLeds::LED_PING, version_color<major_version_digit>());
 		HAL_Delay(500);
+		set_rgb_led(RgbLeds::LED_PING, Palette::c_OFF);
+		HAL_Delay(200);
 		set_rgb_led(RgbLeds::LED_PING, version_color<minor_version_digit>());
 		HAL_Delay(500);
 	}
