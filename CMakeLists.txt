@@ -8,8 +8,8 @@ project(
   ASM
 )
 
-set(
-  COMMON_SOURCES
+# ############### Common #####################
+
   lib/mdrivlib/drivers/pin.cc
   lib/mdrivlib/drivers/tim.cc
   lib/mdrivlib/drivers/timekeeper.cc
@@ -196,7 +196,7 @@ function(add_bin_hex_command target_base)
   )
 endfunction()
 
-# Target-specific
+# ############### Target-specific #####################
 
 if(${TARGET} STREQUAL "f423")
   message("Target is STM32F423")
