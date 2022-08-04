@@ -29,3 +29,6 @@
 
 build/
 LOCAL/
+build-f7-debug/
+
+build-f746/
