@@ -110,7 +110,7 @@ void main() {
 	if (do_bootloader) {
 		init_reception();
 
-		start_reception(kSampleRate, [&]() {
+		start_reception(kSampleRate, []() {
 			bool sample = gate_in_read(gatein_threshold);
 			if (!discard_samples) {
 				demodulator.PushSample(sample ? 1 : 0);
