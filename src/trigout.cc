@@ -1,16 +1,18 @@
-#include "globals.h"
+#include "dig_inout_pins.hh"
+#include "flash_user.hh"
+#include "leds.h"
+#include "settings.h"
 
 uint8_t trigout_high = 0;
 extern volatile uint32_t trigouttmr;
 extern struct SystemSettings settings;
 
-//Private:
-void trigout_on(void);
-void trigout_off(void);
+static void trigout_on(void);
+static void trigout_off(void);
 
 void trigout_on(void) {
 	if (!trigout_high) {
-		TRIGOUT_ON;
+		DigIO::EOJack::high();
 		set_led_brightness(kMaxBrightness, PWM_EOF_LED);
 		trigout_high = 1;
 		trigouttmr = 0;
@@ -18,7 +20,7 @@ void trigout_on(void) {
 }
 void trigout_off(void) {
 	if (!settings.trigout_is_trig && (trigouttmr > TRIGOUT_MIN_GATE_TIME)) {
-		TRIGOUT_OFF;
+		DigIO::EOJack::low();
 		set_led_brightness(0, PWM_EOF_LED);
 		trigouttmr = 0;
 	}
@@ -27,7 +29,7 @@ void trigout_off(void) {
 
 void handle_trigout_trigfall(void) {
 	if (settings.trigout_is_trig && trigouttmr > TRIGOUT_TRIG_TIME) {
-		TRIGOUT_OFF;
+		DigIO::EOJack::low();
 		set_led_brightness(0, PWM_EOF_LED);
 		trigouttmr = 0;
 	}
@@ -64,8 +66,10 @@ void hr_off(void) {
 void tapclkout_on(void) {
 	if (settings.trigout_function == TRIGOUT_IS_TAPCLKOUT)
 		trigout_on();
+	DigIO::ClockBusOut::high();
 }
 void tapclkout_off(void) {
 	if (settings.trigout_function == TRIGOUT_IS_TAPCLKOUT)
 		trigout_off();
+	DigIO::ClockBusOut::low();
 }

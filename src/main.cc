@@ -95,7 +95,7 @@ void main() {
 		write_settings();
 	}
 	HAL_Delay(10);
-	if (PINGBUT && CYCLEBUT) {
+	if (DigIO::PingBut::read()) {
 		test_hardware();
 	}
 
