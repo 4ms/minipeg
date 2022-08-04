@@ -111,21 +111,21 @@ void main() {
 
 	init_params();
 
-	// Todo: store each envelope running separately
+	if (settings.start_clk_time) {
+		clk_time = settings.start_clk_time;
+		m.div_clk_time = settings.start_clk_time;
+	}
+
 	if (settings.start_cycle_on) {
 		cycle_but_on = 1;
 		set_rgb_led(LED_CYCLE, c_ORANGE);
 		m.envelope_running = 1;
 		using_tap_clock = 1;
+		tapout_clk_time = clk_time;
 	} else {
 		cycle_but_on = 0;
 		set_rgb_led(LED_CYCLE, c_OFF);
 		m.envelope_running = 0;
-	}
-
-	if (settings.start_clk_time) {
-		clk_time = settings.start_clk_time;
-		m.div_clk_time = settings.start_clk_time;
 	}
 
 	last_tapin_time = 0;
