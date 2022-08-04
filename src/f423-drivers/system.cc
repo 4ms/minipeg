@@ -11,7 +11,7 @@ void init_timekeeper() {
 }
 
 void system_init() {
-
+	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	HAL_Init();
 
 	RCC_OscInitTypeDef RCC_OscInitStruct = {

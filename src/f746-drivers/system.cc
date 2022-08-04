@@ -1,4 +1,6 @@
 #include "drivers/system.hh"
+#include "flash_layout.hh"
+#include "settings.h"
 #include "stm32xx.h"
 
 //stub for adapting to g431 C code
@@ -6,7 +8,7 @@ void init_timekeeper() {
 }
 
 void system_init() {
-	mdrivlib::System::SetVectorTable(0x08000000);
+	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	HAL_Init();
 
 	RCC_OscInitTypeDef RCC_OscInitStruct = {
@@ -31,7 +33,7 @@ void system_init() {
 		.APB2CLKDivider = RCC_HCLK_DIV4, //Max is DIV2, but ADC reads too fast and bleeds with 1k impedance
 	};
 	RCC_PeriphCLKInitTypeDef noperiphclk{0};
-	mdrivlib::SystemClocks::init_clocks(RCC_OscInitStruct, RCC_ClkInitStruct, noperiphclk, 1000);
+	mdrivlib::SystemClocks::init_clocks(RCC_OscInitStruct, RCC_ClkInitStruct, noperiphclk, TICKS_PER_MS * 1000);
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 	HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);

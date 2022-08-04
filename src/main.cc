@@ -75,9 +75,7 @@ static const uint32_t kDacSampleRate = 40000;
 
 void main() {
 
-	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	system_init();
-	SysTick_Config(SystemCoreClock / (TICKS_PER_MS * 1000));
 
 	init_timekeeper();
 	init_pingable_env(&m);
