@@ -1,7 +1,3 @@
-[submodule "libhwtests"]
-	path = libhwtests
-	url = https://github.com/4ms/libhwtests.git
-	branch = master
 [submodule "lib/mdrivlib"]
 	path = lib/mdrivlib
 	url = git@github.com:4ms/mdrivlib.git
