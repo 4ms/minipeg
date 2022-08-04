@@ -155,7 +155,7 @@ function(target_link_script target_base link_script)
   target_link_options(
     ${target_base}.elf
     PRIVATE
-    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/${target_base}.map,--cref
+    -Wl,-Map,$<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.map,--cref
     -T
     ${link_script}
     ${ARGN}
