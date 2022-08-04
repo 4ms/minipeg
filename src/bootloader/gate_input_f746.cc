@@ -16,9 +16,17 @@ uint16_t buf;
 void init_gate_in() {
 	DigIO::TrigJack init;
 	DigIO::EOJack debug_out_init;
+
+	// builtinAdcSetup adc_setup = {
+	// 	.gpio = CV_SHAPE_GPIO_Port,
+	// 	.pin = CV_SHAPE_Pin,
+	// 	.channel = CV_SHAPE_Channel,
+	// 	.sample_time = ADC_SAMPLETIME_56CYCLES,
+	// };
+	// ADC_Init(ADC1, &buf, 1, &adc_setup, 1);
 }
 
-bool gate_in_read() {
+bool gate_in_read(uint32_t) {
 	bool j = DigIO::TrigJack::read();
 	if (j)
 		DigIO::EOJack::high();
