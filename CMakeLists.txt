@@ -222,7 +222,7 @@ if(${TARGET} STREQUAL "f423")
   set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F423VHHx_FLASH_BOOTLOADER.ld)
   set(
     WAV_ENCODE_PYTHON_CMD
-    # Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the
+    # Note: flash sector size is 128kB, but we arbitrarily limit app size with -g in order to make the
     # wave file shorter
     # cmake-format: off
     python ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py
@@ -247,11 +247,11 @@ elseif(${TARGET} STREQUAL "f746")
   set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F746IEKx_FLASH_BOOTLOADER.ld)
   set(
     WAV_ENCODE_PYTHON_CMD
-    # Note: flash sector size is 128kB, but we arbitrarily limit app size to 64kB (-g 65536), in order to make the
+    # Note: flash sector size is 128kB, but we arbitrarily limit app size with -g, in order to make the
     # wave file shorter
     # cmake-format: off
     python ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py
-    -s 22050 -b 16 -n 8 -z 4 -p 256 -g 40960 -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
+    -s 22050 -b 16 -n 8 -z 4 -p 256 -g 43520 -k 1000 $<TARGET_FILE_DIR:${TARGET}.elf>/${TARGET}.bin
     # cmake-format: on
   )
 
