@@ -13,14 +13,14 @@ set(
   lib/mdrivlib/drivers/pin.cc
   lib/mdrivlib/drivers/tim.cc
   lib/mdrivlib/drivers/timekeeper.cc
-  libhwtests/src/AdcChecker.cc
-  libhwtests/src/AdcRangeChecker.cc
-  libhwtests/src/ButtonChecker.cc
-  libhwtests/src/CodecCallbacks.cc
-  libhwtests/src/GateInChecker.cc
-  libhwtests/src/GateOutChecker.cc
-  libhwtests/src/GateOutput.cc
-  libhwtests/src/LEDTester.cc
+  lib/libhwtests/src/AdcChecker.cc
+  lib/libhwtests/src/AdcRangeChecker.cc
+  lib/libhwtests/src/ButtonChecker.cc
+  lib/libhwtests/src/CodecCallbacks.cc
+  lib/libhwtests/src/GateInChecker.cc
+  lib/libhwtests/src/GateOutChecker.cc
+  lib/libhwtests/src/GateOutput.cc
+  lib/libhwtests/src/LEDTester.cc
   src/analog_conditioning.cc
   src/calibration.cc
   src/dig_inouts.cc
@@ -53,9 +53,8 @@ set(
   COMMON_INCLUDES
   src
   src/hardware_tests
-  libhwtests/inc
+  lib/libhwtests/inc
   stm32/CMSIS/Include
-  ./
   lib/mdrivlib
   lib/mdrivlib/drivers
   lib/cpputil
