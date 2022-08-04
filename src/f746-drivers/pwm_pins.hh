@@ -6,19 +6,19 @@ constexpr inline uint32_t kTimPeriod = 4096;
 
 // FIXME: change these values to match f746. already did gpio/pin
 PWMOutput pwm[NUM_PWMS] = {
-	{GPIOB, GPIO_PIN_11, GPIO_AF2_TIM4, {.Instance = TIM4}, 4, kTimPeriod}, // PWM_ENVA_R,
-	{GPIOB, GPIO_PIN_15, GPIO_AF1_TIM2, {.Instance = TIM2}, 1, kTimPeriod}, // PWM_ENVA_G,
-	{GPIOB, GPIO_PIN_14, GPIO_AF2_TIM4, {.Instance = TIM4}, 3, kTimPeriod}, // PWM_ENVA_B,
-	{GPIOB, GPIO_PIN_9, GPIO_AF1_TIM2, {.Instance = TIM2}, 4, kTimPeriod},	// PWM_ENVB_R,
-	{GPIOB, GPIO_PIN_7, GPIO_AF1_TIM1, {.Instance = TIM1}, 2, kTimPeriod},	// PWM_ENVB_G,
-	{GPIOB, GPIO_PIN_8, GPIO_AF2_TIM3, {.Instance = TIM3}, 1, kTimPeriod},	// PWM_ENVB_B,
-	{GPIOI, GPIO_PIN_5, GPIO_AF2_TIM3, {.Instance = TIM3}, 4, kTimPeriod},	// PWM_CYCLEBUT_R,
-	{GPIOB, GPIO_PIN_5, GPIO_AF1_TIM1, {.Instance = TIM1}, 3, kTimPeriod},	// PWM_CYCLEBUT_G,
-	{GPIOB, GPIO_PIN_6, GPIO_AF1_TIM1, {.Instance = TIM1}, 4, kTimPeriod},	// PWM_CYCLEBUT_B,
-	{GPIOI, GPIO_PIN_7, GPIO_AF2_TIM3, {.Instance = TIM3}, 2, kTimPeriod},	// PWM_PINGBUT_R,
-	{GPIOE, GPIO_PIN_6, GPIO_AF2_TIM3, {.Instance = TIM3}, 3, kTimPeriod},	// PWM_PINGBUT_G,
-	{GPIOE, GPIO_PIN_5, GPIO_AF2_TIM4, {.Instance = TIM4}, 2, kTimPeriod},	// PWM_PINGBUT_B,
-	{GPIOB, GPIO_PIN_10, GPIO_AF1_TIM1, {.Instance = TIM1}, 1, kTimPeriod}, // PWM_EOF_LED,
+	{GPIOB, GPIO_PIN_11, GPIO_AF1_TIM2, {.Instance = TIM2}, TIM_CHANNEL_4, kTimPeriod},	  // PWM_ENVA_R,
+	{GPIOB, GPIO_PIN_15, GPIO_AF9_TIM12, {.Instance = TIM12}, TIM_CHANNEL_2, kTimPeriod}, // PWM_ENVA_G,
+	{GPIOB, GPIO_PIN_14, GPIO_AF9_TIM12, {.Instance = TIM12}, TIM_CHANNEL_1, kTimPeriod}, // PWM_ENVA_B,
+	{GPIOB, GPIO_PIN_9, GPIO_AF2_TIM4, {.Instance = TIM4}, TIM_CHANNEL_4, kTimPeriod},	  // PWM_ENVB_R,
+	{GPIOB, GPIO_PIN_7, GPIO_AF2_TIM4, {.Instance = TIM4}, TIM_CHANNEL_2, kTimPeriod},	  // PWM_ENVB_G,
+	{GPIOB, GPIO_PIN_8, GPIO_AF2_TIM4, {.Instance = TIM4}, TIM_CHANNEL_3, kTimPeriod},	  // PWM_ENVB_B,
+	{GPIOI, GPIO_PIN_5, GPIO_AF3_TIM8, {.Instance = TIM8}, TIM_CHANNEL_1, kTimPeriod},	  // PWM_CYCLEBUT_R,
+	{GPIOB, GPIO_PIN_5, GPIO_AF2_TIM3, {.Instance = TIM3}, TIM_CHANNEL_2, kTimPeriod},	  // PWM_CYCLEBUT_G,
+	{GPIOB, GPIO_PIN_6, GPIO_AF2_TIM4, {.Instance = TIM4}, TIM_CHANNEL_1, kTimPeriod},	  // PWM_CYCLEBUT_B,
+	{GPIOI, GPIO_PIN_7, GPIO_AF3_TIM8, {.Instance = TIM8}, TIM_CHANNEL_3, kTimPeriod},	  // PWM_PINGBUT_R,
+	{GPIOE, GPIO_PIN_6, GPIO_AF3_TIM9, {.Instance = TIM9}, TIM_CHANNEL_2, kTimPeriod},	  // PWM_PINGBUT_G,
+	{GPIOE, GPIO_PIN_5, GPIO_AF3_TIM9, {.Instance = TIM9}, TIM_CHANNEL_1, kTimPeriod},	  // PWM_PINGBUT_B,
+	{GPIOB, GPIO_PIN_10, GPIO_AF1_TIM2, {.Instance = TIM2}, TIM_CHANNEL_3, kTimPeriod},	  // PWM_EOF_LED,
 };
 
 namespace LEDPins
@@ -27,18 +27,18 @@ using PinNoInit = mdrivlib::PinNoInit;
 using GPIO = mdrivlib::GPIO;
 using PinNum = mdrivlib::PinNum;
 using PinAF = mdrivlib::PinAF;
-constexpr inline PinNoInit EnvA_r{GPIO::B, PinNum::_11, PinAF::AltFunc2};
-constexpr inline PinNoInit EnvA_g{GPIO::B, PinNum::_15, PinAF::AltFunc1};
-constexpr inline PinNoInit EnvA_b{GPIO::B, PinNum::_14, PinAF::AltFunc2};
-constexpr inline PinNoInit EnvB_r{GPIO::B, PinNum::_9, PinAF::AltFunc1};
-constexpr inline PinNoInit EnvB_g{GPIO::B, PinNum::_7, PinAF::AltFunc1};
+constexpr inline PinNoInit EnvA_r{GPIO::B, PinNum::_11, PinAF::AltFunc1};
+constexpr inline PinNoInit EnvA_g{GPIO::B, PinNum::_15, PinAF::AltFunc9};
+constexpr inline PinNoInit EnvA_b{GPIO::B, PinNum::_14, PinAF::AltFunc9};
+constexpr inline PinNoInit EnvB_r{GPIO::B, PinNum::_9, PinAF::AltFunc2};
+constexpr inline PinNoInit EnvB_g{GPIO::B, PinNum::_7, PinAF::AltFunc2};
 constexpr inline PinNoInit EnvB_b{GPIO::B, PinNum::_8, PinAF::AltFunc2};
-constexpr inline PinNoInit Cyclebut_r{GPIO::I, PinNum::_5, PinAF::AltFunc2};
-constexpr inline PinNoInit Cyclebut_g{GPIO::B, PinNum::_5, PinAF::AltFunc1};
-constexpr inline PinNoInit Cyclebut_b{GPIO::B, PinNum::_6, PinAF::AltFunc1};
-constexpr inline PinNoInit Pingbut_r{GPIO::I, PinNum::_7, PinAF::AltFunc2};
-constexpr inline PinNoInit Pingbut_g{GPIO::E, PinNum::_6, PinAF::AltFunc2};
-constexpr inline PinNoInit Pingbut_b{GPIO::E, PinNum::_5, PinAF::AltFunc2};
+constexpr inline PinNoInit Cyclebut_r{GPIO::I, PinNum::_5, PinAF::AltFunc3};
+constexpr inline PinNoInit Cyclebut_g{GPIO::B, PinNum::_5, PinAF::AltFunc2};
+constexpr inline PinNoInit Cyclebut_b{GPIO::B, PinNum::_6, PinAF::AltFunc2};
+constexpr inline PinNoInit Pingbut_r{GPIO::I, PinNum::_7, PinAF::AltFunc3};
+constexpr inline PinNoInit Pingbut_g{GPIO::E, PinNum::_6, PinAF::AltFunc3};
+constexpr inline PinNoInit Pingbut_b{GPIO::E, PinNum::_5, PinAF::AltFunc3};
 constexpr inline PinNoInit Eof_led{GPIO::B, PinNum::_10, PinAF::AltFunc1};
 } // namespace LEDPins
 
