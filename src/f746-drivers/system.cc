@@ -3,10 +3,6 @@
 #include "settings.h"
 #include "stm32xx.h"
 
-//stub for adapting to g431 C code
-void init_timekeeper() {
-}
-
 void system_init() {
 	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	HAL_Init();

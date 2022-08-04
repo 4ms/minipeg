@@ -6,10 +6,6 @@
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32xx.h"
 
-//stub for adapting to g431 C code
-void init_timekeeper() {
-}
-
 void system_init() {
 	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	HAL_Init();
@@ -73,7 +69,7 @@ void reset_buses() {
 //LL_RCC_DeInit + systick disable
 void reset_RCC() {
 	// Disable SysTick IRQ and SysTick Timer
-	SysTick->CTRL &= ~(SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);
+	SysTick->CTRL = SysTick->CTRL & ~(SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk);
 
 	/* Set HSION bit */
 	LL_RCC_HSI_Enable();

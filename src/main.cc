@@ -19,7 +19,6 @@
 #include "stm32xx.h"
 #include "system.hh"
 #include "system_mode.h"
-#include "timekeeper.h"
 #include "timers.h"
 #include "trigout.h"
 #include "version.hh"
@@ -77,7 +76,6 @@ void main() {
 
 	system_init();
 
-	init_timekeeper();
 	init_pingable_env(&m);
 	init_dig_inouts();
 	eor_off();
