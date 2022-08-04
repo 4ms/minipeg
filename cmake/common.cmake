@@ -215,8 +215,20 @@ function(
       ${mdrivlib_target_dir}/drivers/interrupt_handler.cc
       PARENT_SCOPE
   )
+
+  # string( REGEX MATCH "^STM32([FGHLMUW]P?[0-9BL])_?(M0PLUS|M4|M7)?" FAMILY ${family_name} ) set(SHORT_FAMILY_NAME
+  # ${CMAKE_MATCH_1})
+
   set_hal_sources(HAL_SOURCES ${SHORT_FAMILY_NAME})
+  set(HAL_SOURCES
+      ${HAL_SOURCES}
+      PARENT_SCOPE
+  )
   set_bootloader_hal_sources(BOOTLOADER_HAL_SOURCES ${SHORT_FAMILY_NAME})
+  set(BOOTLOADER_HAL_SOURCES
+      ${BOOTLOADER_HAL_SOURCES}
+      PARENT_SCOPE
+  )
 endfunction()
 
 function(create_target target)
