@@ -11,31 +11,31 @@ project(
 message("Configuring f423")
 include(../../cmake/common.cmake)
 
-set(FAMILY_NAME stm32f4)
 set(target f423)
-
+set(FAMILY_NAME stm32f4)
 set(PROJECT_DRIVER_DIR ../../src/f423-drivers)
 set(MDRIVLIB_TARGET_DIR ../../lib/mdrivlib/target/stm32f4xx)
-
 set(TARGET_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F423VHHx_FLASH.ld)
 set(ARCH_FLAGS -mcpu=cortex-m4 -mfpu=fpv4-sp-d16)
 set(ARCH_DEFINES STM32F423xx STM32F4 ARM_MATH_CM4)
 
-set(TARGET_BOOTLOADER_SOURCES
-    ../../src/bootloader/gate_input_f423.cc
-    ../../src/f423-drivers/adc.cc
-    ../../stm32/HAL/stm32f4/Src/stm32f4xx_hal_adc.c
-    ../../stm32/HAL/stm32f4/Src/stm32f4xx_hal_dma.c
+set(
+  TARGET_BOOTLOADER_SOURCES
+  ../../src/bootloader/gate_input_f423.cc
+  ../../src/f423-drivers/adc.cc
+  ../../stm32/HAL/stm32f4/Src/stm32f4xx_hal_adc.c
+  ../../stm32/HAL/stm32f4/Src/stm32f4xx_hal_dma.c
 )
 set(TARGET_BOOTLOADER_LINK_SCRIPT ${CMAKE_SOURCE_DIR}/linker/STM32F423VHHx_FLASH_BOOTLOADER.ld)
 
-set(WAV_ENCODE_PYTHON_CMD
-    # Note: flash sector size is 128kB, but we arbitrarily limit app size with -g in order to
-    # make the  wave file shorter
-    # cmake-format: off
-	python ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 40960 -k 1000 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
+set(
+  WAV_ENCODE_PYTHON_CMD
+  # Note: flash sector size is 128kB, but we arbitrarily limit app size with -g in order to
+  # make the  wave file shorter
+  # cmake-format: off
+  python ${CMAKE_SOURCE_DIR}/src/bootloader/stm_audio_bootloader/fsk/encoder.py -s 22050 -b 16 -n 8 -z 4 -p 256 -g 40960 -k 1000 $<TARGET_FILE_DIR:${target}.elf>/${target}.bin
   # cmake-format: on
 )
 
 set_target_sources_includes(${PROJECT_DRIVER_DIR} ${MDRIVLIB_TARGET_DIR} ${FAMILY_NAME})
-create_target(f423)
+create_target(${target})
