@@ -1,11 +1,12 @@
 # ############### Common #####################
 
-set(root "../../")
+set(root ${CMAKE_SOURCE_DIR})
 
-set(COMMON_SOURCES
-    ${root}/lib/mdrivlib/drivers/pin.cc
-    ${root}/lib/mdrivlib/drivers/tim.cc
-    ${root}/lib/mdrivlib/drivers/timekeeper.cc
+set(
+  COMMON_SOURCES
+  ${root}/lib/mdrivlib/drivers/pin.cc
+  ${root}/lib/mdrivlib/drivers/tim.cc
+  ${root}/lib/mdrivlib/drivers/timekeeper.cc
     ${root}/lib/libhwtests/src/AdcChecker.cc
     ${root}/lib/libhwtests/src/AdcRangeChecker.cc
     ${root}/lib/libhwtests/src/ButtonChecker.cc
