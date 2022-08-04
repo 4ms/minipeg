@@ -12,7 +12,6 @@ message("Configuring f746")
 include(../../cmake/common.cmake)
 
 set(FAMILY_NAME stm32f7)
-set(SHORT_FAMILY_NAME f7)
 set(target f746)
 
 set(PROJECT_DRIVER_DIR ../../src/f746-drivers)

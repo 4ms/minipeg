@@ -12,7 +12,6 @@ message("Configuring f423")
 include(../../cmake/common.cmake)
 
 set(FAMILY_NAME stm32f4)
-set(SHORT_FAMILY_NAME f4)
 set(target f423)
 
 set(PROJECT_DRIVER_DIR ../../src/f423-drivers)
