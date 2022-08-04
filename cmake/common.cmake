@@ -136,17 +136,16 @@ set(COMMON_COMPILE_OPTIONS
     -fno-rtti
     -fno-threadsafe-statics
     -fno-exceptions
-    -Wno-register
-    -Wno-volatile
-    >
-    $<$<CONFIG:Debug>:-O0>
-    $<$<CONFIG:Release>:-O3>
+  -Wno-register
+  -Wno-volatile
+  >
 )
 
-set(COMMON_LINK_OPTS
-    -Wl,--gc-sections
-    -nostdlib
-    -mthumb
+set(
+  COMMON_LINK_OPTS
+  -Wl,--gc-sections
+  -nostdlib
+  -mthumb
     -mfloat-abi=hard
 )
 
