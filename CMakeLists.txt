@@ -183,9 +183,9 @@ function(add_bin_hex_command target_base)
     POST_BUILD
     COMMAND echo "Binaries are in $<TARGET_FILE_DIR:${target_base}.elf>"
     COMMAND echo "Target filename is $<TARGET_FILE:${target_base}.elf>"
-    COMMAND arm-none-eabi-objcopy -O ihex $<TARGET_FILE_NAME:${target_base}.elf>
+    COMMAND arm-none-eabi-objcopy -O ihex $<TARGET_FILE:${target_base}.elf>
     $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.hex
-    COMMAND arm-none-eabi-objcopy -O binary $<TARGET_FILE_NAME:${target_base}.elf>
+    COMMAND arm-none-eabi-objcopy -O binary $<TARGET_FILE:${target_base}.elf>
     $<TARGET_FILE_DIR:${target_base}.elf>/${target_base}.bin
   )
   set_target_properties(
