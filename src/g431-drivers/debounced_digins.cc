@@ -59,6 +59,7 @@ static void debounce_irq(void) {
 			digin[i].edge = 1;
 			if (i == PING_JACK) {
 				ping_irq_timestamp = pingtmr;
+				clockbus_on();
 				pingtmr = 0;
 				using_tap_clock = 0;
 			}
