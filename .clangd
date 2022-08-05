@@ -2,16 +2,7 @@
 CompileFlags:
 
 	Add: [
-		"-DSTM32F4",
-		"-DSTM32F423xx",
-		"-Isrc/f423-drivers",
-		"-Ilib/cpputil",
-		"-Ilib/mdrivlib",
-		"-Ilib/mdrivlib/drivers",
-		"-Ilib/mdrivlib/target/stm32f4xx",
-		"-Ilib/mdrivlib/target/stm32f4xx/drivers",
-		"-Istm32/device/stm32f423/Include",
-		"-Istm32/HAL/stm32f4/Inc"
+		"-xc++"
 	]
 
 	Remove: [
