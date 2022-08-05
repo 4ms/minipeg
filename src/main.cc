@@ -337,6 +337,7 @@ void update_tap_clock(void) {
 		if (tapouttmr >= tapout_clk_time) {
 			tapouttmr = 0;
 			if (using_tap_clock) {
+				clockbus_on();
 				// Todo: Yet another sync to the clock,is this needed?
 				if (m.clock_divider_amount <= 1)
 					m.divpingtmr = 0;
@@ -388,7 +389,7 @@ void read_ping_clock(void) {
        Output on EOF
     */
 		if (clk_time && !settings.free_running_ping && !using_tap_clock) {
-			uint32_t ext_ping_timeout = clk_time * 2;
+			const uint32_t ext_ping_timeout = clk_time * 2;
 			if (pingtmr >= ext_ping_timeout) {
 				pingtmr = 0;
 
@@ -407,6 +408,12 @@ void read_ping_clock(void) {
 				ping_led_off();
 			}
 		}
+	}
+
+	if (clk_time) {
+		auto tm = using_tap_clock ? tapouttmr : pingtmr;
+		if (tm >= (clk_time >> 1))
+			clockbus_off();
 	}
 }
 
