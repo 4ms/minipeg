@@ -36,13 +36,13 @@ protected:
 
 	bool read_gate(uint8_t gate_num) override {
 		if (gate_num == 0)
-			return TRIG_JACK_READ ? true : false;
+			return DigIO::TrigJack::read() ? true : false;
 
 		else if (gate_num == 1)
-			return AUXTRIG_JACK_READ ? true : false;
+			return DigIO::CycleJack::read() ? true : false;
 
 		else if (gate_num == 2)
-			return PING_JACK_READ ? true : false;
+			return DigIO::PingJack::read() ? true : false;
 		else
 			return false;
 	}
@@ -145,11 +145,11 @@ void test_gate_ins() {
 
 static void set_trigout(bool state) {
 	if (state) {
-		TRIGOUT_ON;
+		DigIO::EOJack::high();
 		DEBUGON;
 		set_led(PWM_EOF_LED, true);
 	} else {
-		TRIGOUT_OFF;
+		DigIO::EOJack::low();
 		DEBUGOFF;
 		set_led(PWM_EOF_LED, false);
 	}

@@ -6,7 +6,7 @@
 #include "stm32xx.h"
 
 bool hardwaretest_continue_button(void) {
-	return PINGBUT ? true : false;
+	return DigIO::PingBut::read() ? true : false;
 }
 
 void pause_until_button_pressed(void) {
@@ -34,9 +34,9 @@ void set_led(uint8_t led_num, bool newstate) {
 
 bool read_button(uint8_t button_num) {
 	if (button_num == 0)
-		return PINGBUT ? true : false;
+		return DigIO::PingBut::read() ? true : false;
 	else if (button_num == 1)
-		return CYCLEBUT ? true : false;
+		return DigIO::CycleBut::read() ? true : false;
 	else
 		return false;
 }

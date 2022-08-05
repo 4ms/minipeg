@@ -54,7 +54,7 @@ void test_dac() {
 
 	bool cycledown = false;
 	while (!hardwaretest_continue_button()) {
-		if (CYCLEBUT) {
+		if (DigIO::CycleBut::read()) {
 			if (!cycledown) {
 				cycledown = true;
 				freqHz_a *= 2;

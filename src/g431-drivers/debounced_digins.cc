@@ -37,19 +37,19 @@ static void debounce_irq(void) {
 
 	for (uint8_t i = 0; i < NUM_DEBOUNCED_DIGINS; i++) {
 		if (i == PING_BUTTON)
-			pin_read = PINGBUT;
+			pin_read = DigIO::PingBut::read();
 
 		else if (i == CYCLE_BUTTON)
-			pin_read = CYCLEBUT;
+			pin_read = DigIO::CycleBut::read();
 
 		else if (i == TRIGGER_JACK)
-			pin_read = TRIG_JACK_READ;
+			pin_read = DigIO::TrigJack::read();
 
 		else if (i == CYCLE_JACK)
-			pin_read = AUXTRIG_JACK_READ;
+			pin_read = DigIO::CycleJack::read();
 
 		else if (i == PING_JACK)
-			pin_read = PING_JACK_READ;
+			pin_read = DigIO::PingJack::read();
 
 		digin[i].history <<= 1;
 		digin[i].history |= pin_read ? 0x0000 : 0x0001;
