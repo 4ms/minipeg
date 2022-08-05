@@ -32,7 +32,7 @@ bool pot_centered(uint8_t pot_num) {
 }
 
 CalRequests should_enter_calibration_mode(void) {
-	if (!CYCLEBUT)
+	if (!DigIO::CycleBut::read())
 		return CAL_REQUEST_NONE;
 
 	if (!pot_centered(ADC_POT_SCALE))
@@ -174,9 +174,9 @@ void calibrate_center_detents(void) {
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT)
+	while (DigIO::PingBut::read())
 		;
-	while (CYCLEBUT)
+	while (DigIO::CycleBut::read())
 		;
 
 	HAL_Delay(100);
@@ -192,9 +192,9 @@ void calibrate_center_detents(void) {
 	set_rgb_led(LED_PING, c_OFF);
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT)
+	while (DigIO::PingBut::read())
 		;
-	while (CYCLEBUT)
+	while (DigIO::CycleBut::read())
 		;
 
 	while (cur < NUM_CENTER_DETENT_POTS) {
@@ -221,12 +221,12 @@ void calibrate_center_detents(void) {
 
 		set_rgb_led(LED_CYCLE, color);
 
-		if (CYCLEBUT) {
+		if (DigIO::CycleBut::read()) {
 			settings.center_detent_offset[cur] = 2048 - read_avg;
 			wait_for_cyclebut_downup();
 		}
 
-		if (PINGBUT) {
+		if (DigIO::PingBut::read()) {
 			wait_for_pingbut_downup();
 			cur = static_cast<CenterDetentPots>(cur + 1);
 		}
@@ -312,11 +312,11 @@ void calibrate_led_colors(void) {
 
 	set_rgb_led(LED_CYCLE, c_OFF);
 
-	while (PINGBUT)
+	while (DigIO::PingBut::read())
 		;
 	HAL_Delay(100);
 
-	while (!PINGBUT) {
+	while (!DigIO::PingBut::read()) {
 		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SCALE]), PWM_PINGBUT_R);
 		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_SHAPE]), PWM_PINGBUT_G);
 		update_pwm(adjust_hue(2048, adc_pot_dma_buffer[ADC_POT_OFFSET]), PWM_PINGBUT_B);
@@ -326,7 +326,7 @@ void calibrate_led_colors(void) {
 	settings.ping_cal_b = adc_pot_dma_buffer[ADC_POT_OFFSET];
 
 	HAL_Delay(100);
-	while (PINGBUT)
+	while (DigIO::PingBut::read())
 		;
 	HAL_Delay(100);
 
@@ -334,8 +334,8 @@ void calibrate_led_colors(void) {
 	uint16_t g;
 	uint16_t b;
 
-	while (!PINGBUT) {
-		if (!CYCLEBUT) {
+	while (!DigIO::PingBut::read()) {
+		if (!DigIO::CycleBut::read()) {
 			r = 4095;
 			g = 600;
 			b = 0;
@@ -358,19 +358,19 @@ void calibrate_led_colors(void) {
 static void wait_for_pingbut_downup(void) {
 	uint32_t t = 0;
 	while (t < 100)
-		t = PINGBUT ? t + 1 : 0;
+		t = DigIO::PingBut::read() ? t + 1 : 0;
 	t = 0;
 	while (t < 100)
-		t = !PINGBUT ? t + 1 : 0;
+		t = !DigIO::PingBut::read() ? t + 1 : 0;
 }
 
 static void wait_for_cyclebut_downup(void) {
 	uint32_t t = 0;
 	while (t < 100)
-		t = CYCLEBUT ? t + 1 : 0;
+		t = DigIO::CycleBut::read() ? t + 1 : 0;
 	t = 0;
 	while (t < 100)
-		t = !CYCLEBUT ? t + 1 : 0;
+		t = !DigIO::CycleBut::read() ? t + 1 : 0;
 }
 
 void error_writing_settings(void) {

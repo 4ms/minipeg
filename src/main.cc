@@ -23,7 +23,6 @@
 #include "trigout.h"
 #include "version.hh"
 
-extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern analog_t analog[NUM_ADCS];
 extern struct SystemSettings settings;
 extern volatile uint32_t systmr;
@@ -134,6 +133,8 @@ void main() {
 		// G0: loops every ~11uS, maybe 13us if you include envelope updates every
 		// 4th loop G4: loops every ~2uS, with ~10us gaps
 		// p4 unit no-lock: 1.2uS fastest loop. Max 10us loop... average 530kHz
+		// p5-f746: 1.5us fastest, 10us slowest, Mean: 3.9us
+		// p5-f423: 2.5us fastest, 15us slowest, Mean: 6us
 
 		// DEBUGON;
 		read_ping_button();
@@ -154,12 +155,10 @@ void main() {
 }
 
 static void read_ping_button(void) {
-	if (digin[PING_BUTTON].state == 1) {
+	if (is_pressed(PING_BUTTON)) {
 		uint32_t now = tapintmr;
 
-		if (digin[PING_BUTTON].edge == 1) {
-			digin[PING_BUTTON].edge = 0;
-
+		if (just_pressed(PING_BUTTON)) {
 			using_tap_clock = 1;
 
 			if (last_tapin_time && (diff32(last_tapin_time, now) < (last_tapin_time >> 1))) {
@@ -193,9 +192,8 @@ static void read_ping_button(void) {
 		}
 	}
 
-	if (digin[PING_BUTTON].edge == -1) {
+	if (just_released(PING_BUTTON)) {
 		ping_led_off();
-		digin[PING_BUTTON].edge = 0;
 	}
 }
 
@@ -232,27 +230,23 @@ void handle_async_trig(struct PingableEnvelope *e) {
 }
 
 void read_trigjacks(void) {
-	if (digin[TRIGGER_JACK].edge == 1) {
-		digin[TRIGGER_JACK].edge = 0;
+	if (just_pressed(TRIGGER_JACK)) {
 		if (settings.trigin_function == TRIGIN_IS_QNT)
 			handle_qnt_trig(&m);
 		else
 			handle_async_trig(&m);
 	}
 
-	if (digin[TRIGGER_JACK].edge == -1) {
-		digin[TRIGGER_JACK].edge = 0;
+	if (just_released(TRIGGER_JACK)) {
 		m.triga_down = 0;
 		m.trigq_down = 0;
 	}
 
-	if (digin[CYCLE_JACK].edge == 1) {
-		digin[CYCLE_JACK].edge = 0;
+	if (just_pressed(CYCLE_JACK)) {
 		do_toggle_cycle = 1;
 	}
 
-	if (digin[CYCLE_JACK].edge == -1) {
-		digin[CYCLE_JACK].edge = 0;
+	if (just_released(CYCLE_JACK)) {
 
 		if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES)
 			do_toggle_cycle = 1;
@@ -278,18 +272,15 @@ void update_trigout(void) {
 }
 
 static void read_cycle_button(void) {
-	if (digin[CYCLE_BUTTON].edge == 1) {
+	if (just_pressed(CYCLE_BUTTON)) {
 		cycle_latched_offset = analog[POT_OFFSET].lpf_val;
-		digin[CYCLE_BUTTON].edge = 0;
 	}
 
-	if ((digin[CYCLE_BUTTON].edge == -1) && adjusting_shift_mode) {
+	if ((just_released(CYCLE_BUTTON)) && adjusting_shift_mode) {
 		adjusting_shift_mode = 0;
-		digin[CYCLE_BUTTON].edge = 0;
 	}
 
-	if (digin[CYCLE_BUTTON].edge == -1 || do_toggle_cycle) {
-		digin[CYCLE_BUTTON].edge = 0;
+	if (just_released(CYCLE_BUTTON) || do_toggle_cycle) {
 		do_toggle_cycle = 0;
 
 		if (cycle_but_on == 0) {

@@ -1,30 +1,23 @@
 #pragma once
+#include "drivers/pin.hh"
 
-#define ALL_GPIO_RCC_ENABLE                                                                                            \
-	__HAL_RCC_GPIOA_CLK_ENABLE();                                                                                      \
-	__HAL_RCC_GPIOB_CLK_ENABLE();                                                                                      \
-	__HAL_RCC_GPIOC_CLK_ENABLE
+struct DigIO {
+	using GPIO = mdrivlib::GPIO;
+	using PinNum = mdrivlib::PinNum;
+	using PinMode = mdrivlib::PinMode;
+	using PinPolarity = mdrivlib::PinPolarity;
 
-#define PING_BUT_Pin GPIO_PIN_14
-#define PING_BUT_GPIO_Port GPIOC
+	using PingBut = mdrivlib::FPin<GPIO::C, PinNum::_14, PinMode::Input, PinPolarity::Inverted>;
+	using CycleBut = mdrivlib::FPin<GPIO::C, PinNum::_13, PinMode::Input, PinPolarity::Inverted>;
 
-#define CYCLE_BUT_Pin GPIO_PIN_13
-#define CYCLE_BUT_GPIO_Port GPIOC
+	using PingJack = mdrivlib::FPin<GPIO::C, PinNum::_15, PinMode::Input, PinPolarity::Normal>;
+	using CycleJack = mdrivlib::FPin<GPIO::A, PinNum::_0, PinMode::Input, PinPolarity::Normal>;
+	using TrigJack = mdrivlib::FPin<GPIO::B, PinNum::_13, PinMode::Input, PinPolarity::Normal>;
 
-#define PING_JACK_Pin GPIO_PIN_15
-#define PING_JACK_GPIO_Port GPIOC
-#define PING_JACK_EXTI_IRQn EXTI15_10_IRQn
+	using EOJack = mdrivlib::FPin<GPIO::A, PinNum::_12, PinMode::Output, PinPolarity::Normal>;
+	using ClockBusOut =
+		mdrivlib::FPin<GPIO::A, PinNum::_2, PinMode::Output, PinPolarity::Normal>; //Not connected on PCB!
 
-#define AUXTRIG_JACK_Pin GPIO_PIN_0
-#define AUXTRIG_JACK_GPIO_Port GPIOA
-#define AUXTRIG_JACK_EXTI_IRQn EXTI0_IRQn
-
-#define TRIG_JACK_Pin GPIO_PIN_13
-#define TRIG_JACK_GPIO_Port GPIOB
-#define TRIG_JACK_EXTI_IRQn EXTI15_10_IRQn
-
-#define TRIGOUT_Pin GPIO_PIN_12
-#define TRIGOUT_GPIO_Port GPIOA
-
-#define DEBUG_Pin GPIO_PIN_1
-#define DEBUG_GPIO_Port GPIOB
+	//SWO pin can be debug out
+	using DebugOut = mdrivlib::FPin<GPIO::B, PinNum::_3, PinMode::Output, PinPolarity::Normal>;
+};

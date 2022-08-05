@@ -2,7 +2,6 @@
 #include "stm32xx.h"
 
 extern struct SystemSettings settings;
-extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern uint8_t adjusting_shift_mode;
 
 void handle_system_mode(void) {
@@ -12,7 +11,7 @@ void handle_system_mode(void) {
 	static uint32_t cycle_held_time = 0;
 	uint32_t now = HAL_GetTick();
 
-	if (digin[CYCLE_BUTTON].state == 0)
+	if (!is_pressed(CYCLE_BUTTON))
 		cycle_held_time = now;
 
 	if (adjusting_shift_mode)
@@ -41,7 +40,7 @@ void handle_system_mode(void) {
 		HAL_Delay(100);
 	}
 
-	while (digin[CYCLE_BUTTON].state == 1) {
+	while (is_pressed(CYCLE_BUTTON)) {
 		;
 	}
 	HAL_Delay(50);
@@ -52,19 +51,18 @@ void handle_system_mode(void) {
 	while (1) {
 		now = HAL_GetTick();
 
-		if (digin[PING_BUTTON].state == 0)
+		if (!is_pressed(PING_BUTTON))
 			ping_held_time = now;
 		else if ((now - ping_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
-		if (digin[CYCLE_BUTTON].state == 0)
+		if (!is_pressed(CYCLE_BUTTON))
 			cycle_held_time = now;
 		else if ((now - cycle_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
-		if (digin[PING_BUTTON].edge == -1) {
+		if (just_released(PING_BUTTON)) {
 			system_mode_cur = static_cast<SystemModeParams>(system_mode_cur + 1);
-			digin[PING_BUTTON].edge = 0;
 		}
 
 		switch (system_mode_cur) {
@@ -157,8 +155,8 @@ void handle_system_mode(void) {
 				break;
 		}
 
-		if (digin[CYCLE_BUTTON].edge == -1) {
-			digin[CYCLE_BUTTON].edge = 0;
+		if (just_released(CYCLE_BUTTON)) {
+
 			HAL_Delay(50); //to de-noise the cycle button
 
 			switch (system_mode_cur) {
@@ -199,7 +197,7 @@ void handle_system_mode(void) {
 
 	write_settings();
 
-	while (digin[CYCLE_BUTTON].state || digin[PING_BUTTON].state) {
+	while (is_pressed(CYCLE_BUTTON) || is_pressed(PING_BUTTON)) {
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
 		set_rgb_led(LED_ENVA, c_PURPLE);
@@ -216,6 +214,12 @@ void handle_system_mode(void) {
 
 		HAL_Delay(50);
 	}
-	digin[CYCLE_BUTTON].edge = 0;
-	digin[PING_BUTTON].edge = 0;
+
+	//clear edges:
+	while (just_pressed(CYCLE_BUTTON))
+		;
+	while (just_pressed(PING_BUTTON))
+		;
+	// digin[CYCLE_BUTTON].edge = 0;
+	// digin[PING_BUTTON].edge = 0;
 }

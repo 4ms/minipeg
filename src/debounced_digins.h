@@ -22,4 +22,7 @@ typedef struct DebouncedDigin {
 	int8_t edge;
 } debounced_digin_t;
 
+bool just_released(DebouncedDiginList pin);
+bool just_pressed(DebouncedDiginList pin);
+bool is_pressed(DebouncedDiginList pin);
 void init_debouncer(void);

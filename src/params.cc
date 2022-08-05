@@ -12,7 +12,6 @@ extern struct PingableEnvelope m;
 extern uint32_t clk_time;
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
-extern debounced_digin_t digin[NUM_DEBOUNCED_DIGINS];
 extern int16_t cycle_latched_offset;
 extern uint8_t adjusting_shift_mode;
 
@@ -99,7 +98,7 @@ static uint8_t read_shape_scale_offset(void) {
 	total_adc = analog[POT_OFFSET].lpf_val + settings.center_detent_offset[DET_OFFSET];
 	int16_t tmp = plateau(total_adc, OFFSET_PLATEAU_LOW, OFFSET_PLATEAU_HIGH);
 
-	if (digin[CYCLE_BUTTON].state && (diff(cycle_latched_offset, analog[POT_OFFSET].lpf_val) > 40))
+	if (is_pressed(CYCLE_BUTTON) && (diff(cycle_latched_offset, analog[POT_OFFSET].lpf_val) > 40))
 		adjusting_shift_mode = 1;
 
 	if (adjusting_shift_mode)
