@@ -54,7 +54,7 @@ uint8_t system_mode_cur = 0;
 uint8_t initial_cycle_button_state = 0;
 char update_cycle_button_now = 0;
 
-uint8_t adjusting_shift_mode = 0;
+bool adjusting_shift_mode = false;
 int16_t cycle_latched_offset;
 
 struct PingableEnvelope m;
@@ -278,6 +278,7 @@ static void read_cycle_button(void) {
 
 	auto released_cycle = just_released(CYCLE_BUTTON);
 	if (released_cycle && adjusting_shift_mode) {
+		adjusting_shift_mode = false;
 		released_cycle = false;
 	}
 

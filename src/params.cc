@@ -13,7 +13,7 @@ extern uint32_t clk_time;
 extern struct SystemSettings settings;
 extern analog_t analog[NUM_ADCS];
 extern int16_t cycle_latched_offset;
-extern uint8_t adjusting_shift_mode;
+extern bool adjusting_shift_mode;
 
 int32_t scale, offset, shift;
 
@@ -99,7 +99,7 @@ static uint8_t read_shape_scale_offset(void) {
 	int16_t tmp = plateau(total_adc, OFFSET_PLATEAU_LOW, OFFSET_PLATEAU_HIGH);
 
 	if (is_pressed(CYCLE_BUTTON) && (diff(cycle_latched_offset, analog[POT_OFFSET].lpf_val) > 40))
-		adjusting_shift_mode = 1;
+		adjusting_shift_mode = true;
 
 	if (adjusting_shift_mode)
 		shift = 2048 + tmp;

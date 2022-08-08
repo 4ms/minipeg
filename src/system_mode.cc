@@ -2,7 +2,7 @@
 #include "stm32xx.h"
 
 extern struct SystemSettings settings;
-extern uint8_t adjusting_shift_mode;
+extern bool adjusting_shift_mode;
 
 void handle_system_mode(void) {
 	uint8_t d;
