@@ -1,11 +1,11 @@
 #include "globals.h"
 #include "log4096.h"
-
-// extern const uint16_t log4096[4096];
+#include "util/math.hh"
+#include <array>
 
 extern struct SystemSettings settings;
 
-const int8_t P_array[NUM_DIVMULTS] = {32, 16, 8, 7, 6, 5, 4, 3, 2, 1, -2, -3, -4, -5, -6, -7, -8, -12, -16};
+constexpr int8_t P_array[NUM_DIVMULTS] = {32, 16, 8, 7, 6, 5, 4, 3, 2, 1, -2, -3, -4, -5, -6, -7, -8, -12, -16};
 
 int8_t get_clk_div_nominal(uint16_t adc_val) {
 	uint8_t i;
@@ -108,23 +108,23 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time) {
 	}
 }
 
-#define SHAPE_REGION_SIZE 820 //(4095/NUM_SHAPE_REGIONS) + 1;
+constexpr std::array region_starts = {0, 900, 1450, 2645, 3195, 4096};
+constexpr std::array region_sizes = MathTools::array_adj_diff(region_starts);
+//{900, 550,...}
 
 // shape: 0..4095 (adc value)
 // returns skew: 0..255
 // returns next_curve_rise and _fall: 0..255: expo/linear/log
 void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_rise, uint8_t *next_curve_fall) {
-	uint16_t shape_region = shape / SHAPE_REGION_SIZE;
-	uint16_t shape_variation = shape - shape_region * SHAPE_REGION_SIZE;
+	if (shape > region_starts.back())
+		shape = region_starts.back();
+	int i = 1;
+	while (shape >= region_starts[i])
+		i++;
+	uint16_t shape_region = i - 1;
 
-	uint8_t var_127; //shape variation normalized to 0..127
-	var_127 = shape_variation / 6;
-	if (var_127 > 127)
-		var_127 = 127;
-
-	// uint16_t var_255 = shape_variation/3;
-	// if (var_255>255)
-	// 	var_255 = 255;
+	uint16_t shape_variation = shape - region_starts[shape_region];
+	uint32_t var_127 = (shape_variation << 7) / region_sizes[shape_region];
 
 	switch (shape_region) {
 		case RAMPUP_EXP2LIN:
@@ -167,18 +167,17 @@ int16_t calc_curve(int16_t phase, uint8_t cur_curve) {
 	if (phase > 4095)
 		phase = 4095;
 
-	if (cur_curve == 127 || cur_curve == 128)
+	if (cur_curve > 119 && cur_curve < 139)
 		return phase;
 
-	else if (cur_curve < 127) {
+	else if (cur_curve <= 119) {
 		uint16_t t_inv_loga = 4095 - log4096[4095 - phase];
-		return (phase * cur_curve + t_inv_loga * (127 - cur_curve)) >> 7;
+		return MathTools::interpolate<119>(phase, t_inv_loga, cur_curve);
 	}
 
 	else
-	{ //cur_curve>128
+	{ //cur_curve>=139
 		uint16_t t_loga = log4096[phase];
-		cur_curve -= 128;
-		return (phase * (127 - cur_curve) + t_loga * cur_curve) >> 7;
+		return MathTools::interpolate<139>(phase, t_loga, cur_curve - 139);
 	}
 }
