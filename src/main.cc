@@ -276,11 +276,12 @@ static void read_cycle_button(void) {
 		cycle_latched_offset = analog[POT_OFFSET].lpf_val;
 	}
 
-	if ((just_released(CYCLE_BUTTON)) && adjusting_shift_mode) {
-		adjusting_shift_mode = 0;
+	auto released_cycle = just_released(CYCLE_BUTTON);
+	if (released_cycle && adjusting_shift_mode) {
+		released_cycle = false;
 	}
 
-	if (just_released(CYCLE_BUTTON) || do_toggle_cycle) {
+	if (released_cycle || do_toggle_cycle) {
 		do_toggle_cycle = 0;
 
 		if (cycle_but_on == 0) {
