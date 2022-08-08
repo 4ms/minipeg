@@ -21,6 +21,7 @@
 #include "system_mode.h"
 #include "timers.h"
 #include "trigout.h"
+#include "util/math.hh"
 #include "version.hh"
 
 extern analog_t analog[NUM_ADCS];
@@ -161,7 +162,7 @@ static void read_ping_button(void) {
 		if (just_pressed(PING_BUTTON)) {
 			using_tap_clock = 1;
 
-			if (last_tapin_time && (diff32(last_tapin_time, now) < (last_tapin_time >> 1))) {
+			if (last_tapin_time && (MathTools::diff(last_tapin_time, now) < (last_tapin_time >> 1))) {
 				clk_time = (now >> 1) + (last_tapin_time >> 1);
 			} else {
 				clk_time = now;
@@ -359,7 +360,7 @@ void read_ping_clock(void) {
 			clk_time = ping_irq_timestamp;
 
 			if (prev_clk_time) {
-				uint32_t delta = diff32(clk_time, prev_clk_time);
+				uint32_t delta = MathTools::diff(clk_time, prev_clk_time);
 				if (delta > (prev_clk_time >> 3)) //>12.5%
 				{
 					force_transition();

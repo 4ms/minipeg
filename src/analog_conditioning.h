@@ -48,7 +48,7 @@ typedef struct AnalogConditioned {
 	enum AnalogPolarity polarity;
 
 	uint16_t raw_val;
-	uint16_t lpf_val;
+	int16_t lpf_val;
 	// uint16_t bracketed_val;
 
 } analog_t;

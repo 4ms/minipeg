@@ -30,7 +30,7 @@ void update_all_envelopes(void) {
 	//@22kHz: 6.5us, every 45.5us, = 14.2%
 	//@40kHz: 6.5us, every 25.0us = 26.0%
 	// DEBUGON;
-	m.divpingtmr++;
+	m.divpingtmr = m.divpingtmr + 1;
 	inc_tmrs();
 
 	uint16_t envA = update_envelope(&m);
