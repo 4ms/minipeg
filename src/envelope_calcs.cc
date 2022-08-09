@@ -172,7 +172,7 @@ int16_t calc_curve(int16_t phase, uint8_t cur_curve) {
 
 	else if (cur_curve <= 119) {
 		uint16_t t_inv_loga = 4095 - log4096[4095 - phase];
-		return MathTools::interpolate<119>(phase, t_inv_loga, cur_curve);
+		return MathTools::interpolate<119>(t_inv_loga, phase, cur_curve);
 	}
 
 	else
