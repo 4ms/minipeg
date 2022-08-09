@@ -127,15 +127,8 @@ static int8_t read_divmult(void) {
 	int8_t new_clock_divider_amount = 0;
 
 	int16_t cv = MathTools::plateau(2048 - analog[CV_DIVMULT].lpf_val, DIVMULTCV_PLATEAU_WIDTH, 0);
-	cv = 2048 - analog[CV_DIVMULT].lpf_val;
-	if (cv > -20 && cv < 20)
-		cv = 0;
 
-	total_adc = cv + analog[POT_DIVMULT].lpf_val;
-	if (total_adc > 4095)
-		total_adc = 4095;
-	else if (total_adc < 0)
-		total_adc = 0;
+	total_adc = MathTools::constrain(cv + analog[POT_DIVMULT].lpf_val, 0, 4095);
 
 	uint16_t d = MathTools::diff(total_adc, last_total_adc);
 
