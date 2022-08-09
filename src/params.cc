@@ -50,17 +50,12 @@ void update_adc_params(uint8_t force_params_update) {
 		poll_user_input = 0;
 
 		if (read_shape_scale_offset()) {
-			DigIO::DebugOut::high();
 			calc_skew_and_curves(shape, &m.skew, &m.next_curve_rise, &m.next_curve_fall);
 			calc_rise_fall_incs(&m);
-			update_env_tracking(&m);
-
-			reset_transition_counter();
-			DigIO::DebugOut::low();
 		}
 
-		if (m.env_state != TRANSITION ||
-			!m.envelope_running) //Todo: remove !m.envelope_running and test. if m.env_state==TRANSITION, then m.envelope_running should never be true
+		if (m.env_state != TRANSITION || !m.envelope_running)
+		//Todo: remove !m.envelope_running and test. if m.env_state==TRANSITION, then m.envelope_running is true
 		{
 			int8_t new_clock_divider_amount = read_divmult();
 			if (new_clock_divider_amount != 0) {
