@@ -14,5 +14,6 @@ add_subdirectory(src/f746-drivers f746)
 add_custom_target(
   tests ALL
   COMMAND cd ${CMAKE_SOURCE_DIR}/tests && cmake -B build && cmake --build build && build/tests
+  COMMAND cd ${CMAKE_SOURCE_DIR}/lib/cpputil && make -f tests/Makefile
   USES_TERMINAL
 )
