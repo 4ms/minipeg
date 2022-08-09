@@ -11,3 +11,13 @@ CompileFlags:
 		"-DSTM32F7",
 		"-DSTM32F746xx",
 	]
+
+---
+If:
+	PathMatch: [".*tests/.*"]
+CompileFlags:
+	Remove: [
+		"--target=arm-none-eabi", 
+		"-mcpu=cortex-m4",
+		"-mcpu=cortex-m7",
+	]

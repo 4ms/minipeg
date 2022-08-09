@@ -10,3 +10,9 @@ project(
 
 add_subdirectory(src/f423-drivers f423)
 add_subdirectory(src/f746-drivers f746)
+
+add_custom_target(
+  tests ALL
+  COMMAND cd ${CMAKE_SOURCE_DIR}/tests && cmake -B build && cmake --build build && build/tests
+  USES_TERMINAL
+)
