@@ -3,9 +3,9 @@
 #include "leds.h"
 #include "pwm.h"
 
-#include "GateInChecker.h"
-#include "GateOutput.h"
 #include "hardware_test_util.h"
+#include "libhwtests/GateInChecker.h"
+#include "libhwtests/GateOutput.h"
 
 //Test:
 //Patch ENVA to TRIGA, TRIGB, and PING jacks in that order

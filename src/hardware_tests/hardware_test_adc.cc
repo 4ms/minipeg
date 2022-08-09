@@ -2,7 +2,7 @@
 #include "analog_conditioning.h"
 #include "pwm.h"
 
-#include "AdcRangeChecker.hh"
+#include "libhwtests/AdcRangeChecker.hh"
 
 #include "hardware_test_util.h"
 

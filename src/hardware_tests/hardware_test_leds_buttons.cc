@@ -5,8 +5,8 @@
 #include "hardware_test_leds_buttons.h"
 #include "hardware_test_util.h"
 
-#include "ButtonChecker.h"
-#include "LEDTester.h"
+#include "libhwtests/ButtonChecker.h"
+#include "libhwtests/LEDTester.h"
 
 void test_leds() {
 	while (!hardwaretest_continue_button()) {
