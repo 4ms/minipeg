@@ -1,4 +1,5 @@
 #include "env_transition.h"
+#include "dig_inout_pins.hh"
 #include "envelope_calcs.h"
 
 extern volatile uint8_t using_tap_clock;
@@ -31,6 +32,7 @@ uint8_t check_to_start_transition(void) {
 }
 
 void do_start_transition(PingableEnvelope *e) {
+	DigIO::DebugOut::high();
 	uint32_t elapsed_time;
 
 	if (e->div_clk_time && e->sync_to_ping_mode) {
@@ -77,9 +79,10 @@ void do_start_transition(PingableEnvelope *e) {
 	}
 }
 
-void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
+__attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
 	uint64_t time_tmp;
 	uint16_t segphase_endpoint;
+	uint16_t dacval_endpoint;
 
 	if (elapsed_time > e->div_clk_time)
 		elapsed_time -= e->div_clk_time;
@@ -98,26 +101,27 @@ void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
 		segphase_endpoint = time_tmp / e->fall_time;
 		if (segphase_endpoint >= 4095) {
 			segphase_endpoint = 0;
+			dacval_endpoint = 0;
 			e->accum_endpoint = 0;
 		} else {
 			segphase_endpoint = 4095 - segphase_endpoint;
 			e->accum_endpoint = segphase_endpoint << 19;
-			segphase_endpoint = calc_curve(segphase_endpoint, e->next_curve_fall);
+			dacval_endpoint = calc_curve(segphase_endpoint, e->next_curve_fall);
 		}
 		e->next_env_state = FALL;
 	}
 
 	//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12
 	//Todo: use signed ints to simplify this
-	if (segphase_endpoint > e->segphase)
-		e->transition_inc = (segphase_endpoint - e->segphase) << 12; //was 9
+	if (dacval_endpoint > e->cur_val)
+		e->transition_inc = (dacval_endpoint - e->cur_val) << 12; //was 9
 	else {
-		e->transition_inc = (e->segphase - segphase_endpoint) << 12; //was 9
+		e->transition_inc = (e->cur_val - dacval_endpoint) << 12; //was 9
 		e->transition_inc = -1 * e->transition_inc;
 	}
 
 	e->cur_curve = LIN;
-	e->accum = e->segphase << 19;
+	e->accum = e->cur_val << 19;
 
 	e->env_state = TRANSITION;
 	e->transition_ctr = 128;

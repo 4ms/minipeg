@@ -19,7 +19,7 @@ extern volatile uint32_t tapouttmr;
 extern volatile uint32_t pingtmr;
 
 static void do_reset_envelope(PingableEnvelope *e);
-static uint16_t update_envelope(PingableEnvelope *e);
+static void update_envelope(PingableEnvelope *e);
 static void output_env_val(uint16_t rawA);
 static void handle_env_segment_end(PingableEnvelope *e, envelopeStates end_segment_flag);
 static void handle_env_end(PingableEnvelope *e, uint8_t end_env_flag);
@@ -33,15 +33,15 @@ void update_all_envelopes(void) {
 	m.divpingtmr = m.divpingtmr + 1;
 	inc_tmrs();
 
-	uint16_t envA = update_envelope(&m);
-	output_env_val(envA);
+	update_envelope(&m);
+	output_env_val(m.cur_val);
 	// DEBUGOFF;
 }
 
 const uint32_t k_accum_max = (0xFFF << 19);
 const uint32_t k_accum_min = (0x001 << 19);
 
-static uint16_t update_envelope(struct PingableEnvelope *e) {
+static void update_envelope(struct PingableEnvelope *e) {
 	envelopeStates end_segment_flag = WAIT;
 	uint8_t end_env_flag = 0;
 	uint16_t cur_val = 0;
@@ -64,6 +64,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 		// else DEBUGOFF;
 		switch (e->env_state) {
 			case (RISE):
+				DigIO::DebugOut::low();
 				e->accum += e->rise_inc;
 				e->segphase = e->accum >> 19;
 				if (e->accum > k_accum_max) {
@@ -84,6 +85,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 				break;
 
 			case (SUSTAIN):
+				DigIO::DebugOut::low();
 				eor_off();
 				eof_off();
 				hr_on();
@@ -97,6 +99,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 				break;
 
 			case (FALL):
+				DigIO::DebugOut::low();
 				e->accum -= e->fall_inc;
 				e->segphase = e->accum >> 19;
 
@@ -115,6 +118,7 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 				break;
 
 			case (TRANSITION):
+				// DigIO::DebugOut::high();
 				e->accum += e->transition_inc;
 				if (e->accum < k_accum_min || (e->transition_inc == 0)) {
 					//trans_inc==0 would technically be an error, so this gives us an out
@@ -152,15 +156,14 @@ static uint16_t update_envelope(struct PingableEnvelope *e) {
 				break;
 
 			default:
+				DigIO::DebugOut::low();
 				break;
 		}
-		cur_val = calc_curve(e->segphase, e->cur_curve);
+		e->cur_val = calc_curve(e->segphase, e->cur_curve);
 
 		handle_env_segment_end(e, end_segment_flag);
 		handle_env_end(e, end_env_flag);
 	}
-
-	return cur_val;
 }
 
 static void handle_env_segment_end(struct PingableEnvelope *e, envelopeStates end_segment_flag) {
