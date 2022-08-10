@@ -20,15 +20,15 @@ void force_transition() {
 	didnt_change_divmult = NUM_ADC_CYCLES_BEFORE_TRANSITION;
 }
 
-uint8_t check_to_start_transition(void) {
-	if (didnt_change_divmult != 0) {
+bool check_to_start_transition() {
+	if (didnt_change_divmult > 0) {
 		didnt_change_divmult++;
 		if (didnt_change_divmult >= NUM_ADC_CYCLES_BEFORE_TRANSITION) {
 			didnt_change_divmult = 0;
-			return 1;
+			return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 void do_start_transition(PingableEnvelope *e) {
