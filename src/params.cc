@@ -135,17 +135,25 @@ static int8_t read_divmult(void) {
 	if (d > DIV_ADC_HYSTERESIS) {
 		last_total_adc = total_adc;
 		new_clock_divider_amount = get_clk_div_nominal(total_adc);
+		if (last_clock_divider_amount == new_clock_divider_amount)
+			return 0; //ADC jumped, but no change in clock divider amount, so do nothing
+
 		last_clock_divider_amount = new_clock_divider_amount;
+
 	} else if (d != 0) {
 		t_clock_divider_amount = get_clk_div_nominal(total_adc);
+
+		if (t_clock_divider_amount == last_clock_divider_amount)
+			return 0; //clock_divider_amount has not changed, do nothing
 
 		if (t_clock_divider_amount > last_clock_divider_amount) {
 			int16_t tmp = total_adc + DIV_ADC_HYSTERESIS;
 			hys_clock_divider_amount = get_clk_div_nominal(tmp);
-		} else if (t_clock_divider_amount < last_clock_divider_amount) {
+		}
+		if (t_clock_divider_amount < last_clock_divider_amount) {
 			int16_t tmp = total_adc - DIV_ADC_HYSTERESIS;
 			hys_clock_divider_amount = get_clk_div_nominal(tmp);
-		} else
+		}
 			hys_clock_divider_amount = 99; //clock_divider_amount has not changed, do nothing
 
 		if (hys_clock_divider_amount == t_clock_divider_amount) {
