@@ -92,8 +92,8 @@ __attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint3
 		segphase_endpoint = time_tmp / e->rise_time;
 		if (segphase_endpoint > 4095)
 			segphase_endpoint = 4095;
-		e->accum_endpoint = segphase_endpoint << 19;
-		segphase_endpoint = calc_curve(segphase_endpoint, e->next_curve_rise);
+		dacval_endpoint = calc_curve(segphase_endpoint, e->next_curve_rise);
+		e->accum_endpoint = dacval_endpoint << 19;
 		e->next_env_state = RISE;
 	} else {
 		elapsed_time -= e->rise_time;
@@ -105,8 +105,8 @@ __attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint3
 			e->accum_endpoint = 0;
 		} else {
 			segphase_endpoint = 4095 - segphase_endpoint;
-			e->accum_endpoint = segphase_endpoint << 19;
 			dacval_endpoint = calc_curve(segphase_endpoint, e->next_curve_fall);
+			e->accum_endpoint = dacval_endpoint << 19;
 		}
 		e->next_env_state = FALL;
 	}
