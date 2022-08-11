@@ -143,15 +143,24 @@ static void update_envelope(struct PingableEnvelope *e) {
 				e->transition_ctr -= 1;
 				if (e->transition_ctr <= 0) {
 					end_segment_flag = e->next_env_state;
+
+					//FixMe: accum_endpoint should be segphase_endpoint << 19, so that
+					//in the next curve when we do:
+					//     accum = accum_endpoint + inc
+					//     segphase = accum >> 19
+					//     nextcurve_dacout = calc_curve(segphase),
+					// then nextcurve_dacout should be close to the current dacout value
+					// Since TRANSITION is linear, that means nextcurve_dacout should be close to the current segphase value
+					// thus we should set accum based on the segphase of the synced ping env
 					e->accum = e->accum_endpoint;
 
 					//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
-					if (e->outta_sync) //2 means we got to transistion from reset_now_flag
-						e->outta_sync = 0;
-					else if (e->outta_sync == 1)
-						e->outta_sync = 2;
-					else
-						e->outta_sync = 0;
+					// if (e->outta_sync) //2 means we got to transistion from reset_now_flag
+					// 	e->outta_sync = 0;
+					// else if (e->outta_sync == 1)
+					// 	e->outta_sync = 2;
+					// else
+					e->outta_sync = 0;
 				}
 				break;
 
