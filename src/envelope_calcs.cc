@@ -39,6 +39,7 @@ void calc_rise_fall_incs(struct PingableEnvelope *e) {
 }
 
 //skew: 0..255, 0 means fall=min
+// TODO: use division, check it uses SDIV
 uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time) {
 	// return div_clk_time/2;
 

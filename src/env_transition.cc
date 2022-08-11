@@ -14,10 +14,12 @@ static int8_t calc_divided_ping_div_ctr(PingableEnvelope *e, envelopeStates envs
 
 void reset_transition_counter() {
 	didnt_change_divmult = 1;
+	DigIO::DebugOut::high();
 }
 
 void force_transition() {
 	didnt_change_divmult = NUM_ADC_CYCLES_BEFORE_TRANSITION;
+	__BKPT();
 }
 
 bool check_to_start_transition() {
@@ -32,7 +34,7 @@ bool check_to_start_transition() {
 }
 
 void do_start_transition(PingableEnvelope *e) {
-	DigIO::DebugOut::high();
+	// DigIO::DebugOut::high();
 	uint32_t elapsed_time;
 
 	if (e->div_clk_time && e->sync_to_ping_mode) {
