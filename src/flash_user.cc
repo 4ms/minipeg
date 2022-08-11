@@ -6,7 +6,7 @@
 
 struct SystemSettings settings;
 
-HAL_StatusTypeDef write_settings(void) {
+int write_settings(void) {
 	HAL_StatusTypeDef status;
 
 	flash_begin_open_program();

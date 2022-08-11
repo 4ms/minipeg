@@ -79,7 +79,7 @@ struct SystemSettings {
 #define QNT_REPHASES_WHEN_CYCLE_OFF 0
 #define CYCLE_REPHASES_DIV_PING 1
 
-HAL_StatusTypeDef write_settings(void);
+int write_settings(void);
 uint8_t read_settings(void);
 uint8_t check_settings_valid(void);
 void default_settings(void);
