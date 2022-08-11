@@ -246,7 +246,7 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 
 	e->reset_now_flag = 0;
 
-	if (e->segphase < 0x0010)
+	if (e->cur_val < 0x0010)
 		e->outta_sync = 0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
 	if ((!e->envelope_running || (e->outta_sync == 0) || (e->div_clk_time < 0x80))) //was div_clk_time<0x8000
