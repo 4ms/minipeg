@@ -5,6 +5,7 @@
 #include "pingable_env.h"
 
 void update_all_envelopes();
+void update_envelope(PingableEnvelope *e);
 void stop_envelope(struct PingableEnvelope *e);
 void start_envelope(struct PingableEnvelope *e);
 void check_restart_async_env(struct PingableEnvelope *e);

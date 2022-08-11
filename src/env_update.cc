@@ -19,14 +19,13 @@ extern volatile uint32_t tapouttmr;
 extern volatile uint32_t pingtmr;
 
 static void do_reset_envelope(PingableEnvelope *e);
-static void update_envelope(PingableEnvelope *e);
 static void output_env_val(uint16_t rawA);
 static void handle_env_segment_end(PingableEnvelope *e, envelopeStates end_segment_flag);
 static void handle_env_end(PingableEnvelope *e, uint8_t end_env_flag);
 static void start_envelope_in_sync(PingableEnvelope *e);
 static void start_envelope_immediate(PingableEnvelope *e);
 
-void update_all_envelopes(void) {
+void update_all_envelopes() {
 	//@22kHz: 6.5us, every 45.5us, = 14.2%
 	//@40kHz: 6.5us, every 25.0us = 26.0%
 	// DEBUGON;
@@ -41,7 +40,7 @@ void update_all_envelopes(void) {
 const uint32_t k_accum_max = (0xFFF << 19);
 const uint32_t k_accum_min = (0x001 << 19);
 
-static void update_envelope(struct PingableEnvelope *e) {
+void update_envelope(PingableEnvelope *e) {
 	envelopeStates end_segment_flag = WAIT;
 	uint8_t end_env_flag = 0;
 	uint16_t cur_val = 0;
@@ -60,8 +59,6 @@ static void update_envelope(struct PingableEnvelope *e) {
 		eof_on();
 		e->outta_sync = 0;
 	} else {
-		// if (e->env_state==TRANSITION) DEBUGON;
-		// else DEBUGOFF;
 		switch (e->env_state) {
 			case (RISE):
 				DigIO::DebugOut::low();
@@ -143,15 +140,24 @@ static void update_envelope(struct PingableEnvelope *e) {
 				e->transition_ctr -= 1;
 				if (e->transition_ctr <= 0) {
 					end_segment_flag = e->next_env_state;
+
+					//FixMe: accum_endpoint should be segphase_endpoint << 19, so that
+					//in the next curve when we do:
+					//     accum = accum_endpoint + inc
+					//     segphase = accum >> 19
+					//     nextcurve_dacout = calc_curve(segphase),
+					// then nextcurve_dacout should be close to the current dacout value
+					// Since TRANSITION is linear, that means nextcurve_dacout should be close to the current segphase value
+					// thus we should set accum based on the segphase of the synced ping env
 					e->accum = e->accum_endpoint;
 
 					//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
-					if (e->outta_sync) //2 means we got to transistion from reset_now_flag
-						e->outta_sync = 0;
-					else if (e->outta_sync == 1)
-						e->outta_sync = 2;
-					else
-						e->outta_sync = 0;
+					// if (e->outta_sync) //2 means we got to transistion from reset_now_flag
+					// 	e->outta_sync = 0;
+					// else if (e->outta_sync == 1)
+					// 	e->outta_sync = 2;
+					// else
+					e->outta_sync = 0;
 				}
 				break;
 
