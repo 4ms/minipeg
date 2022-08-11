@@ -1,14 +1,18 @@
 #include "env_transition.h"
 #include "dig_inout_pins.hh"
 #include "envelope_calcs.h"
+#include "util/math.hh"
 
 extern volatile uint8_t using_tap_clock;
 extern uint32_t clk_time;
 extern volatile uint32_t tapouttmr;
 extern volatile uint32_t pingtmr;
 
-const uint32_t NUM_ADC_CYCLES_BEFORE_TRANSITION = 100; //10 is about 100ms
+const uint32_t NUM_ADC_CYCLES_BEFORE_TRANSITION = 200; //200 is about 100ms
 static uint32_t didnt_change_divmult = 0;
+
+constexpr uint32_t TransitionPeriod = 512;
+constexpr uint32_t TransitionPeriodBitShift = MathTools::Log2<TransitionPeriod>::val;
 
 static int8_t calc_divided_ping_div_ctr(PingableEnvelope *e, envelopeStates envstate);
 
@@ -69,7 +73,7 @@ void do_start_transition(PingableEnvelope *e) {
 		e->divpingtmr = elapsed_time; // was >>8;
 
 		if (e->envelope_running) {
-			elapsed_time += 128; //was 0x8000. offset to account for transition period: 128 timer overflows
+			elapsed_time += TransitionPeriod + 6; //offset to account for transition period + 6 overflows during calc
 			start_transition(e, elapsed_time);
 			e->outta_sync = 1;
 			e->ready_to_start_async = 1;
@@ -81,17 +85,14 @@ void do_start_transition(PingableEnvelope *e) {
 	}
 }
 
-__attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
-	uint64_t time_tmp;
-	uint16_t segphase_endpoint;
-	uint16_t dacval_endpoint;
-
+void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
 	if (elapsed_time > e->div_clk_time)
 		elapsed_time -= e->div_clk_time;
 
+	uint16_t dacval_endpoint;
 	if (elapsed_time <= e->rise_time) {
-		time_tmp = ((uint64_t)elapsed_time) << 12;
-		segphase_endpoint = time_tmp / e->rise_time;
+		uint64_t time_tmp = ((uint64_t)elapsed_time) << 12; //Fixed-point U12.0
+		uint16_t segphase_endpoint = time_tmp / e->rise_time;
 		if (segphase_endpoint > 4095)
 			segphase_endpoint = 4095;
 		dacval_endpoint = calc_curve(segphase_endpoint, e->next_curve_rise);
@@ -99,8 +100,8 @@ __attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint3
 		e->next_env_state = RISE;
 	} else {
 		elapsed_time -= e->rise_time;
-		time_tmp = ((uint64_t)elapsed_time) << 12;
-		segphase_endpoint = time_tmp / e->fall_time;
+		uint64_t time_tmp = ((uint64_t)elapsed_time) << 12; //Fixed-point U12.0
+		uint16_t segphase_endpoint = time_tmp / e->fall_time;
 		if (segphase_endpoint >= 4095) {
 			segphase_endpoint = 0;
 			dacval_endpoint = 0;
@@ -116,9 +117,9 @@ __attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint3
 	//split (segphase_endpoint - segphase) into 128 pieces (>>7), but in units of accum (<<19) ===> <<12
 	//Todo: use signed ints to simplify this
 	if (dacval_endpoint > e->cur_val)
-		e->transition_inc = (dacval_endpoint - e->cur_val) << 12; //was 9
+		e->transition_inc = (dacval_endpoint - e->cur_val) << (19 - TransitionPeriodBitShift); //12;
 	else {
-		e->transition_inc = (e->cur_val - dacval_endpoint) << 12; //was 9
+		e->transition_inc = (e->cur_val - dacval_endpoint) << (19 - TransitionPeriodBitShift); //12;
 		e->transition_inc = -1 * e->transition_inc;
 	}
 
@@ -126,7 +127,7 @@ __attribute__((optimize("O0"))) void start_transition(PingableEnvelope *e, uint3
 	e->accum = e->cur_val << 19;
 
 	e->env_state = TRANSITION;
-	e->transition_ctr = 128;
+	e->transition_ctr = TransitionPeriod;
 }
 
 static int8_t calc_divided_ping_div_ctr(struct PingableEnvelope *e, enum envelopeStates envstate) {

@@ -42,7 +42,7 @@ void init_params(void) {
 	scale = 0;
 }
 
-__attribute__((optimize("O0"))) void update_adc_params(uint8_t force_params_update) {
+void update_adc_params(uint8_t force_params_update) {
 	static uint16_t oversample_wait_ctr = 0;
 	static uint16_t poll_user_input = 0;
 
@@ -120,7 +120,7 @@ static uint8_t read_shape_scale_offset(void) {
 // Reads Divmult pot and cv
 // returns updated clock divider
 // amount or 0 if no change
-__attribute__((optimize("O0"))) static int8_t read_divmult(void) {
+static int8_t read_divmult(void) {
 	static int16_t last_total_adc = 0;
 	static int8_t last_clock_divider_amount = 0;
 
