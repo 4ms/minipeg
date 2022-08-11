@@ -154,7 +154,6 @@ static int8_t read_divmult(void) {
 			int16_t tmp = total_adc - DIV_ADC_HYSTERESIS;
 			hys_clock_divider_amount = get_clk_div_nominal(tmp);
 		}
-			hys_clock_divider_amount = 99; //clock_divider_amount has not changed, do nothing
 
 		if (hys_clock_divider_amount == t_clock_divider_amount) {
 			new_clock_divider_amount = t_clock_divider_amount;
@@ -162,7 +161,6 @@ static int8_t read_divmult(void) {
 			last_total_adc = total_adc;
 		}
 	}
-
 	return new_clock_divider_amount;
 }
 
