@@ -23,7 +23,6 @@ void reset_transition_counter() {
 
 void force_transition() {
 	didnt_change_divmult = NUM_ADC_CYCLES_BEFORE_TRANSITION;
-	__BKPT();
 }
 
 bool check_to_start_transition() {

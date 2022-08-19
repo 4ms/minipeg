@@ -21,6 +21,3 @@ constexpr inline uint32_t BootloaderFlashAddr = get_sector_addr(0);	  //32kB for
 constexpr inline uint32_t SettingsFlashAddr = get_sector_addr(2);	  //16kB for settings
 constexpr inline uint32_t AppFlashAddr = get_sector_addr(5);		  //128kB for app
 constexpr inline uint32_t BootloaderReceiveAddr = get_sector_addr(5); //Receive into same address, no point in copying
-
-//Note: sector size is 128kB, but we can make the firmware update wav file smaller by forcing the app max to be 64kB
-constexpr inline uint32_t BootloaderReceiveSectorSize = 64 * 1024;

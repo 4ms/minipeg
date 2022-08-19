@@ -8,12 +8,14 @@
 #include "bootloader/buttons.hh"
 #include "bootloader/gate_input.hh"
 #include "bootloader/leds.hh"
+#include "bootloader_settings.hh"
 #include "dig_inouts.hh"
 #include "drivers/system.hh"
 #include "flash.hh"
 #include "flash_layout.hh"
 
 #include "bl_utils.hh"
+#include "drivers/arch.hh"
 
 #ifdef USING_QPSK
 #include "stm_audio_bootloader/qpsk/demodulator.h"
@@ -31,16 +33,16 @@ constexpr float kModulationRate = 6000.0;
 constexpr float kBitRate = 12000.0;
 constexpr float kSampleRate = 48000.0;
 #else
-constexpr uint32_t kSampleRate = 22050; //-s
-constexpr uint32_t kPausePeriod = 16;	//-b
-constexpr uint32_t kOnePeriod = 8;		//-n
-constexpr uint32_t kZeroPeriod = 4;		//-z
-										//-p must be 256 (set in fsk/packet_decoder.h)
+constexpr uint32_t kSampleRate = BootloaderConf::SampleRate;	  //-s
+constexpr uint32_t kPausePeriod = BootloaderConf::Encoding.blank; //-b
+constexpr uint32_t kOnePeriod = BootloaderConf::Encoding.one;	  //-n
+constexpr uint32_t kZeroPeriod = BootloaderConf::Encoding.zero;	  //-z
+																  //-p must be 256 (set in fsk/packet_decoder.h)
 #endif
 
 constexpr uint32_t kStartExecutionAddress = AppFlashAddr;
 constexpr uint32_t kStartReceiveAddress = BootloaderReceiveAddr;
-constexpr uint32_t kBlkSize = BootloaderReceiveSectorSize; //Flash page size, -g
+constexpr uint32_t kBlkSize = BootloaderConf::ReceiveSectorSize; //Flash page size, -g
 
 constexpr uint16_t kPacketsPerBlock = kBlkSize / kPacketSize; //kPacketSize=256
 uint8_t recv_buffer[kBlkSize];
@@ -235,20 +237,25 @@ void main() {
 }
 
 void set_threshold_led() {
-	// 25 possible levels
-	uint8_t seq = (gatein_threshold - thresh_min) / thresh_stepsize;
-	Palette Acolor = (seq / 5) == 0 ? Palette::Black
-				   : (seq / 5) == 1 ? Palette::Blue
-				   : (seq / 5) == 2 ? Palette::Magenta
-				   : (seq / 5) == 3 ? Palette::Red
-									: Palette::White;
-	Palette Bcolor = (seq % 5) == 0 ? Palette::Black
-				   : (seq % 5) == 1 ? Palette::Blue
-				   : (seq % 5) == 2 ? Palette::Magenta
-				   : (seq % 5) == 3 ? Palette::Red
-									: Palette::White;
-	set_rgb_led(RgbLeds::EnvA, Acolor);
-	set_rgb_led(RgbLeds::EnvB, Bcolor);
+	if constexpr (BootloaderConf::UseGateInThreshold) {
+		// 25 possible levels
+		uint8_t seq = (gatein_threshold - thresh_min) / thresh_stepsize;
+		Palette Acolor = (seq / 5) == 0 ? Palette::Black
+					   : (seq / 5) == 1 ? Palette::Blue
+					   : (seq / 5) == 2 ? Palette::Magenta
+					   : (seq / 5) == 3 ? Palette::Red
+										: Palette::White;
+		Palette Bcolor = (seq % 5) == 0 ? Palette::Black
+					   : (seq % 5) == 1 ? Palette::Blue
+					   : (seq % 5) == 2 ? Palette::Magenta
+					   : (seq % 5) == 3 ? Palette::Red
+										: Palette::White;
+		set_rgb_led(RgbLeds::EnvA, Acolor);
+		set_rgb_led(RgbLeds::EnvB, Bcolor);
+	} else {
+		set_rgb_led(RgbLeds::EnvA, Palette::Green);
+		set_rgb_led(RgbLeds::EnvB, Palette::Green);
+	}
 }
 
 void init_reception() {

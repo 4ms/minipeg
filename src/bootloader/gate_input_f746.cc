@@ -2,7 +2,6 @@
 #include "adc_pins.h"
 #include "analog_conditioning.h"
 #include "dig_inout_pins.hh"
-#include "drivers/arch.hh"
 #include "drivers/pin.hh"
 #include "drivers/timekeeper.hh"
 #include <functional>

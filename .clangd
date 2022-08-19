@@ -8,8 +8,8 @@ CompileFlags:
 	Remove: [
 		"-DSTM32G4",
 		"-DSTM32G431xx",
-		"-DSTM32F7",
-		"-DSTM32F746xx",
+		#"-DSTM32F7",
+		#"-DSTM32F746xx",
 	]
 
 ---

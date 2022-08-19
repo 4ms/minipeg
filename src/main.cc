@@ -74,6 +74,7 @@ static const uint32_t kDacSampleRate = 40000;
 
 void main() {
 
+	mdrivlib::System::SetVectorTable(AppFlashAddr);
 	system_init();
 
 	init_pingable_env(&m);
