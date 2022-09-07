@@ -255,7 +255,7 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 	if (e->cur_val < 0x0010)
 		e->outta_sync = 0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
-	if ((!e->envelope_running || (e->outta_sync == 0) || (e->div_clk_time < 0x80))) //was div_clk_time<0x8000
+	if (!e->envelope_running || e->outta_sync == 0 || e->div_clk_time < 2000) //2000 is 20Hz
 	{
 		e->envelope_running = 1;
 		e->env_state = RISE;
@@ -325,13 +325,15 @@ uint8_t resync_on_ping(struct PingableEnvelope *e) {
 			}
 
 		} else {
+			//TODO: this is the same logic as sync_env_to_clk() except for ping_div_ctr vs divpingtmr. Combine.
+
 			//re-sync on every ping, since we're mult or = to the clock
 			if (e->sync_to_ping_mode && !e->tracking_changedrisefalls &&
 				(e->reset_nextping_flag || cycle_but_on || e->trigq_down))
 				e->reset_now_flag = 1;
 
-			e->reset_nextping_flag =
-				0; //FYI: reset_next_ping goes low only right after an envelope starts (on the ping, of course)
+			e->reset_nextping_flag = 0;
+			//FYI: reset_next_ping goes low only right after an envelope starts (on the ping, of course)
 			e->divpingtmr = 0;
 		}
 	}
