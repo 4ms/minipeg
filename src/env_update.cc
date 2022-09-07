@@ -50,6 +50,7 @@ void update_envelope(PingableEnvelope *e) {
 		e->outta_sync = 0;
 	}
 
+	DEBUGOFF;
 	if (e->reset_now_flag)
 		do_reset_envelope(e);
 
@@ -61,7 +62,7 @@ void update_envelope(PingableEnvelope *e) {
 	} else {
 		switch (e->env_state) {
 			case (RISE):
-				DigIO::DebugOut::low();
+				// DigIO::DebugOut::low();
 				e->accum += e->rise_inc;
 				e->segphase = e->accum >> 19;
 				if (e->accum > k_accum_max) {
@@ -82,7 +83,7 @@ void update_envelope(PingableEnvelope *e) {
 				break;
 
 			case (SUSTAIN):
-				DigIO::DebugOut::low();
+				// DigIO::DebugOut::low();
 				eor_off();
 				eof_off();
 				hr_on();
@@ -96,7 +97,7 @@ void update_envelope(PingableEnvelope *e) {
 				break;
 
 			case (FALL):
-				DigIO::DebugOut::low();
+				// DigIO::DebugOut::low();
 				e->accum -= e->fall_inc;
 				e->segphase = e->accum >> 19;
 
@@ -162,7 +163,7 @@ void update_envelope(PingableEnvelope *e) {
 				break;
 
 			default:
-				DigIO::DebugOut::low();
+				// DigIO::DebugOut::low();
 				break;
 		}
 		e->cur_val = calc_curve(e->segphase, e->cur_curve);
@@ -260,6 +261,7 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 		e->accum = 0;
 		eof_on();
 		eor_off();
+		DEBUGON;
 	} else {
 		if (e->outta_sync == 1)
 			e->outta_sync = 2;

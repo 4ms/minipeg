@@ -79,6 +79,7 @@ void main() {
 
 	init_pingable_env(&m);
 	init_dig_inouts();
+
 	eor_off();
 	eof_off();
 	hr_off();
@@ -320,8 +321,10 @@ static void ping_led_on(void) {
 void check_reset_envelopes(void) {
 	check_restart_async_env(&m);
 
-	if (div_ping_led && (m.divpingtmr >= (m.div_clk_time >> 1)))
+	if (div_ping_led && (m.divpingtmr >= (m.div_clk_time >> 1))) {
 		ping_led_off();
+		// DEBUGON;
+	}
 
 	if (m.div_clk_time) {
 		if ((!div_ping_led) && (m.divpingtmr > m.div_clk_time)) { // Todo: why do we have !div_ping_led
@@ -333,6 +336,8 @@ void check_reset_envelopes(void) {
 
 	} else
 		ping_led_off();
+
+	// DEBUGOFF;
 }
 
 // Todo: this only needs to be done when tapouttmr updates
