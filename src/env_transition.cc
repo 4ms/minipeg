@@ -18,7 +18,7 @@ static int8_t calc_divided_ping_div_ctr(PingableEnvelope *e, envelopeStates envs
 
 void reset_transition_counter() {
 	didnt_change_divmult = 1;
-	DigIO::DebugOut::high();
+	// DigIO::DebugOut::high();
 }
 
 void force_transition() {
@@ -84,6 +84,7 @@ void do_start_transition(PingableEnvelope *e) {
 	}
 }
 
+// FIXME: if elapsed_time is not at least TransisionPeriod, then does the TransitionPeriodBitShift math work?
 void start_transition(PingableEnvelope *e, uint32_t elapsed_time) {
 	if (elapsed_time > e->div_clk_time)
 		elapsed_time -= e->div_clk_time;

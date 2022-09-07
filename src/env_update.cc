@@ -248,8 +248,6 @@ static void output_env_val(uint16_t rawA) {
 }
 
 static void do_reset_envelope(struct PingableEnvelope *e) {
-	uint32_t elapsed_time;
-
 	e->reset_now_flag = 0;
 
 	if (e->cur_val < 0x0010)
@@ -265,7 +263,8 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 	} else {
 		if (e->outta_sync == 1)
 			e->outta_sync = 2;
-		elapsed_time = 128; //was 0x8000. offset to account for transition period: 64/128 timer overflows (6/13ms)
+		uint32_t elapsed_time = 512 + 6;
+		//was 0x8000. offset to account for transition period: 64/128 timer overflows (6/13ms)
 		start_transition(e, elapsed_time);
 	}
 
