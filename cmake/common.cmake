@@ -269,7 +269,9 @@ function(create_target target)
 
   # Create .wav file target for firmware upgrades
   add_custom_target(
-    ${target}.wav COMMAND export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && ${WAV_ENCODE_PYTHON_CMD}
+    ${target}.wav
+    DEPENDS ${target}.elf
+    COMMAND export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && ${WAV_ENCODE_PYTHON_CMD}
   )
 
   # Helper for letting lsp servers know what target we're using
