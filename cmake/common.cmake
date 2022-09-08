@@ -274,6 +274,28 @@ function(create_target target)
     COMMAND export PYTHONPATH="${CMAKE_SOURCE_DIR}/src/bootloader" && ${WAV_ENCODE_PYTHON_CMD}
   )
 
+  set(TARGET_BASE $<TARGET_FILE_DIR:${target}.elf>/${target})
+
+  add_custom_target(
+    ${target}-combo
+    DEPENDS ${TARGET_BASE}.hex ${TARGET_BASE}-bootloader.elf
+    COMMAND cat ${TARGET_BASE}-bootloader.hex ${TARGET_BASE}.hex | awk -f ${CMAKE_SOURCE_DIR}/merge_hex.awk > ${TARGET_BASE}-combo.hex
+  )
+  set_target_properties(
+    ${target}-combo
+    PROPERTIES
+    ADDITIONAL_CLEAN_FILES
+    "${TARGET_BASE}-combo.hex"
+  )
+  add_custom_target(
+    ${target}-flash
+    DEPENDS ${target}-combo
+    COMMAND echo "/Applications/SEGGER/JLink_V770e/JFlash.app/Contents/MacOS/JFlashExe -openprj${CMAKE_SOURCE_DIR}/minipeg-${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit"
+    COMMAND /Applications/SEGGER/JLink_V770e/JFlash.app/Contents/MacOS/JFlashExe -openprjminipeg-${target}.jflash -open${TARGET_BASE}-combo.hex -auto -exit
+    USES_TERMINAL
+  )
+
+
   # Helper for letting lsp servers know what target we're using
   add_custom_target(${target}-compdb COMMAND ln -snf ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/.)
 
