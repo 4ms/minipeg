@@ -3,6 +3,7 @@
 
 extern struct SystemSettings settings;
 extern bool adjusting_shift_mode;
+bool system_mode_active = false;
 
 void handle_system_mode(void) {
 	uint8_t d;
@@ -49,6 +50,8 @@ void handle_system_mode(void) {
 	system_mode_cur = SET_TRIGOUT_FUNC;
 
 	while (1) {
+		system_mode_active = true;
+
 		now = HAL_GetTick();
 
 		if (!is_pressed(PING_BUTTON))
@@ -220,6 +223,6 @@ void handle_system_mode(void) {
 		;
 	while (just_pressed(PING_BUTTON))
 		;
-	// digin[CYCLE_BUTTON].edge = 0;
-	// digin[PING_BUTTON].edge = 0;
+
+	system_mode_active = false;
 }

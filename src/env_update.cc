@@ -17,6 +17,7 @@ extern struct SystemSettings settings;
 extern volatile uint8_t using_tap_clock;
 extern volatile uint32_t tapouttmr;
 extern volatile uint32_t pingtmr;
+extern bool system_mode_active;
 
 static void do_reset_envelope(PingableEnvelope *e);
 static void output_env_val(uint16_t rawA);
@@ -237,15 +238,17 @@ static void output_env_val(uint16_t rawA) {
 	dac_out(DAC_ENVA, envA);
 	dac_out(DAC_ENVB, envB);
 
-	if (envA < 2048) {
-		set_led_brightness(0, PWM_ENVA_B);
-		set_led_brightness((2048 - envA) * 2, PWM_ENVA_R);
-	} else {
-		set_led_brightness((envA - 2048) * 2, PWM_ENVA_B);
-		set_led_brightness(0, PWM_ENVA_R);
-	}
+	if (!system_mode_active) {
+		if (envA < 2048) {
+			set_led_brightness(0, PWM_ENVA_B);
+			set_led_brightness((2048 - envA) * 2, PWM_ENVA_R);
+		} else {
+			set_led_brightness((envA - 2048) * 2, PWM_ENVA_B);
+			set_led_brightness(0, PWM_ENVA_R);
+		}
 
-	set_led_brightness(envB, PWM_ENVB_B);
+		set_led_brightness(envB, PWM_ENVB_B);
+	}
 }
 
 static void do_reset_envelope(struct PingableEnvelope *e) {
