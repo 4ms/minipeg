@@ -64,6 +64,7 @@ void handle_system_mode(void) {
 		else if ((now - cycle_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
+		//Ping: go to next
 		if (just_released(PING_BUTTON)) {
 			system_mode_cur = static_cast<SystemModeParams>(system_mode_cur + 1);
 		}
@@ -71,6 +72,7 @@ void handle_system_mode(void) {
 		switch (system_mode_cur) {
 			case (NUM_SYSMODE_PARAMS):
 				system_mode_cur = SET_TRIGOUT_FUNC;
+				// fall-through
 			case (SET_TRIGOUT_FUNC):
 				set_led_brightness(1024, PWM_EOF_LED);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
@@ -120,7 +122,7 @@ void handle_system_mode(void) {
 
 			case (SET_FREE_RUNNING_PING):
 				if (settings.free_running_ping) {
-					set_rgb_led(LED_PING, (now & 0x1000) ? c_WHITE : c_DIMBLUE);
+					set_rgb_led(LED_PING, (now & 0x100) ? c_WHITE : c_DIMBLUE);
 					set_rgb_led(LED_CYCLE, c_ORANGE);
 				} else {
 					set_rgb_led(LED_PING, c_DIMBLUE);
@@ -147,9 +149,9 @@ void handle_system_mode(void) {
 
 			case (SET_CYCLEJACK_FUNCTION):
 				if (settings.cycle_jack_behavior == CYCLE_JACK_RISING_EDGE_TOGGLES)
-					set_rgb_led(LED_CYCLE, (now & 0x1000) ? c_RED : c_GREEN);
+					set_rgb_led(LED_CYCLE, (now & 0x100) ? c_RED : c_GREEN);
 				else
-					set_rgb_led(LED_CYCLE, (now & 0x2000) ? c_ORANGE : c_OFF);
+					set_rgb_led(LED_CYCLE, (now & 0x200) ? c_ORANGE : c_OFF);
 
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
@@ -198,7 +200,8 @@ void handle_system_mode(void) {
 		}
 	}
 
-	write_settings();
+	if (is_pressed(CYCLE_BUTTON))
+		write_settings();
 
 	while (is_pressed(CYCLE_BUTTON) || is_pressed(PING_BUTTON)) {
 		set_rgb_led(LED_PING, c_WHITE);
