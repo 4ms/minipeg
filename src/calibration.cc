@@ -145,7 +145,7 @@ uint8_t sanity_check_calibration(void) {
 		return 0;
 	if (settings.cycle_jack_behavior >= NUM_CYCLEJACK_BEHAVIORS)
 		return 0;
-	if ((settings.start_clk_time > 0x8000000) || (settings.start_clk_time < 100))
+	if (settings.start_clk_time == 0)
 		return 0;
 	if (settings.start_cycle_on > 1)
 		return 0;
