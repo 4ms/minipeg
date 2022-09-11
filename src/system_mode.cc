@@ -21,6 +21,7 @@ void handle_system_mode(void) {
 	if ((now - cycle_held_time) <= (3000 * TICKS_PER_MS))
 		return;
 
+	// Enter System Mode
 	for (d = 0; d < 5; d++) {
 		set_rgb_led(LED_PING, c_WHITE);
 		set_rgb_led(LED_CYCLE, c_WHITE);
@@ -44,16 +45,19 @@ void handle_system_mode(void) {
 	while (is_pressed(CYCLE_BUTTON)) {
 		;
 	}
+	while (just_released(CYCLE_BUTTON))
+		;
 	HAL_Delay(50);
 
 	ping_held_time = now;
-	system_mode_cur = SET_TRIGOUT_FUNC;
+	system_mode_cur = static_cast<SystemModeParams>(0);
 
 	while (1) {
 		system_mode_active = true;
 
 		now = HAL_GetTick();
 
+		// Hold either button to exit
 		if (!is_pressed(PING_BUTTON))
 			ping_held_time = now;
 		else if ((now - ping_held_time) > (3000 * TICKS_PER_MS))
@@ -64,8 +68,8 @@ void handle_system_mode(void) {
 		else if ((now - cycle_held_time) > (3000 * TICKS_PER_MS))
 			break;
 
-		//Ping: go to next
-		if (just_released(PING_BUTTON)) {
+		//Cycle: go to next
+		if (just_released(CYCLE_BUTTON)) {
 			system_mode_cur = static_cast<SystemModeParams>(system_mode_cur + 1);
 		}
 
@@ -77,34 +81,34 @@ void handle_system_mode(void) {
 			case (SET_TRIGOUT_FUNC):
 				set_led_brightness(1024, PWM_EOF_LED);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
-					set_rgb_led(LED_CYCLE, c_RED);
+					set_rgb_led(LED_PING, c_RED);
 				else if (settings.trigout_function == TRIGOUT_IS_ENDOFFALL)
-					set_rgb_led(LED_CYCLE, c_ORANGE);
+					set_rgb_led(LED_PING, c_ORANGE);
 				else if (settings.trigout_function == TRIGOUT_IS_HALFRISE)
-					set_rgb_led(LED_CYCLE, c_GREEN);
+					set_rgb_led(LED_PING, c_GREEN);
 				else if (settings.trigout_function == TRIGOUT_IS_TAPCLKOUT)
-					set_rgb_led(LED_CYCLE, c_WHITE);
+					set_rgb_led(LED_PING, c_WHITE);
 
-				set_rgb_led(LED_PING, c_OFF);
+				set_rgb_led(LED_CYCLE, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				break;
 
 			case (SET_TRIGOUT_IS_TRIG):
 				if (settings.trigout_is_trig) {
-					set_rgb_led(LED_CYCLE, c_WHITE);
-					if (now & 0x0F00)
+					set_rgb_led(LED_PING, c_WHITE);
+					if (now & 0x0F0)
 						set_led_brightness(0, PWM_EOF_LED);
 					else
 						set_led_brightness(1024, PWM_EOF_LED);
 				} else {
-					set_rgb_led(LED_CYCLE, c_ORANGE);
-					if (now & 0x1000)
+					set_rgb_led(LED_PING, c_ORANGE);
+					if (now & 0x100)
 						set_led_brightness(0, PWM_EOF_LED);
 					else
 						set_led_brightness(1024, PWM_EOF_LED);
 				}
-				set_rgb_led(LED_PING, c_OFF);
+				set_rgb_led(LED_CYCLE, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				break;
@@ -112,23 +116,22 @@ void handle_system_mode(void) {
 			case (SET_LIMIT_SKEW):
 				set_rgb_led(LED_ENVA, c_BLUE);
 				if (settings.limit_skew)
-					set_rgb_led(LED_CYCLE, c_WHITE);
+					set_rgb_led(LED_PING, c_WHITE);
 				else
-					set_rgb_led(LED_CYCLE, c_ORANGE);
+					set_rgb_led(LED_PING, c_ORANGE);
 
-				set_rgb_led(LED_PING, c_OFF);
+				set_rgb_led(LED_CYCLE, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_led_brightness(0, PWM_EOF_LED);
 				break;
 
 			case (SET_FREE_RUNNING_PING):
 				if (settings.free_running_ping) {
-					set_rgb_led(LED_PING, (now & 0x100) ? c_WHITE : c_DIMBLUE);
-					set_rgb_led(LED_CYCLE, c_ORANGE);
+					set_rgb_led(LED_PING, (now & 0x100) ? c_WHITE : c_OFF);
 				} else {
-					set_rgb_led(LED_PING, c_DIMBLUE);
-					set_rgb_led(LED_CYCLE, c_WHITE);
+					set_rgb_led(LED_PING, c_RED);
 				}
+				set_rgb_led(LED_CYCLE, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				set_led_brightness(0, PWM_EOF_LED);
@@ -138,21 +141,23 @@ void handle_system_mode(void) {
 				set_led_brightness(1024, PWM_EOF_LED);
 				set_rgb_led(LED_ENVA, c_RED);
 				if (settings.trigin_function == TRIGIN_IS_QNT)
-					set_rgb_led(LED_CYCLE, c_GREEN);
+					set_rgb_led(LED_PING, c_BLUE);
 				else if (settings.trigin_function == TRIGIN_IS_ASYNC)
-					set_rgb_led(LED_CYCLE, c_ORANGE);
+					set_rgb_led(LED_PING, c_ORANGE);
 				else if (settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN)
-					set_rgb_led(LED_CYCLE, c_RED);
+					set_rgb_led(LED_PING, c_GREEN);
 
-				set_rgb_led(LED_PING, c_OFF);
+				set_rgb_led(LED_CYCLE, c_OFF);
 				set_rgb_led(LED_ENVB, c_OFF);
 				break;
 
 			case (SET_CYCLEJACK_FUNCTION):
 				if (settings.cycle_jack_behavior == CYCLE_JACK_RISING_EDGE_TOGGLES)
-					set_rgb_led(LED_CYCLE, (now & 0x100) ? c_RED : c_GREEN);
-				else
-					set_rgb_led(LED_CYCLE, (now & 0x200) ? c_ORANGE : c_OFF);
+					set_rgb_led(LED_CYCLE, (now & 0x200) ? c_RED : c_OFF);
+				else if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES)
+					set_rgb_led(LED_CYCLE, (now & 0x100) ? c_ORANGE : c_OFF);
+				else if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT)
+					set_rgb_led(LED_CYCLE, (now & 0x100) ? c_BLUE : c_OFF);
 
 				set_rgb_led(LED_PING, c_OFF);
 				set_rgb_led(LED_ENVA, c_OFF);
@@ -161,7 +166,7 @@ void handle_system_mode(void) {
 				break;
 		}
 
-		if (just_released(CYCLE_BUTTON)) {
+		if (just_released(PING_BUTTON)) {
 
 			HAL_Delay(50); //to de-noise the cycle button
 
