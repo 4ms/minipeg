@@ -25,21 +25,8 @@ enum PwmOutputs {
 
 	PWM_EOF_LED,
 
-	PWM_LOCKBUT_R,
-	PWM_LOCKBUT_G,
-	PWM_LOCKBUT_B,
-
-	NUM_PWMS_LOCKPCB
+	NUM_PWMS
 };
-
-#ifdef LOCK_PCB
-#define NUM_PWMS NUM_PWMS_LOCKPCB
-#else
-#define NUM_PWMS (NUM_PWMS_LOCKPCB - 3)
-#endif
-//non-PWM:
-//PINGBUT_G_EN
-//CYCLE_BUT_B
 
 struct PWMOutput {
 	GPIO_TypeDef *gpio;

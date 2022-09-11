@@ -110,9 +110,9 @@ void default_calibration(void) {
 	settings.cycle_cal_r = 2048;
 	settings.cycle_cal_g = 2048;
 	settings.cycle_cal_b = 2048;
-	settings.lock_cal_r = 2048;
-	settings.lock_cal_g = 2048;
-	settings.lock_cal_b = 2048;
+	// settings.lock_cal_r = 2048;
+	// settings.lock_cal_g = 2048;
+	// settings.lock_cal_b = 2048;
 	settings.enva_cal_r = 2048;
 	settings.enva_cal_g = 2048;
 	settings.enva_cal_b = 2048;

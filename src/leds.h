@@ -10,7 +10,6 @@
 enum RgbLeds {
 	LED_PING,
 	LED_CYCLE,
-	LED_LOCK,
 	LED_ENVA,
 	LED_ENVB,
 
@@ -32,7 +31,6 @@ struct Color {
 struct AdjustedColor {
 	Color ping;
 	Color cycle;
-	Color lock;
 	Color envA;
 	Color envB;
 };

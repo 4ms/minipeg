@@ -22,10 +22,6 @@ void create_color(AdjustedColor *col, uint16_t red, uint16_t green, uint16_t blu
 	col->cycle.g = adjust_hue(green, settings.cycle_cal_g);
 	col->cycle.b = adjust_hue(blue, settings.cycle_cal_b);
 
-	col->lock.r = adjust_hue(red, settings.lock_cal_r);
-	col->lock.g = adjust_hue(green, settings.lock_cal_g);
-	col->lock.b = adjust_hue(blue, settings.lock_cal_b);
-
 	col->envA.r = adjust_hue(red, settings.enva_cal_r);
 	col->envA.g = adjust_hue(green, settings.enva_cal_g);
 	col->envA.b = adjust_hue(blue, settings.enva_cal_b);
@@ -59,10 +55,6 @@ void set_rgb_led(RgbLeds rgb_led_id, Palette color_id) {
 		update_pwm(palette[color_id].cycle.r, PWM_CYCLEBUT_R);
 		update_pwm(palette[color_id].cycle.b, PWM_CYCLEBUT_B);
 		update_pwm(palette[color_id].cycle.g, PWM_CYCLEBUT_G);
-	} else if (rgb_led_id == LED_LOCK) {
-		update_pwm(palette[color_id].lock.r, PWM_LOCKBUT_R);
-		update_pwm(palette[color_id].lock.b, PWM_LOCKBUT_B);
-		update_pwm(palette[color_id].lock.g, PWM_LOCKBUT_G);
 	} else if (rgb_led_id == LED_ENVA) {
 		update_pwm(palette[color_id].envA.r, PWM_ENVA_R);
 		update_pwm(palette[color_id].envA.b, PWM_ENVA_B);
@@ -87,10 +79,6 @@ void all_lights_off(void) {
 	update_pwm(0, PWM_PINGBUT_R);
 	update_pwm(0, PWM_PINGBUT_G);
 	update_pwm(0, PWM_PINGBUT_B);
-
-	update_pwm(0, PWM_LOCKBUT_R);
-	update_pwm(0, PWM_LOCKBUT_G);
-	update_pwm(0, PWM_LOCKBUT_B);
 
 	update_pwm(0, PWM_ENVA_R);
 	update_pwm(0, PWM_ENVA_G);

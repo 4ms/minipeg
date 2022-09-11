@@ -52,10 +52,6 @@ void set_button_led(uint8_t button_num, bool turn_on) {
 		update_pwm(brightness, PWM_CYCLEBUT_R);
 		update_pwm(brightness, PWM_CYCLEBUT_G);
 		update_pwm(brightness, PWM_CYCLEBUT_B);
-	} else if (button_num == 2) {
-		update_pwm(brightness, PWM_LOCKBUT_R);
-		update_pwm(brightness, PWM_LOCKBUT_G);
-		update_pwm(brightness, PWM_LOCKBUT_B);
 	}
 }
 
