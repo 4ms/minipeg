@@ -131,7 +131,7 @@ void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_ris
 		case RAMPUP_EXP2LIN:
 			*skew = RAMPUP;
 			*next_curve_rise = var_127;
-			*next_curve_fall = EXPO;
+			*next_curve_fall = LIN;
 			break;
 
 		case RAMPUP2SYM_LIN2EXP:
@@ -155,7 +155,7 @@ void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_ris
 		default:
 		case RAMPDOWN_EXP2LIN:
 			*skew = RAMPDOWN;
-			*next_curve_rise = EXPO;
+			*next_curve_rise = LIN;
 			*next_curve_fall = 127 - var_127;
 			break;
 	}
