@@ -5,6 +5,8 @@ extern struct SystemSettings settings;
 extern uint32_t clk_time;
 extern uint8_t cycle_but_on;
 extern bool adjusting_shift_mode;
+extern bool toggled_sync_mode;
+
 bool system_mode_active = false;
 
 void handle_system_mode(void) {
@@ -17,7 +19,7 @@ void handle_system_mode(void) {
 	if (!is_pressed(CYCLE_BUTTON))
 		cycle_held_time = now;
 
-	if (adjusting_shift_mode)
+	if (adjusting_shift_mode || toggled_sync_mode)
 		return;
 
 	if ((now - cycle_held_time) <= (3000 * TICKS_PER_MS))

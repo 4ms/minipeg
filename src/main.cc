@@ -56,6 +56,7 @@ uint8_t initial_cycle_button_state = 0;
 char update_cycle_button_now = 0;
 
 bool adjusting_shift_mode = false;
+bool toggled_sync_mode = false;
 int16_t cycle_latched_offset;
 
 struct PingableEnvelope m;
@@ -159,10 +160,20 @@ void main() {
 }
 
 static void read_ping_button(void) {
+	if (toggled_sync_mode)
+		return;
+
 	if (is_pressed(PING_BUTTON)) {
 		uint32_t now = tapintmr;
 
 		if (just_pressed(PING_BUTTON)) {
+
+			if (is_pressed(CYCLE_BUTTON)) {
+				m.sync_to_ping_mode = !m.sync_to_ping_mode;
+				toggled_sync_mode = true;
+				return;
+			}
+
 			using_tap_clock = 1;
 
 			if (last_tapin_time && (MathTools::diff(last_tapin_time, now) < (last_tapin_time >> 1))) {
@@ -284,8 +295,14 @@ static void read_cycle_button(void) {
 	}
 
 	auto released_cycle = just_released(CYCLE_BUTTON);
+
 	if (released_cycle && adjusting_shift_mode) {
 		adjusting_shift_mode = false;
+		released_cycle = false;
+	}
+
+	if (released_cycle && toggled_sync_mode) {
+		toggled_sync_mode = false;
 		released_cycle = false;
 	}
 
@@ -316,7 +333,7 @@ static void ping_led_off(void) {
 }
 
 static void ping_led_on(void) {
-	set_rgb_led(LED_PING, c_WHITE);
+	set_rgb_led(LED_PING, m.sync_to_ping_mode ? c_CYAN : c_WHITE);
 	div_ping_led = 1;
 }
 
