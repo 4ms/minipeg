@@ -2,6 +2,8 @@
 #include "stm32xx.h"
 
 extern struct SystemSettings settings;
+extern uint32_t clk_time;
+extern uint8_t cycle_but_on;
 extern bool adjusting_shift_mode;
 bool system_mode_active = false;
 
@@ -206,8 +208,13 @@ void handle_system_mode(void) {
 		}
 	}
 
-	if (is_pressed(CYCLE_BUTTON))
+	// Save if we exited by holding Ping
+	if (is_pressed(PING_BUTTON)) {
+		settings.start_clk_time = clk_time;
+		settings.start_cycle_on = cycle_but_on;
+
 		write_settings();
+	}
 
 	while (is_pressed(CYCLE_BUTTON) || is_pressed(PING_BUTTON)) {
 		set_rgb_led(LED_PING, c_WHITE);
