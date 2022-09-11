@@ -116,6 +116,7 @@ void main() {
 	if (settings.start_clk_time) {
 		clk_time = settings.start_clk_time;
 		m.div_clk_time = settings.start_clk_time;
+		using_tap_clock = 1;
 	}
 
 	if (settings.start_cycle_on) {
