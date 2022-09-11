@@ -246,12 +246,15 @@ void read_trigjacks(void) {
 	}
 
 	if (just_pressed(CYCLE_JACK)) {
+		if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT)
+			m.sync_to_ping_mode = 1;
 		do_toggle_cycle = 1;
 	}
 
 	if (just_released(CYCLE_JACK)) {
 
-		if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES)
+		if (settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES ||
+			settings.cycle_jack_behavior == CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT)
 			do_toggle_cycle = 1;
 	}
 }
