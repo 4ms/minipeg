@@ -42,7 +42,7 @@ void adjust_palette(void) {
 	create_color(&palette[c_GREEN], 0, 4095, 0);
 	create_color(&palette[c_CYAN], 0, 3600, 3600);
 	create_color(&palette[c_BLUE], 0, 0, 4095);
-	create_color(&palette[c_DIMBLUE], 0, 0, 1024);
+	create_color(&palette[c_DIMBLUE], 0, 0, 600);
 	create_color(&palette[c_PURPLE], 3600, 0, 4095);
 }
 
