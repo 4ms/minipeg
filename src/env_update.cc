@@ -60,10 +60,12 @@ void update_envelope(PingableEnvelope *e) {
 		hr_off();
 		eof_on();
 		e->outta_sync = 0;
-	} else {
-		switch (e->env_state) {
-			case (RISE):
-				// DigIO::DebugOut::low();
+		return;
+	}
+
+	switch (e->env_state) {
+		case (RISE):
+			// DigIO::DebugOut::low();
 				e->accum += e->rise_inc;
 				e->segphase = e->accum >> 19;
 				if (e->accum > k_accum_max) {
@@ -169,9 +171,8 @@ void update_envelope(PingableEnvelope *e) {
 		}
 		e->cur_val = calc_curve(e->segphase, e->cur_curve);
 
-		handle_env_segment_end(e, end_segment_flag);
-		handle_env_end(e, end_env_flag);
-	}
+	handle_env_segment_end(e, end_segment_flag);
+	handle_env_end(e, end_env_flag);
 }
 
 static void handle_env_segment_end(struct PingableEnvelope *e, envelopeStates end_segment_flag) {
