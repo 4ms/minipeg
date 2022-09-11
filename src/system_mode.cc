@@ -71,8 +71,9 @@ void handle_system_mode(void) {
 
 		switch (system_mode_cur) {
 			case (NUM_SYSMODE_PARAMS):
-				system_mode_cur = SET_TRIGOUT_FUNC;
-				// fall-through
+				system_mode_cur = static_cast<SystemModeParams>(0); //SET_TRIGIN_FUNC;
+				break;
+
 			case (SET_TRIGOUT_FUNC):
 				set_led_brightness(1024, PWM_EOF_LED);
 				if (settings.trigout_function == TRIGOUT_IS_ENDOFRISE)
