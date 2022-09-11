@@ -44,12 +44,12 @@ uint8_t check_settings_valid(void) {
 void default_settings(void) {
 	default_calibration();
 	settings.limit_skew = 0;
-	settings.free_running_ping = 0;
+	settings.free_running_ping = 1;
 	settings.trigout_is_trig = 0;
 	settings.trigin_function = TRIGIN_IS_ASYNC;
 	settings.trigout_function = TRIGOUT_IS_ENDOFFALL;
 
-	settings.cycle_jack_behavior = CYCLE_JACK_RISING_EDGE_TOGGLES;
+	settings.cycle_jack_behavior = CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT;
 
 	settings.start_clk_time = 8000;
 	settings.start_cycle_on = 1;
