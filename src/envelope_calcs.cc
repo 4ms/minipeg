@@ -51,15 +51,15 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time) {
 	else
 		skew_portion = (skew * div_clk_time) >> 8;
 
-	if (!settings.limit_skew || (div_clk_time < (LIMIT_SKEW_TIME >> 1))) {
+	if (!settings.limit_skew || (div_clk_time < (LIMIT_SKEW_TIME * 2))) {
 		if (skew == 0)
-			return (30);
+			return 30;
 
 		else if (skew == 1)
-			return (40);
+			return 40;
 
 		else if (skew == 2)
-			return (50);
+			return 50;
 
 		else if (skew <= 25) {
 			//return smaller of skew_portion and squared link funcion, but at least 50
