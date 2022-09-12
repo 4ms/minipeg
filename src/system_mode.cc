@@ -237,10 +237,14 @@ void handle_system_mode(void) {
 	}
 
 	//clear edges:
-	while (just_pressed(CYCLE_BUTTON))
+	while (just_released(CYCLE_BUTTON))
 		;
-	while (just_pressed(PING_BUTTON))
+	while (just_released(PING_BUTTON))
 		;
+
+	//restore lights:
+	if (cycle_but_on)
+		set_rgb_led(LED_CYCLE, c_ORANGE);
 
 	system_mode_active = false;
 }
