@@ -43,7 +43,7 @@ uint8_t check_settings_valid(void) {
 
 void default_settings(void) {
 	default_calibration();
-	settings.limit_skew = 0;
+	settings.limit_skew = 1;
 	settings.free_running_ping = 1;
 	settings.trigout_is_trig = 0;
 	settings.trigin_function = TRIGIN_IS_ASYNC;
