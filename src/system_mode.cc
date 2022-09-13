@@ -9,7 +9,7 @@ extern bool toggled_sync_mode;
 
 bool system_mode_active = false;
 
-void handle_system_mode(void) {
+void handle_system_mode(bool sync_to_ping_mode) {
 	uint8_t d;
 	enum SystemModeParams system_mode_cur;
 	static uint32_t ping_held_time = 0;
@@ -214,6 +214,7 @@ void handle_system_mode(void) {
 	if (is_pressed(PING_BUTTON)) {
 		settings.start_clk_time = clk_time;
 		settings.start_cycle_on = cycle_but_on;
+		settings.start_sync_on = sync_to_ping_mode;
 
 		write_settings();
 	}

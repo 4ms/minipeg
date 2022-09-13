@@ -17,4 +17,4 @@ enum SystemModeParams {
 	NUM_SYSMODE_PARAMS
 };
 
-void handle_system_mode(void);
+void handle_system_mode(bool sync_to_ping_mode);

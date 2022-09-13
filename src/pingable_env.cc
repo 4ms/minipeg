@@ -20,7 +20,7 @@ void init_pingable_env(struct PingableEnvelope *e) {
 	e->accum = 0;
 	e->segphase = 0;
 	e->cur_val = 0;
-	e->sync_to_ping_mode = 1;
+	e->sync_to_ping_mode = 0;
 	e->reset_now_flag = 0;
 	e->ready_to_start_async = 0;
 	e->async_phase_diff = 0;

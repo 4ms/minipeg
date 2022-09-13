@@ -114,6 +114,14 @@ void main() {
 
 	init_params();
 
+	if (settings.start_sync_on) {
+		m.sync_to_ping_mode = true;
+	} else {
+		m.sync_to_ping_mode = false;
+		m.async_env_changed_shape = 0;
+		m.ready_to_start_async = true;
+	}
+
 	if (settings.start_clk_time) {
 		clk_time = settings.start_clk_time;
 		m.div_clk_time = settings.start_clk_time;
@@ -155,7 +163,7 @@ void main() {
 
 		handle_trigout_trigfall();
 
-		handle_system_mode();
+		handle_system_mode(m.sync_to_ping_mode);
 	}
 }
 
