@@ -352,7 +352,6 @@ void check_reset_envelopes(void) {
 
 	if (div_ping_led && (m.divpingtmr >= (m.div_clk_time >> 1))) {
 		ping_led_off();
-		// DEBUGON;
 	}
 
 	if (m.div_clk_time) {
@@ -365,8 +364,6 @@ void check_reset_envelopes(void) {
 
 	} else
 		ping_led_off();
-
-	// DEBUGOFF;
 }
 
 // Todo: this only needs to be done when tapouttmr updates
@@ -379,6 +376,7 @@ void update_tap_clock(void) {
 				// This was causing issue #7
 				// if (m.clock_divider_amount <= 1)
 				// 	m.divpingtmr = 0;
+				// DebugReset = 2;
 
 				got_tap_clock = 1;
 			}
@@ -411,7 +409,7 @@ void read_ping_clock(void) {
 
 		if (m.clock_divider_amount <= 1) {
 			ping_led_on();
-			// if (!using_tap_clock) {
+			// TODO: test if we need to reset divpingtmr in sync mode (we don't in async mode)
 			if (m.sync_to_ping_mode) {
 				//FIXME: We don't want to reset divpingtmr if we're not synced to ping.
 				//should we say: if (!m.sync_to_ping_mode) instead of if (!using_tap_clock) ?
