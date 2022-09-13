@@ -52,8 +52,13 @@ void update_adc_params(uint8_t force_params_update) {
 		poll_user_input = 0;
 
 		if (read_shape_scale_offset()) {
+			auto old_skew = m.skew;
 			calc_skew_and_curves(shape, &m.skew, &m.next_curve_rise, &m.next_curve_fall);
 			calc_rise_fall_incs(&m);
+			if (old_skew != m.skew) {
+				update_env_tracking(&m);
+				reset_transition_counter();
+			}
 		}
 
 		if (m.env_state != TRANSITION || !m.envelope_running)
