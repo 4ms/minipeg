@@ -314,20 +314,12 @@ uint8_t resync_on_ping(struct PingableEnvelope *e) {
 			if (e->envelope_running && !e->tracking_changedrisefalls)
 				e->ping_div_ctr++;
 
-			if (e->ping_div_ctr >= e->clock_divider_amount) {
-				// if (e->sync_to_ping_mode) {
+			if (e->sync_to_ping_mode && (e->ping_div_ctr >= e->clock_divider_amount)) {
 				e->divpingtmr = 0;
-				// }
+				DebugReset = 6;
 
 				sync_env_to_clk(e);
 				e->ping_div_ctr = 0;
-				//Todo: two differnces: 1) reset_nextping_flag is only cleared if big boolean is true, but below it's cleared always. 2) ready_to_start_async is set if we're not syncing to ping, but below it's not touched
-
-				// if (e->sync_to_ping_mode && !e->tracking_changedrisefalls && (cycle_but_on || e->reset_nextping_flag || e->trigq_down))
-				// 	e->reset_now_flag = 1;
-				// e->reset_nextping_flag = 0;
-				// e->ping_div_ctr = 0;
-				// e->divpingtmr = 0;
 
 				return 1;
 			}
@@ -343,9 +335,8 @@ uint8_t resync_on_ping(struct PingableEnvelope *e) {
 			e->reset_nextping_flag = 0;
 			//FYI: reset_next_ping goes low only right after an envelope starts (on the ping, of course)
 
-			// if (e->sync_to_ping_mode) {
+			DebugReset = 5;
 			e->divpingtmr = 0;
-			// }
 		}
 	}
 	return 0;
