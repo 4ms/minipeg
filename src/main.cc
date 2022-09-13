@@ -376,9 +376,9 @@ void update_tap_clock(void) {
 			tapouttmr = 0;
 			if (using_tap_clock) {
 				clockbus_on();
-				// Todo: Yet another sync to the clock,is this needed?
-				if (m.clock_divider_amount <= 1)
-					m.divpingtmr = 0;
+				// This was causing issue #7
+				// if (m.clock_divider_amount <= 1)
+				// 	m.divpingtmr = 0;
 
 				got_tap_clock = 1;
 			}
@@ -411,8 +411,13 @@ void read_ping_clock(void) {
 
 		if (m.clock_divider_amount <= 1) {
 			ping_led_on();
-			// if (!using_tap_clock)
-			m.divpingtmr = 0;
+			// if (!using_tap_clock) {
+			if (m.sync_to_ping_mode) {
+				//FIXME: We don't want to reset divpingtmr if we're not synced to ping.
+				//should we say: if (!m.sync_to_ping_mode) instead of if (!using_tap_clock) ?
+				// DEBUGON;
+				m.divpingtmr = 0;
+			}
 		}
 
 		calc_div_clk_time(&m, clk_time);
