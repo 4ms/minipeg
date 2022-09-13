@@ -265,12 +265,11 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 		e->accum = 0;
 		eof_on();
 		eor_off();
-		DEBUGON;
 	} else {
 		if (e->outta_sync == 1)
 			e->outta_sync = 2;
 		uint32_t elapsed_time = 512 + 6;
-		//was 0x8000. offset to account for transition period: 64/128 timer overflows (6/13ms)
+		//Offset to account for transition period: 64/128 timer overflows (6/13ms)
 		start_transition(e, elapsed_time);
 	}
 
@@ -287,6 +286,9 @@ void check_restart_async_env(struct PingableEnvelope *e) {
 	if (!e->sync_to_ping_mode && cycle_but_on && (e->divpingtmr >= e->async_phase_diff) &&
 		!e->async_env_changed_shape && e->ready_to_start_async && !e->triga_down)
 	{
+		// In async mode, reset the envelope on the same phase each Cycle
+		// This happens in Async mode when envelope hits bottom
+		// and for Issue #8 and Issue #9
 		e->reset_now_flag = 1;
 		e->ready_to_start_async = 0;
 		e->async_env_changed_shape = 0;
@@ -299,6 +301,7 @@ void sync_env_to_clk(struct PingableEnvelope *e) {
 	else {
 		if (e->reset_nextping_flag || cycle_but_on || e->trigq_down) {
 			if (!e->tracking_changedrisefalls) {
+				// In sync mode, on the ping we must reset the envelope (cause a transition, usually)
 				e->reset_now_flag = 1;
 				e->reset_nextping_flag = 0;
 			}
