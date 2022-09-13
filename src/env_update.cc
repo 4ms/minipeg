@@ -291,7 +291,6 @@ void check_restart_async_env(struct PingableEnvelope *e) {
 		// and for Issue #8 and Issue #9
 		e->reset_now_flag = 1;
 		e->ready_to_start_async = 0;
-		e->async_env_changed_shape = 0;
 	}
 }
 
