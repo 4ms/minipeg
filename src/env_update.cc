@@ -51,7 +51,7 @@ void update_envelope(PingableEnvelope *e) {
 		e->outta_sync = 0;
 	}
 
-	DEBUGOFF;
+	// DEBUGOFF;
 	if (e->reset_now_flag)
 		do_reset_envelope(e);
 
@@ -318,7 +318,7 @@ uint8_t resync_on_ping(struct PingableEnvelope *e) {
 
 			if (e->sync_to_ping_mode && (e->ping_div_ctr >= e->clock_divider_amount)) {
 				e->divpingtmr = 0;
-				DebugReset = 6;
+				// DebugReset = 6;
 
 				sync_env_to_clk(e);
 				e->ping_div_ctr = 0;
@@ -337,7 +337,7 @@ uint8_t resync_on_ping(struct PingableEnvelope *e) {
 			e->reset_nextping_flag = 0;
 			//FYI: reset_next_ping goes low only right after an envelope starts (on the ping, of course)
 
-			DebugReset = 5;
+			// DebugReset = 5;
 			e->divpingtmr = 0;
 		}
 	}
