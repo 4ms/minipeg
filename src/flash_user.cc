@@ -51,6 +51,7 @@ void default_settings(void) {
 
 	settings.cycle_jack_behavior = CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT;
 
-	settings.start_clk_time = 8000;
+	settings.start_clk_time = 25000;
 	settings.start_cycle_on = 1;
+	settings.start_sync_on = 0;
 }
