@@ -68,8 +68,8 @@ void update_adc_params(uint8_t force_params_update) {
 			if (new_clock_divider_amount != 0) {
 				update_clock_divider_amount(&m, new_clock_divider_amount);
 				calc_rise_fall_incs(&m);
-				update_env_tracking(&m);
 
+				update_env_tracking(&m);
 				reset_transition_counter();
 			}
 		}

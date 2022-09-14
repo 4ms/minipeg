@@ -37,10 +37,13 @@ bool check_to_start_transition() {
 }
 
 void do_start_transition(PingableEnvelope *e) {
-	// DigIO::DebugOut::high();
 	uint32_t elapsed_time;
+	if (!e->div_clk_time)
+		return;
 
-	if (e->div_clk_time && e->sync_to_ping_mode) {
+	if (!e->sync_to_ping_mode) {
+		e->async_env_changed_shape = 1;
+	} else {
 		e->tracking_changedrisefalls = 0;
 
 		if (using_tap_clock)
