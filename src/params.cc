@@ -61,7 +61,7 @@ void update_adc_params(uint8_t force_params_update) {
 			}
 		}
 
-		if (m.env_state != TRANSITION || !m.envelope_running)
+		if (m.env_state != TRANSITION /*|| !m.envelope_running*/)
 		//Todo: remove !m.envelope_running and test. if m.env_state==TRANSITION, then m.envelope_running is true
 		{
 			int8_t new_clock_divider_amount = read_divmult();
