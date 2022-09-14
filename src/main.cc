@@ -397,7 +397,11 @@ void read_ping_clock(void) {
 				if (delta > (prev_clk_time >> 3)) //>12.5%
 				{
 					force_transition();
+					m.tracking_changedrisefalls = 1;
 					force_params_update = 1;
+				} else if (delta > 100) {
+					m.tracking_changedrisefalls = 1;
+					reset_transition_counter();
 				}
 			}
 		}
