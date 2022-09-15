@@ -67,110 +67,110 @@ void update_envelope(PingableEnvelope *e) {
 	switch (e->env_state) {
 		case (RISE):
 			// DigIO::DebugOut::low();
-				e->accum += e->rise_inc;
-				e->segphase = e->accum >> 19;
-				if (e->accum > k_accum_max) {
-					e->accum = k_accum_max;
-					e->segphase = 0x0FFF;
-					if (e->triga_down && settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN)
-						end_segment_flag = SUSTAIN;
-					else
-						end_segment_flag = FALL;
-				}
-				e->cur_curve = e->curve_rise;
-				if (e->segphase >= 2048)
-					hr_on();
+			e->accum += e->rise_inc;
+			e->segphase = e->accum >> 19;
+			if (e->accum > k_accum_max) {
+				e->accum = k_accum_max;
+				e->segphase = 0x0FFF;
+				if (e->triga_down && settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN)
+					end_segment_flag = SUSTAIN;
 				else
-					hr_off();
+					end_segment_flag = FALL;
+			}
+			e->cur_curve = e->curve_rise;
+			if (e->segphase >= 2048)
+				hr_on();
+			else
+				hr_off();
+			eor_off();
+			eof_on();
+			break;
+
+		case (SUSTAIN):
+			// DigIO::DebugOut::low();
+			eor_off();
+			eof_off();
+			hr_on();
+			e->segphase = 0x0FFF;
+			if (e->triga_down && settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN) {
+				e->accum = k_accum_max;
+				e->async_env_changed_shape = 1;
+			} else {
+				end_segment_flag = FALL;
+			}
+			break;
+
+		case (FALL):
+			// DigIO::DebugOut::low();
+			e->accum -= e->fall_inc;
+			e->segphase = e->accum >> 19;
+
+			if ((e->accum < k_accum_min) || (e->accum > k_accum_max)) {
+				e->accum = 0;
+				e->segphase = 0;
+				end_env_flag = 1;
+			}
+			eor_on();
+			eof_off();
+			if (e->segphase < 2048)
+				hr_off();
+			else
+				hr_on();
+			e->cur_curve = e->curve_fall;
+			break;
+
+		case (TRANSITION):
+			// DigIO::DebugOut::high();
+			e->accum += e->transition_inc;
+			if (e->accum < k_accum_min || (e->transition_inc == 0)) {
+				//trans_inc==0 would technically be an error, so this gives us an out
+				e->accum = 0;
+				e->segphase = 0;
+				e->transition_ctr = 1;
+			} else if (e->accum > k_accum_max) {
+				e->accum = k_accum_max;
+				e->segphase = 0x0FFF;
+				e->transition_ctr = 1;
+			} else
+				e->segphase = e->accum >> 19;
+
+			if (e->transition_inc > 0) {
 				eor_off();
 				eof_on();
-				break;
-
-			case (SUSTAIN):
-				// DigIO::DebugOut::low();
-				eor_off();
-				eof_off();
-				hr_on();
-				e->segphase = 0x0FFF;
-				if (e->triga_down && settings.trigin_function == TRIGIN_IS_ASYNC_SUSTAIN) {
-					e->accum = k_accum_max;
-					e->async_env_changed_shape = 1;
-				} else {
-					end_segment_flag = FALL;
-				}
-				break;
-
-			case (FALL):
-				// DigIO::DebugOut::low();
-				e->accum -= e->fall_inc;
-				e->segphase = e->accum >> 19;
-
-				if ((e->accum < k_accum_min) || (e->accum > k_accum_max)) {
-					e->accum = 0;
-					e->segphase = 0;
-					end_env_flag = 1;
-				}
+			} else {
 				eor_on();
 				eof_off();
-				if (e->segphase < 2048)
-					hr_off();
-				else
-					hr_on();
-				e->cur_curve = e->curve_fall;
-				break;
+			}
 
-			case (TRANSITION):
-				// DigIO::DebugOut::high();
-				e->accum += e->transition_inc;
-				if (e->accum < k_accum_min || (e->transition_inc == 0)) {
-					//trans_inc==0 would technically be an error, so this gives us an out
-					e->accum = 0;
-					e->segphase = 0;
-					e->transition_ctr = 1;
-				} else if (e->accum > k_accum_max) {
-					e->accum = k_accum_max;
-					e->segphase = 0x0FFF;
-					e->transition_ctr = 1;
-				} else
-					e->segphase = e->accum >> 19;
+			e->transition_ctr -= 1;
+			if (e->transition_ctr <= 0) {
+				end_segment_flag = e->next_env_state;
 
-				if (e->transition_inc > 0) {
-					eor_off();
-					eof_on();
-				} else {
-					eor_on();
-					eof_off();
-				}
+				//FixMe: accum_endpoint should be segphase_endpoint << 19, so that
+				//in the next curve when we do:
+				//     accum = accum_endpoint + inc
+				//     segphase = accum >> 19
+				//     nextcurve_dacout = calc_curve(segphase),
+				// then nextcurve_dacout should be close to the current dacout value
+				// Since TRANSITION is linear, that means nextcurve_dacout should be close to the current segphase value
+				// thus we should set accum based on the segphase of the synced ping env
+				e->accum = e->accum_endpoint;
 
-				e->transition_ctr -= 1;
-				if (e->transition_ctr <= 0) {
-					end_segment_flag = e->next_env_state;
+				//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
+				// if (e->outta_sync) //2 means we got to transistion from reset_now_flag
+				// 	e->outta_sync = 0;
+				// else if (e->outta_sync == 1)
+				// 	e->outta_sync = 2;
+				// else
+				e->outta_sync = 0;
+			}
+			break;
 
-					//FixMe: accum_endpoint should be segphase_endpoint << 19, so that
-					//in the next curve when we do:
-					//     accum = accum_endpoint + inc
-					//     segphase = accum >> 19
-					//     nextcurve_dacout = calc_curve(segphase),
-					// then nextcurve_dacout should be close to the current dacout value
-					// Since TRANSITION is linear, that means nextcurve_dacout should be close to the current segphase value
-					// thus we should set accum based on the segphase of the synced ping env
-					e->accum = e->accum_endpoint;
-
-					//SPEG Fixme: This logic looks wrong, should it be if (outta_sync==2) ? otherwise outta_sync always is set to 0
-					// if (e->outta_sync) //2 means we got to transistion from reset_now_flag
-					// 	e->outta_sync = 0;
-					// else if (e->outta_sync == 1)
-					// 	e->outta_sync = 2;
-					// else
-					e->outta_sync = 0;
-				}
-				break;
-
-			default:
-				// DigIO::DebugOut::low();
-				break;
-		}
-		e->cur_val = calc_curve(e->segphase, e->cur_curve);
+		default:
+			// DigIO::DebugOut::low();
+			break;
+	}
+	e->cur_val = calc_curve(e->segphase, e->cur_curve);
 
 	handle_env_segment_end(e, end_segment_flag);
 	handle_env_end(e, end_env_flag);
@@ -260,6 +260,20 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 	if (e->cur_val < 0x0010)
 		e->outta_sync = 0; // if we're practically at bottom, then consider us in sync and do an immediate transition
 
+	// TODO: rename outta_sync => transition_requested and then use this:
+	//if (e->envelope_running && e->transition_requested && e->div_clk_time >= 2000) //2000 is 20Hz
+	//{
+	//	//Offset to account for transition period
+	//	uint32_t elapsed_time = 512 + 6;
+	//	start_transition(e, elapsed_time);
+	//} else {
+	//	e->envelope_running = 1;
+	//	e->env_state = RISE;
+	//	e->accum = 0;
+	//	eof_on();
+	//	eor_off();
+	//}
+
 	if (!e->envelope_running || e->outta_sync == 0 || e->div_clk_time < 2000) //2000 is 20Hz
 	{
 		e->envelope_running = 1;
@@ -268,10 +282,8 @@ static void do_reset_envelope(struct PingableEnvelope *e) {
 		eof_on();
 		eor_off();
 	} else {
-		if (e->outta_sync == 1)
-			e->outta_sync = 2;
+		//Offset to account for transition period
 		uint32_t elapsed_time = 512 + 6;
-		//Offset to account for transition period: 64/128 timer overflows (6/13ms)
 		start_transition(e, elapsed_time);
 	}
 
