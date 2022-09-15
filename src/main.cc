@@ -229,7 +229,10 @@ void handle_qnt_trig(struct PingableEnvelope *e) {
 	if (QNT_REPHASES_WHEN_CYCLE_OFF || cycle_but_on || !e->envelope_running) {
 		e->ping_div_ctr = e->clock_divider_amount; // make sure divided clock envelopes start from
 												   // beginning on next ping
-		if (e->rise_time > 0x10)				   // was 0x1000
+
+		// TODO: this used to check rise_time instead of limit_skew. Change it back?
+		// if (e->rise_time > 0x10) // was 0x1000
+		if (settings.limit_skew && e->cur_val > 100) //~200mV max (Scale at max)
 			e->outta_sync = 1;
 	}
 	e->tracking_changedrisefalls = 0;
@@ -244,10 +247,15 @@ void handle_async_trig(struct PingableEnvelope *e) {
 	e->reset_now_flag = 1;
 	e->ready_to_start_async = 0;
 
-	if (e->rise_time > 0x1000) // FixMe: should this be 0x10 ?? //do an immediate
-							   // fall if rise_time is fast
-		e->outta_sync = 1;	   // otherwise set the outta_sync flag which works to force
-							   // a slew limited transition to zero
+	// Do a transition if env is above a certain level and Skew Limit is enabled
+	if (settings.limit_skew && e->cur_val > 100) //~200mV max (Scale at max)
+		e->outta_sync = 1;
+
+	// TODO: this used to check rise_time instead of limit_skew. Change it back?
+	// if (e->rise_time > 0x10) // or 0x1000
+	// do an immediate fall if rise_time is fast
+	// otherwise set the outta_sync flag which works to force
+	// a slew limited transition to zero
 
 	e->async_phase_diff = e->divpingtmr;
 }
