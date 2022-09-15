@@ -2,8 +2,6 @@
 
 // #define TRIGDEBUGMODE
 
-//#define LOCK_PCB
-
 #define TICKS_PER_MS 1
 
 #define HOLDTIMECLEAR 100000 //4800000

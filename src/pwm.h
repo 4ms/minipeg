@@ -37,5 +37,5 @@ struct PWMOutput {
 	uint32_t period;
 };
 
-void init_pwm(void);
+void init_pwm();
 void update_pwm(uint32_t pwmval, enum PwmOutputs channel);

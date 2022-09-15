@@ -71,7 +71,7 @@ void set_led_brightness(uint16_t brightness, PwmOutputs pwm_led_num) {
 	update_pwm(brightness, pwm_led_num);
 }
 
-void all_lights_off(void) {
+void all_lights_off() {
 	update_pwm(0, PWM_CYCLEBUT_R);
 	update_pwm(0, PWM_CYCLEBUT_G);
 	update_pwm(0, PWM_CYCLEBUT_B);
