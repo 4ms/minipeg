@@ -49,7 +49,7 @@ void default_settings(void) {
 	settings.trigin_function = TRIGIN_IS_ASYNC;
 	settings.trigout_function = TRIGOUT_IS_ENDOFFALL;
 
-	settings.cycle_jack_behavior = CYCLE_JACK_BOTH_EDGES_TOGGLES_QNT;
+	settings.cycle_jack_behavior = CYCLE_JACK_BOTH_EDGES_TOGGLES;
 
 	settings.start_clk_time = 25000;
 	settings.start_cycle_on = 1;
