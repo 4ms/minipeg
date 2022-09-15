@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 // #define TRIGDEBUGMODE
 
@@ -12,3 +13,8 @@
 
 #define TRIGOUT_TRIG_TIME 91
 #define TRIGOUT_MIN_GATE_TIME 37
+
+constexpr inline int32_t SCALE_PLATEAU_WIDTH = 100;
+constexpr inline int32_t OFFSET_PLATEAU_WIDTH = 100;
+constexpr inline int32_t SHAPECV_PLATEAU_WIDTH = 100;
+constexpr inline int32_t DIVMULTCV_PLATEAU_WIDTH = 100;

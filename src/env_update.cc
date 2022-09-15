@@ -6,6 +6,7 @@
 #include "flash_user.hh"
 #include "leds.h"
 #include "pingable_env.h"
+#include "settings.h"
 #include "timers.h"
 #include "trigout.h"
 
@@ -222,7 +223,8 @@ static void handle_env_end(struct PingableEnvelope *e, uint8_t end_env_flag) {
 
 static int32_t scale_shift_offset_env(uint16_t raw_env_val) {
 	int32_t env = (int32_t)raw_env_val;
-	env = (((env + offset) * scale) / 4096) + shift;
+	constexpr auto kScaleRange = 4096; // - SCALE_PLATEAU_WIDTH;
+	env = (((env + offset) * scale) / kScaleRange) + shift;
 
 	if (env > 4095)
 		env = 4095;

@@ -7,6 +7,7 @@
 #include "envelope_calcs.h"
 #include "flash_user.hh"
 #include "pingable_env.h"
+#include "settings.h"
 #include "util/math.hh"
 
 extern struct PingableEnvelope m;
@@ -26,11 +27,6 @@ static void update_env_tracking(struct PingableEnvelope *e);
 
 //Settings:
 #define USER_INPUT_POLL_TIME 80
-
-constexpr inline int32_t SCALE_PLATEAU_WIDTH = 100;
-constexpr inline int32_t OFFSET_PLATEAU_WIDTH = 100;
-constexpr inline int32_t SHAPECV_PLATEAU_WIDTH = 100;
-constexpr inline int32_t DIVMULTCV_PLATEAU_WIDTH = 100;
 
 #define ADC_DRIFT 16
 #define DIV_ADC_HYSTERESIS 16
@@ -106,7 +102,8 @@ static uint8_t read_shape_scale_offset(void) {
 		if (adjusting_shift_mode)
 			shift = 2048 + tmp;
 		else
-			offset = tmp - 2048;
+			//offset must go to zero at max
+			offset = tmp - (2048 - OFFSET_PLATEAU_WIDTH / 2 - 4 /*wiggle room*/);
 	}
 
 	{
