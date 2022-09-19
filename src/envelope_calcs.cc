@@ -109,6 +109,27 @@ uint32_t get_fall_time(uint8_t skew, uint32_t div_clk_time) {
 	}
 }
 
+constexpr uint32_t morph_exp2lin(uint32_t x) {
+	//0..127 => 0..127
+	return x;
+}
+constexpr uint32_t morph_lin2exp(uint32_t x) {
+	//0..127 => 127..0
+	return 127 - x;
+}
+constexpr uint32_t morph_exp2log(uint32_t x) {
+	//0..127 => 0..255
+	return x * 2;
+}
+constexpr uint32_t morph_log2exp(uint32_t x) {
+	//0..127 => 255..0
+	return 255 - x * 2;
+}
+constexpr uint32_t morph_log2lin(uint32_t x) {
+	//0..127 => 255..128
+	return 255 - x;
+}
+
 constexpr std::array region_starts = {0, 900, 1450, 2645, 3195, 4096};
 constexpr std::array region_sizes = MathTools::array_adj_diff(region_starts);
 //{900, 550,...}
@@ -130,33 +151,33 @@ void calc_skew_and_curves(uint16_t shape, uint8_t *skew, uint8_t *next_curve_ris
 	switch (shape_region) {
 		case RAMPUP_EXP2LIN:
 			*skew = RAMPUP;
-			*next_curve_rise = var_127;
+			*next_curve_rise = morph_exp2lin(var_127);
 			*next_curve_fall = LIN;
 			break;
 
 		case RAMPUP2SYM_LIN2EXP:
 			*skew = var_127;
-			*next_curve_rise = 127 - var_127;
-			*next_curve_fall = EXPO;
+			*next_curve_rise = morph_lin2exp(var_127);
+			*next_curve_fall = morph_lin2exp(var_127); //was EXPO
 			break;
 
 		case SYM_EXP2LOG:
 			*skew = SYM;
-			*next_curve_rise = var_127 * 2;
-			*next_curve_fall = var_127 * 2;
+			*next_curve_rise = morph_exp2log(var_127);
+			*next_curve_fall = morph_exp2log(var_127);
 			break;
 
 		case SYM2RAMPDOWN_LOG2LIN:
 			*skew = var_127 + 128;
-			*next_curve_rise = 255 - var_127 * 2;
-			*next_curve_fall = 255 - var_127;
+			*next_curve_rise = morph_log2lin(var_127); //255 - var_127 * 2;
+			*next_curve_fall = morph_log2lin(var_127);
 			break;
 
 		default:
 		case RAMPDOWN_EXP2LIN:
 			*skew = RAMPDOWN;
 			*next_curve_rise = LIN;
-			*next_curve_fall = 127 - var_127;
+			*next_curve_fall = morph_lin2exp(var_127);
 			break;
 	}
 }
