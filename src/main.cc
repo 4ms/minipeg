@@ -59,15 +59,15 @@ bool adjusting_shift_mode = false;
 bool toggled_sync_mode = false;
 int16_t cycle_latched_offset;
 
-struct PingableEnvelope m;
+PingableEnvelope m;
 
 // main.h
-static void read_ping_button(void);
-static void read_trigjacks(void);
-static void read_cycle_button(void);
-static void check_reset_envelopes(void);
-static void update_tap_clock(void);
-static void read_ping_clock(void);
+static void read_ping_button();
+static void read_trigjacks();
+static void read_cycle_button();
+static void check_reset_envelopes();
+static void update_tap_clock();
+static void read_ping_clock();
 static void ping_led_off();
 static void ping_led_on();
 
@@ -167,7 +167,7 @@ void main() {
 	}
 }
 
-static void read_ping_button(void) {
+static void read_ping_button() {
 	if (toggled_sync_mode)
 		return;
 
@@ -260,7 +260,7 @@ void handle_async_trig(struct PingableEnvelope *e) {
 	e->async_phase_diff = e->divpingtmr;
 }
 
-void read_trigjacks(void) {
+void read_trigjacks() {
 	if (just_pressed(TRIGGER_JACK)) {
 		if (settings.trigin_function == TRIGIN_IS_QNT)
 			handle_qnt_trig(&m);
@@ -287,7 +287,7 @@ void read_trigjacks(void) {
 	}
 }
 
-void update_trigout(void) {
+void update_trigout() {
 	if (m.env_state == RISE) {
 		if ((m.accum >> 19) >= 2048)
 			hr_on();
@@ -305,7 +305,7 @@ void update_trigout(void) {
 	}
 }
 
-static void read_cycle_button(void) {
+static void read_cycle_button() {
 	if (just_pressed(CYCLE_BUTTON)) {
 		cycle_latched_offset = analog[POT_OFFSET].lpf_val;
 	}
@@ -343,19 +343,19 @@ static void read_cycle_button(void) {
 	}
 }
 
-static void ping_led_off(void) {
+static void ping_led_off() {
 	set_rgb_led(LED_PING, c_OFF);
 	div_ping_led = 0;
 }
 
-static void ping_led_on(void) {
+static void ping_led_on() {
 	set_rgb_led(LED_PING, m.sync_to_ping_mode ? c_CYAN : c_WHITE);
 	div_ping_led = 1;
 }
 
 // Todo: this should be done when divpingtmr is updated, or when div_clk_time is
-// updated void resync_on_divpingtmr(void)
-void check_reset_envelopes(void) {
+// updated void resync_on_divpingtmr()
+void check_reset_envelopes() {
 	check_restart_async_env(&m);
 
 	if (div_ping_led && (m.divpingtmr >= (m.div_clk_time >> 1))) {
@@ -375,7 +375,7 @@ void check_reset_envelopes(void) {
 }
 
 // Todo: this only needs to be done when tapouttmr updates
-void update_tap_clock(void) {
+void update_tap_clock() {
 	if (tapout_clk_time) {
 		if (tapouttmr >= tapout_clk_time) {
 			tapouttmr = 0;
@@ -394,7 +394,7 @@ void update_tap_clock(void) {
 	}
 }
 
-void read_ping_clock(void) {
+void read_ping_clock() {
 	if (got_tap_clock || ping_irq_timestamp) {
 		if (ping_irq_timestamp) {
 			uint32_t prev_clk_time = clk_time;
@@ -434,10 +434,10 @@ void read_ping_clock(void) {
 
 	} else {
 		/*	If we haven't received a ping within 2x expected clock time (that is,
-       clock stopped or slowed to less than half speed) we should stop the ping
-       clock. Or switch to the Tap clock if it's running and we have Tap Clock
-       Output on EOF
-    */
+	   clock stopped or slowed to less than half speed) we should stop the ping
+	   clock. Or switch to the Tap clock if it's running and we have Tap Clock
+	   Output on EOF
+	*/
 		if (clk_time && !settings.free_running_ping && !using_tap_clock) {
 			const uint32_t ext_ping_timeout = clk_time * 2;
 			if (pingtmr >= ext_ping_timeout) {
@@ -467,6 +467,6 @@ void read_ping_clock(void) {
 	}
 }
 
-extern "C" void SysTick_Handler(void) {
+extern "C" void SysTick_Handler() {
 	HAL_IncTick();
 }
