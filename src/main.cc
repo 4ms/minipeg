@@ -396,9 +396,13 @@ void update_tap_clock() {
 
 void read_ping_clock() {
 	if (got_tap_clock || ping_irq_timestamp) {
-		if (ping_irq_timestamp) {
+
+		// copy ping_irq_timestamp so it doesn't change while we process
+		uint32_t check_ping_irq_timestamp = ping_irq_timestamp;
+
+		if (check_ping_irq_timestamp > 0) {
 			uint32_t prev_clk_time = clk_time;
-			clk_time = ping_irq_timestamp;
+			clk_time = check_ping_irq_timestamp;
 
 			if (prev_clk_time) {
 				uint32_t delta = MathTools::diff(clk_time, prev_clk_time);
